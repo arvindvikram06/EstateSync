@@ -1,0 +1,6 @@
+@EstateSync.Api_HostAddress = http://localhost:5118
+
+GET {{EstateSync.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

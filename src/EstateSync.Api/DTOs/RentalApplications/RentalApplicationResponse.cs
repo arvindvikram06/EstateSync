@@ -1,0 +1,22 @@
+using System;
+
+namespace EstateSync.Api.DTOs.RentalApplications;
+
+public record RentalApplicationResponse
+{
+    public Guid ApplicationId { get; init; }
+    public Guid PropertyId { get; init; }
+    public string? PropertyTitle { get; init; }
+    public Guid TenantId { get; init; }
+    public string? TenantName { get; init; }
+    public string Message { get; init; } = string.Empty;
+    public int DocumentCount { get; init; }
+    public DateTime MoveInDate { get; init; }
+    public DateTime MoveOutDate { get; init; }
+    public decimal NegotiatedPrice { get; init; }
+    public decimal CommuteDistance { get; init; }
+    public string Status { get; init; } = string.Empty;
+    public string? ReviewRemarks { get; init; }
+    public DateTime? ReviewedAt { get; init; }
+    public DateTime CreatedAt { get; init; }
+}

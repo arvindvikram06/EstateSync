@@ -1,0 +1,77 @@
+user - > tenant
+
+
+{
+  "fullName": "arvindvikram",
+  "email": "arvindvikram47@gmail.com",
+  "phoneNumber": "1234567890",
+  "password": "Arvind@1234"
+}
+
+
+{
+  "fullName": "vikram",
+  "email": "arvindvikramms@gmail.com",
+  "phoneNumber": "9328382389",
+  "password": "Vikram@1234"
+}
+
+
+admin
+
+{
+  "fullName": "SystemAdmin",
+  "email": "estatesync@gmail.com",
+  "phoneNumber": "9999232241",
+  "password": "Admin@1234"
+}
+
+
+
+property::
+
+
+
+curl -X 'POST' \
+  'http://localhost:5118/api/v1/Properties' \
+  -H 'accept: text/plain' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJkNjQ3MTM0Ni0wN2ZlLTRjMDAtYTcwZC03ZjUxODk4ZDNmY2QiLCJuYW1lIjoidmlrcmFtIiwiZW1haWwiOiJhcnZpbmR2aWtyYW1tc0BnbWFpbC5jb20iLCJqdGkiOiJmYTlhMmNjZS05ZWVmLTQxNzUtYTRhNy0xMzUwOGFkMDI3YzgiLCJyb2xlIjpbIk93bmVyIiwiVGVuYW50Il0sIm5iZiI6MTc4MDc3ODQ4MiwiZXhwIjoxNzgwNzc5MzgyLCJpYXQiOjE3ODA3Nzg0ODIsImlzcyI6IlJlYWxFc3RhdGVBcGkiLCJhdWQiOiJSZWFsRXN0YXRlQ2xpZW50In0.nS7l8YyUP5WbFdft2SQvc2qpOxBtFes8H9o8Adf-LrA' \
+  -H 'Content-Type: application/json' \
+  -d '
+{
+  "title": "Greeny Villa",
+  "description": "Spacious 3 BHK independent house located in a peaceful residential area with covered parking, private garden, and 24/7 water supply. Suitable for families.",
+  "propertyType": "IndependentHouse",
+  "locationId": "40415aac-466a-4447-b358-47d8a50a9282",
+  "addressLine": "12, Indiranagar,mettur",
+  "latitude": 11.811257,
+  "longitude": 77.840195,
+  "landArea": 2400,
+  "buildupArea": 1800,
+  "monthlyRent": 35000,
+  "securityDeposit": 210000,
+  "bedrooms": 3,
+  "bathrooms": 3,
+  "agreementTypeId": "9a82643a-4467-4f65-9856-d76b1f234502"
+}'
+Request URL
+http://localhost:5118/api/v1/Properties
+Server response
+Code	Details
+201
+Undocumented
+Response body
+Download
+{
+  "success": true,
+  "data": {
+    "propertyId": "7630107d-bdf4-4f55-9029-21a97462db98"
+  },
+  "message": null
+}
+Response headers
+ content-type: application/json; charset=utf-8 
+ date: Sat,06 Jun 2026 20:51:42 GMT 
+ location: http://localhost:5118/api/v1/Properties/7630107d-bdf4-4f55-9029-21a97462db98 
+ server: Kestrel 
+ transfer-encoding: chunked
