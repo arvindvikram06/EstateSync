@@ -10,9 +10,6 @@ public class Property : BaseEntity
     public Guid OwnerId { get; set; }
     public User? Owner { get; set; }
 
-    public Guid? AgreementTypeId { get; set; }
-    public AgreementType? AgreementType { get; set; }
-
     public Guid LocationId { get; set; }
     public Location? Location { get; set; }
 

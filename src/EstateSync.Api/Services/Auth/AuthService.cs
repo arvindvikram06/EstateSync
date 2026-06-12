@@ -14,7 +14,7 @@ namespace EstateSync.Api.Services.Auth;
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
-    private readonly IRepository<Role> _roleRepository;
+    private readonly IRoleRepository _roleRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IPasswordService _passwordService;
     private readonly ITokenService _tokenService;
@@ -23,7 +23,7 @@ public class AuthService : IAuthService
 
     public AuthService(
         IUserRepository userRepository,
-        IRepository<Role> roleRepository,
+        IRoleRepository roleRepository,
         IRefreshTokenRepository refreshTokenRepository,
         IPasswordService passwordService,
         ITokenService tokenService,
@@ -40,65 +40,37 @@ public class AuthService : IAuthService
     }
 
     public async Task<(AuthResponse Auth, string RefreshToken)> RegisterAsync(RegisterRequest request)
-    {
+    {   
         var existingUser = await _userRepository.GetByEmailAsync(request.Email);
         if (existingUser != null)
         {
             throw new ConflictException("Email is already registered.");
         }
 
-        var rolesResult = await _roleRepository.GetAllAsync(1, 100);
-        var tenantRole = rolesResult.Items.FirstOrDefault(r => r.Name.Equals("Tenant", StringComparison.OrdinalIgnoreCase));
+        var tenantRole = await _roleRepository.GetByNameAsync("Tenant");
         if (tenantRole == null)
         {
             throw new NotFoundException("Role", "Tenant");
         }
 
-        var passwordHash = _passwordService.HashPassword(request.Password);
-
-        var newUser = new User
-        {
-            FullName = request.FullName,
-            Email = request.Email,
-            PhoneNumber = request.PhoneNumber,
-            PasswordHash = passwordHash,
-            IsActive = true
-        };
-
-        newUser.UserRoles.Add(new UserRole
-        {
-            UserId = newUser.UserId,
-            RoleId = tenantRole.RoleId,
-            Role = tenantRole
-        });
-
+        var newUser = CreateTenantUser(request, tenantRole);
         await _userRepository.AddAsync(newUser);
 
         var token = _tokenService.GenerateAccessToken(newUser);
         var refreshTokenString = _tokenService.GenerateRefreshToken();
 
-        var refreshTokenEntity = new RefreshToken
-        {
-            UserId = newUser.UserId,
-            Token = refreshTokenString,
-            ExpiresAt = DateTime.UtcNow.AddDays(7),
-            TokenFamily = Guid.NewGuid().ToString(),
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await _refreshTokenRepository.AddAsync(refreshTokenEntity);
+        await CreateAndSaveRefreshTokenAsync(newUser.UserId, refreshTokenString, Guid.NewGuid().ToString());
 
         newUser.LastLogin = DateTime.UtcNow;
         await _unitOfWork.SaveChangesAsync();
 
         var authResponse = _authMapper.MapToAuthResponse(newUser, token);
-
         return (authResponse, refreshTokenString);
     }
 
     public async Task<(AuthResponse Auth, string RefreshToken)> LoginAsync(LoginRequest request)
     {
-        var user = await _userRepository.GetWithRolesByEmailAsync(request.Email);
+        var user = await _userRepository.GetByEmailWithRolesAsync(request.Email);
         if (user == null || !_passwordService.VerifyPassword(request.Password, user.PasswordHash))
         {
             throw new UnauthorizedException("Invalid email or password.");
@@ -114,6 +86,7 @@ public class AuthService : IAuthService
 
         var refreshTokenEntity = new RefreshToken
         {
+            RefreshTokenId = Guid.NewGuid(),
             UserId = user.UserId,
             Token = refreshTokenString,
             ExpiresAt = DateTime.UtcNow.AddDays(7),
@@ -143,14 +116,8 @@ public class AuthService : IAuthService
 
         if (tokenEntity.RevokedAt != null)
         {
-            var familyTokens = await _refreshTokenRepository.GetActiveTokensInFamilyAsync(tokenEntity.TokenFamily);
-            foreach (var token in familyTokens)
-            {
-                token.RevokedAt = DateTime.UtcNow;
-                await _refreshTokenRepository.UpdateAsync(token);
-            }
+            await RevokeTokenFamilyAsync(tokenEntity.TokenFamily);
             await _unitOfWork.SaveChangesAsync();
-
             throw new UnauthorizedException("Token family reuse detected. Please log in again.");
         }
 
@@ -162,36 +129,15 @@ public class AuthService : IAuthService
         tokenEntity.RevokedAt = DateTime.UtcNow;
         await _refreshTokenRepository.UpdateAsync(tokenEntity);
 
-        var user = await _userRepository.GetByIdAsync(tokenEntity.UserId);
-        if (user == null || !user.IsActive)
-        {
-            throw new UnauthorizedException("User not found or inactive.");
-        }
-
-        user = await _userRepository.GetWithRolesByEmailAsync(user.Email);
-        if (user == null)
-        {
-            throw new UnauthorizedException("User details not found.");
-        }
+        var user = await GetAndVerifyUserForRefreshAsync(tokenEntity.UserId);
 
         var newAccessToken = _tokenService.GenerateAccessToken(user);
         var newRefreshTokenString = _tokenService.GenerateRefreshToken();
 
-        var newRefreshTokenEntity = new RefreshToken
-        {
-            RefreshTokenId = Guid.NewGuid(),
-            UserId = user.UserId,
-            Token = newRefreshTokenString,
-            ExpiresAt = DateTime.UtcNow.AddDays(7),
-            TokenFamily = tokenEntity.TokenFamily,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await _refreshTokenRepository.AddAsync(newRefreshTokenEntity);
+        await CreateAndSaveRefreshTokenAsync(user.UserId, newRefreshTokenString, tokenEntity.TokenFamily);
         await _unitOfWork.SaveChangesAsync();
 
         var authResponse = _authMapper.MapToAuthResponse(user, newAccessToken);
-
         return (authResponse, newRefreshTokenString);
     }
 
@@ -203,5 +149,72 @@ public class AuthService : IAuthService
     public Task ResetPasswordAsync(ResetPasswordRequest request)
     {
         return Task.CompletedTask;
+    }
+
+    private User CreateTenantUser(RegisterRequest request, Role tenantRole)
+    {
+        var passwordHash = _passwordService.HashPassword(request.Password);
+
+        var newUser = new User
+        {
+            UserId = Guid.NewGuid(),
+            FullName = request.FullName,
+            Email = request.Email,
+            PhoneNumber = request.PhoneNumber,
+            PasswordHash = passwordHash,
+            IsActive = true
+        };
+
+        newUser.UserRoles.Add(new UserRole
+        {
+            UserRoleId = Guid.NewGuid(),
+            UserId = newUser.UserId,
+            RoleId = tenantRole.RoleId,
+            Role = tenantRole
+        });
+
+        return newUser;
+    }
+
+    private async Task CreateAndSaveRefreshTokenAsync(Guid userId, string tokenString, string tokenFamily)
+    {
+        var refreshTokenEntity = new RefreshToken
+        {
+            RefreshTokenId = Guid.NewGuid(),
+            UserId = userId,
+            Token = tokenString,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            TokenFamily = tokenFamily,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _refreshTokenRepository.AddAsync(refreshTokenEntity);
+    }
+
+    private async Task RevokeTokenFamilyAsync(string tokenFamily)
+    {
+        var familyTokens = await _refreshTokenRepository.GetActiveTokensInFamilyAsync(tokenFamily);
+        foreach (var token in familyTokens)
+        {
+            token.RevokedAt = DateTime.UtcNow;
+            await _refreshTokenRepository.UpdateAsync(token);
+        }
+    }
+
+    private async Task<User> GetAndVerifyUserForRefreshAsync(Guid userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null || !user.IsActive)
+        {
+            throw new UnauthorizedException("User not found or inactive.");
+        }
+
+        var detailedUser = await _userRepository.GetByEmailWithRolesAsync(user.Email);
+        if (detailedUser == null)
+        {
+            throw new UnauthorizedException("User details not found.");
+        }
+
+        return detailedUser;
     }
 }

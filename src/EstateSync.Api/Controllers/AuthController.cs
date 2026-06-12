@@ -21,60 +21,44 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    // User Registration Endpoint
     [HttpPost("register")]
-    public async Task<ActionResult<ApiResponse<object>>> Register([FromBody] RegisterRequest request)
+    public async Task<ActionResult<ApiResponse<AuthResponse>>> Register([FromBody] RegisterRequest request)
     {
         var (auth, refreshToken) = await _authService.RegisterAsync(request);
+
+        // Set the refresh token in an HttpOnly cookie
         SetRefreshTokenCookie(refreshToken);
 
-        var data = new
-        {
-            userId = auth.UserId,
-            accessToken = auth.AccessToken,
-        };
-
-        return StatusCode(StatusCodes.Status201Created, ApiResponse<object>.Ok(data,message: "Registration successful."));
+        return StatusCode(StatusCodes.Status201Created, ApiResponse<AuthResponse>.Ok(auth, message: "Registration successful."));
     }
 
+    // User Login Endpoint
     [HttpPost("login")]
-    public async Task<ActionResult<ApiResponse<object>>> Login([FromBody] LoginRequest request)
+    public async Task<ActionResult<ApiResponse<AuthResponse>>> Login([FromBody] LoginRequest request)
     {
         var (auth, refreshToken) = await _authService.LoginAsync(request);
+
+        //set the refresh token in an HttpOnly cookie
         SetRefreshTokenCookie(refreshToken);
 
-        var data = new
-        {
-            accessToken = auth.AccessToken,
-            user = new
-            {
-                id = auth.UserId,
-                fullName = auth.FullName,
-                roles = auth.Roles
-            }
-        };
-
-        return Ok(ApiResponse<object>.Ok(data));
+        return Ok(ApiResponse<AuthResponse>.Ok(auth));
     }
 
     [HttpPost("refresh-token")]
-    public async Task<ActionResult<ApiResponse<object>>> RefreshToken()
+    public async Task<ActionResult<ApiResponse<AuthResponse>>> RefreshToken()
     {
         var token = Request.Cookies["refreshToken"];
 
         if (string.IsNullOrWhiteSpace(token))
         {
-            return BadRequest(ApiResponse<object>.Fail("Refresh token is required."));
+            return BadRequest(ApiResponse<AuthResponse>.Fail("Refresh token is required."));
         }
 
         var (auth, newRefreshToken) = await _authService.RefreshTokenAsync(token);
         SetRefreshTokenCookie(newRefreshToken);
 
-        var data = new
-        {
-            accessToken = auth.AccessToken
-        };
-
-        return Ok(ApiResponse<object>.Ok(data));
+        return Ok(ApiResponse<AuthResponse>.Ok(auth));
     }
 
     // [HttpPost("forgot-password")]

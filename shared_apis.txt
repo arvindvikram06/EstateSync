@@ -1,0 +1,64 @@
+# Shared APIs - EstateSync Platform
+
+This document catalogs all the endpoints in the EstateSync API that are shared across different scopes (unauthenticated/anonymous, all authenticated users, or multiple specific roles).
+
+---
+
+## 1. Public / Anonymous Endpoints (Unauthenticated)
+These endpoints are marked with `[AllowAnonymous]` and can be accessed by any client without a JWT token.
+
+* **POST** `/api/v1/auth/register`
+  * *Purpose*: Register a new user account.
+* **POST** `/api/v1/auth/login`
+  * *Purpose*: Log in and receive access/refresh tokens.
+* **POST** `/api/v1/auth/refresh-token`
+  * *Purpose*: Obtain a new access token using an httpOnly secure refresh token cookie.
+* **GET** `/api/v1/properties`
+  * *Purpose*: Search, filter, and paginate properties.
+* **GET** `/api/v1/properties/{id}`
+  * *Purpose*: Retrieve details of a single property.
+
+---
+
+## 2. Authenticated Common Endpoints (All Roles)
+These endpoints use a general `[Authorize]` filter without restricting roles, meaning any registered and logged-in user (Tenant, Owner, or Admin) has access.
+
+* **POST** `/api/v1/identity/verification-request/draft`
+  * *Purpose*: Initialize a draft identity verification request.
+* **POST** `/api/v1/identity/verification-request/{requestId}/documents`
+  * *Purpose*: Upload support documents for identity verification.
+* **POST** `/api/v1/identity/verification-request/{requestId}/submit`
+  * *Purpose*: Submit an identity verification request.
+* **GET** `/api/v1/identity/verification-requests`
+  * *Purpose*: Get a list of verification requests submitted by the caller.
+* **POST** `/api/v1/owners/me/verification-request/draft`
+  * *Purpose*: Create draft verification request for owner profile.
+* **POST** `/api/v1/owners/me/verification-request/{requestId}/documents`
+  * *Purpose*: Upload document for owner verification.
+* **POST** `/api/v1/owners/me/verification-request/{requestId}/submit`
+  * *Purpose*: Submit owner verification request.
+* **GET** `/api/v1/owners/me/verification-requests`
+  * *Purpose*: Retrieve owner verification requests for the caller.
+* **GET** `/api/v1/tenantverifications/{requestId}`
+  * *Purpose*: Get a specific tenant verification request.
+
+---
+
+## 3. Multi-Role Endpoints (Specific Roles Shared)
+These endpoints explicitly list multiple roles in the `[Authorize(Roles = "...")]` attribute.
+
+* **POST** `/api/v1/leases/{id}/sign`
+  * *Roles*: `Owner`, `Tenant`
+  * *Purpose*: Sign a lease agreement.
+* **GET** `/api/v1/leases/{id}`
+  * *Roles*: `Owner`, `Tenant`, `Admin`
+  * *Purpose*: Retrieve detailed information for a specific lease.
+* **DELETE** `/api/v1/properties/{id}`
+  * *Roles*: `Owner`, `Admin`
+  * *Purpose*: Soft-delete a property.
+* **GET** `/api/v1/properties/{id}/documents`
+  * *Roles*: `Owner`, `Admin`
+  * *Purpose*: Retrieve document attachments linked to a property.
+* **GET** `/api/v1/rentalapplications/{applicationId}`
+  * *Roles*: `Tenant`, `Owner`
+  * *Purpose*: Retrieve a single rental application request.

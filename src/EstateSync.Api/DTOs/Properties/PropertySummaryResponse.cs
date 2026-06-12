@@ -14,5 +14,4 @@ public record PropertySummaryResponse
     public int Bedrooms { get; init; }
     public int Bathrooms { get; init; }
     public string? Status { get; init; }
-    public Guid? AgreementTypeId { get; init; }
 }

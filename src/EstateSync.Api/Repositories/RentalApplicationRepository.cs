@@ -23,13 +23,14 @@ public class RentalApplicationRepository : BaseRepository<RentalApplication>, IR
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<RentalApplication>> GetByTenantIdAsync(Guid tenantId)
-    {
-        return await _dbSet
-            .AsNoTracking()
-            .Where(ra => ra.TenantId == tenantId)
-            .ToListAsync();
-    }
+    // Reserved for future modules — not yet called by any service
+    // public async Task<IEnumerable<RentalApplication>> GetByTenantIdAsync(Guid tenantId)
+    // {
+    //     return await _dbSet
+    //         .AsNoTracking()
+    //         .Where(ra => ra.TenantId == tenantId)
+    //         .ToListAsync();
+    // }
 
     public async Task<bool> HasTenantAppliedAsync(Guid propertyId, Guid tenantId)
     {
@@ -42,26 +43,61 @@ public class RentalApplicationRepository : BaseRepository<RentalApplication>, IR
         return await _dbSet
             .Include(ra => ra.Property)
             .Include(ra => ra.Tenant)
+            .Include(ra => ra.TenantVerificationRequests)
             .FirstOrDefaultAsync(ra => ra.ApplicationId == applicationId);
     }
 
-    public async Task<IEnumerable<RentalApplication>> GetByOwnerIdAsync(Guid ownerId)
+    public async Task<(IEnumerable<RentalApplication> Items, int Total)> GetByOwnerIdPagedAsync(Guid ownerId, int page, int limit)
     {
-        return await _dbSet
+        var query = _dbSet
             .AsNoTracking()
             .Include(ra => ra.Property)
             .Include(ra => ra.Tenant)
-            .Where(ra => ra.Property != null && ra.Property.OwnerId == ownerId)
+            .Where(ra => ra.Property != null && ra.Property.OwnerId == ownerId);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(ra => ra.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
             .ToListAsync();
+
+        return (items, total);
     }
 
-    public async Task<IEnumerable<RentalApplication>> GetByPropertyIdWithDetailsAsync(Guid propertyId)
+    public async Task<(IEnumerable<RentalApplication> Items, int Total)> GetByPropertyIdWithDetailsPagedAsync(Guid propertyId, int page, int limit)
     {
-        return await _dbSet
+        var query = _dbSet
             .AsNoTracking()
             .Include(ra => ra.Property)
             .Include(ra => ra.Tenant)
-            .Where(ra => ra.PropertyId == propertyId)
+            .Where(ra => ra.PropertyId == propertyId);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(ra => ra.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
             .ToListAsync();
+
+        return (items, total);
+    }
+
+    public async Task<(IEnumerable<RentalApplication> Items, int Total)> GetByTenantIdWithDetailsPagedAsync(Guid tenantId, int page, int limit)
+    {
+        var query = _dbSet
+            .AsNoTracking()
+            .Include(ra => ra.Property)
+            .Include(ra => ra.Tenant)
+            .Where(ra => ra.TenantId == tenantId);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(ra => ra.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToListAsync();
+
+        return (items, total);
     }
 }

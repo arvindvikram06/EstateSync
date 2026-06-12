@@ -15,6 +15,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.Email).IsRequired().HasMaxLength(250);
         builder.Property(x => x.PhoneNumber).IsRequired().HasMaxLength(50);
         builder.Property(x => x.PasswordHash).IsRequired().HasMaxLength(500);
+        builder.Property(x => x.AadhaarNumber).HasMaxLength(12);
+        builder.Property(x => x.PanNumber).HasMaxLength(10);
+        builder.Property(x => x.IsIdentityVerified).HasDefaultValue(false);
 
         builder.HasIndex(x => x.Email).IsUnique();
         builder.HasIndex(x => x.IsActive).HasFilter("\"DeletedAt\" IS NULL");
@@ -43,6 +46,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 PhoneNumber = "1234567890",
                 PasswordHash = "$2a$12$R.73c242HjI8U15u2yZ.Nu9L1zXn9i6s7Jm/aP3P.z6N3F8w2KzY2", // Admin123!
                 IsActive = true,
+                IsIdentityVerified = true,
                 CreatedAt = new DateTime(2026, 6, 4, 0, 0, 0, DateTimeKind.Utc)
             }
         );

@@ -9,5 +9,7 @@ public interface INotificationRepository : IRepository<Notification>
 {
     Task<IEnumerable<Notification>> GetUnreadByUserIdAsync(Guid userId);
     Task MarkAllReadAsync(Guid userId);
-    Task DeleteNotificationsOlderThanDaysAsync(int days);
+
+    // Reserved for background cleanup job — not yet implemented
+    // Task DeleteNotificationsOlderThanDaysAsync(int days);
 }

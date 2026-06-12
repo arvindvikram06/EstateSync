@@ -4,3 +4,12 @@
 **/obj/
 **/Logs/
 **/AGENTS.md
+
+# Code Coverage
+**/TestResults/
+**/coverage/
+*.coverage
+**/coveragereport/
+
+# Other ignored files
+sharedpai.txt

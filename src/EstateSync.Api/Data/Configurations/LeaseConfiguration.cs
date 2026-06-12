@@ -14,7 +14,11 @@ public class LeaseConfiguration : IEntityTypeConfiguration<Lease>
         builder.Property(x => x.PaymentFrequency).HasConversion<string>().HasMaxLength(50);
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(50);
         builder.Property(x => x.CancellationReason).HasMaxLength(1000);
-        builder.Property(x => x.AgreementData).HasColumnType("jsonb");
+        builder.Property(x => x.AgreementText).HasMaxLength(4000);
+        builder.Property(x => x.UnsignedAgreementUrl).HasMaxLength(500);
+        builder.Property(x => x.SignedAgreementUrl).HasMaxLength(500);
+        builder.Property(x => x.TenantSignature).HasMaxLength(250);
+        builder.Property(x => x.OwnerSignature).HasMaxLength(250);
 
         builder.HasIndex(x => x.PropertyId);
         builder.HasIndex(x => x.TenantId);
@@ -29,16 +33,6 @@ public class LeaseConfiguration : IEntityTypeConfiguration<Lease>
         builder.HasOne(x => x.Tenant)
             .WithMany(u => u.LeasesAsTenant)
             .HasForeignKey(x => x.TenantId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(x => x.AgreementType)
-            .WithMany()
-            .HasForeignKey(x => x.AgreementTypeId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(x => x.Template)
-            .WithMany()
-            .HasForeignKey(x => x.TemplateId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.RentalApplication)

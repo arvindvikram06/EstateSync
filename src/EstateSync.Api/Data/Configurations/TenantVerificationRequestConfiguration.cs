@@ -21,7 +21,7 @@ public class TenantVerificationRequestConfiguration : IEntityTypeConfiguration<T
 
         builder.HasOne(x => x.ReviewedByUser)
             .WithMany(u => u.ReviewedTenantVerificationRequests)
-            .HasForeignKey(x => x.ReviewedBy)
+            .HasForeignKey(x => x.ReviewedById)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.RentalApplication)

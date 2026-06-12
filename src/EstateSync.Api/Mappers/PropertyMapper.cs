@@ -20,8 +20,7 @@ public class PropertyMapper
             State = s.Location != null ? s.Location.StateName : string.Empty,
             PrimaryImage = s.PropertyImages.FirstOrDefault(i => i.IsPrimary)?.Image,
             PropertyType = s.PropertyType.ToString(),
-            Status = s.Status.ToString(),
-            AgreementTypeId = s.AgreementTypeId
+            Status = s.Status.ToString()
         };
     }
 
@@ -61,9 +60,8 @@ public class PropertyMapper
             Bedrooms = s.Bedrooms,
             Bathrooms = s.Bathrooms,
             Status = s.Status.ToString(),
-            AgreementTypeId = s.AgreementTypeId,
             Amenities = s.Amenities ?? new List<string>(),
-            Images = s.PropertyImages.Select(MapToImageResponse).ToList()
+            Images = s.PropertyImages != null ? s.PropertyImages.Select(MapToImageResponse).ToList() : new List<PropertyImageResponse>()
         };
     }
 
@@ -71,7 +69,7 @@ public class PropertyMapper
     {
         return new Property
         {
-       
+            PropertyId = Guid.NewGuid(),
             Title = request.Title,
             Description = request.Description,
             PropertyType = request.PropertyType,
@@ -85,7 +83,6 @@ public class PropertyMapper
             SecurityDeposit = request.SecurityDeposit,
             Bedrooms = request.Bedrooms,
             Bathrooms = request.Bathrooms,
-            AgreementTypeId = request.AgreementTypeId,
             Status = PropertyStatus.Draft
         };
     }
@@ -105,6 +102,5 @@ public class PropertyMapper
         entity.SecurityDeposit = request.SecurityDeposit;
         entity.Bedrooms = request.Bedrooms;
         entity.Bathrooms = request.Bathrooms;
-        entity.AgreementTypeId = request.AgreementTypeId;
     }
 }

@@ -12,7 +12,7 @@ public class TenantVerificationRequest : BaseEntity
     public Guid ApplicationId { get; set; }
     public RentalApplication? RentalApplication { get; set; }
     public ApprovalStatus Status { get; set; }
-    public Guid? ReviewedBy { get; set; }
+    public Guid? ReviewedById { get; set; }
     public User? ReviewedByUser { get; set; }
     public string? ReviewRemarks { get; set; }
 

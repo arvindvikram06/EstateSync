@@ -25,14 +25,6 @@ public class LeaseRepository : BaseRepository<Lease>, ILeaseRepository
             .FirstOrDefaultAsync(l => l.LeaseId == id);
     }
 
-    public async Task<IEnumerable<Lease>> GetByPropertyIdAsync(Guid propertyId)
-    {
-        return await _dbSet
-            .AsNoTracking()
-            .Where(l => l.PropertyId == propertyId)
-            .ToListAsync();
-    }
-
     public async Task<Lease?> GetActiveLeaseByPropertyIdAsync(Guid propertyId)
     {
         return await _dbSet
@@ -40,20 +32,65 @@ public class LeaseRepository : BaseRepository<Lease>, ILeaseRepository
             .FirstOrDefaultAsync(l => l.PropertyId == propertyId && l.Status == LeaseStatus.Active);
     }
 
-    public async Task<IEnumerable<Lease>> GetByTenantIdAsync(Guid tenantId)
-    {
-        return await _dbSet
-            .AsNoTracking()
-            .Where(l => l.TenantId == tenantId)
-            .ToListAsync();
-    }
+    // Reserved for future modules — not yet called by any service
+    // public async Task<IEnumerable<Lease>> GetByPropertyIdAsync(Guid propertyId)
+    // {
+    //     return await _dbSet
+    //         .AsNoTracking()
+    //         .Where(l => l.PropertyId == propertyId)
+    //         .ToListAsync();
+    // }
 
-    public async Task<IEnumerable<Lease>> GetByOwnerIdAsync(Guid ownerId)
+    // public async Task<IEnumerable<Lease>> GetByTenantIdAsync(Guid tenantId)
+    // {
+    //     return await _dbSet
+    //         .AsNoTracking()
+    //         .Where(l => l.TenantId == tenantId)
+    //         .ToListAsync();
+    // }
+
+    // public async Task<IEnumerable<Lease>> GetByOwnerIdAsync(Guid ownerId)
+    // {
+    //     return await _dbSet
+    //         .AsNoTracking()
+    //         .Include(l => l.Property)
+    //         .Where(l => l.Property != null && l.Property.OwnerId == ownerId)
+    //         .ToListAsync();
+    // }
+
+    public async Task<(IEnumerable<Lease> Items, int Total)> GetByTenantIdPagedAsync(Guid tenantId, int page, int limit)
     {
-        return await _dbSet
+        var query = _dbSet
             .AsNoTracking()
             .Include(l => l.Property)
-            .Where(l => l.Property != null && l.Property.OwnerId == ownerId)
+            .Include(l => l.Tenant)
+            .Where(l => l.TenantId == tenantId);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(l => l.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
             .ToListAsync();
+
+        return (items, total);
+    }
+
+    public async Task<(IEnumerable<Lease> Items, int Total)> GetByOwnerIdPagedAsync(Guid ownerId, int page, int limit)
+    {
+        var query = _dbSet
+            .AsNoTracking()
+            .Include(l => l.Property)
+            .Include(l => l.Tenant)
+            .Where(l => l.Property != null && l.Property.OwnerId == ownerId);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(l => l.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToListAsync();
+
+        return (items, total);
     }
 }

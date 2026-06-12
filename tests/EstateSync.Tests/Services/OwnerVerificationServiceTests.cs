@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using EstateSync.Api.DTOs.Users;
+using EstateSync.Api.DTOs.OwnerVerification;
 using EstateSync.Api.Exceptions;
 using EstateSync.Api.Repositories.Interfaces;
 using EstateSync.Api.Mappers;
@@ -17,6 +18,7 @@ using EstateSync.Api.Services.Storage;
 using EstateSync.Api.Services.OwnerVerification;
 using EstateSync.Api.Interfaces.Services.OwnerVerification;
 using EstateSync.Api.Interfaces.Services.Storage;
+using EstateSync.Api.Interfaces.Services.Auth;
 
 namespace EstateSync.Tests.Services;
 
@@ -28,9 +30,11 @@ public class OwnerVerificationServiceTests
     private Mock<IUserRepository> _userRepoMock;
     private Mock<INotificationRepository> _notificationRepoMock;
     private Mock<IFileStorageService> _fileStorageServiceMock;
+    private Mock<IRoleRepository> _roleRepoMock;
     private Mock<IUnitOfWork> _unitOfWorkMock;
     private UserMapper _userMapper;
     private Mock<ILogger<OwnerVerificationService>> _loggerMock;
+    private Mock<ICurrentUserService> _currentUserServiceMock;
     private OwnerVerificationService _verificationService;
 
     [SetUp]
@@ -41,9 +45,11 @@ public class OwnerVerificationServiceTests
         _userRepoMock = new Mock<IUserRepository>();
         _notificationRepoMock = new Mock<INotificationRepository>();
         _fileStorageServiceMock = new Mock<IFileStorageService>();
+        _roleRepoMock = new Mock<IRoleRepository>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _userMapper = new UserMapper();
         _loggerMock = new Mock<ILogger<OwnerVerificationService>>();
+        _currentUserServiceMock = new Mock<ICurrentUserService>();
 
         _verificationService = new OwnerVerificationService(
             _requestRepoMock.Object,
@@ -51,9 +57,11 @@ public class OwnerVerificationServiceTests
             _userRepoMock.Object,
             _notificationRepoMock.Object,
             _fileStorageServiceMock.Object,
+            _roleRepoMock.Object,
             _unitOfWorkMock.Object,
             _userMapper,
-            _loggerMock.Object);
+            _loggerMock.Object,
+            _currentUserServiceMock.Object);
     }
 
     [Test]
@@ -90,8 +98,16 @@ public class OwnerVerificationServiceTests
 
         _requestRepoMock.Setup(x => x.GetWithDetailsByIdAsync(requestId)).ReturnsAsync(requestEntity);
 
+        var requestDto = new SubmitOwnerVerificationRequest
+        {
+            BankAccountNumber = "1234567890",
+            BankIFSCCode = "ABCD0123456",
+            BankAccountHolderName = "John Doe",
+            BankName = "Test Bank"
+        };
+
         // Act
-        Func<Task> act = async () => await _verificationService.SubmitVerificationRequestAsync(userId, requestId, CancellationToken.None);
+        Func<Task> act = async () => await _verificationService.SubmitVerificationRequestAsync(userId, requestId, requestDto, CancellationToken.None);
 
         // Assert
         act.Should().ThrowAsync<BadRequestException>()
@@ -123,8 +139,16 @@ public class OwnerVerificationServiceTests
 
         _requestRepoMock.Setup(x => x.GetWithDetailsByIdAsync(requestId)).ReturnsAsync(requestEntity);
 
+        var requestDto = new SubmitOwnerVerificationRequest
+        {
+            BankAccountNumber = "1234567890",
+            BankIFSCCode = "ABCD0123456",
+            BankAccountHolderName = "John Doe",
+            BankName = "Test Bank"
+        };
+
         // Act
-        await _verificationService.SubmitVerificationRequestAsync(userId, requestId, CancellationToken.None);
+        await _verificationService.SubmitVerificationRequestAsync(userId, requestId, requestDto, CancellationToken.None);
 
         // Assert
         requestEntity.Status.Should().Be(ApprovalStatus.Pending);
@@ -137,13 +161,30 @@ public class OwnerVerificationServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
+        var user = new User { UserId = userId, IsIdentityVerified = true, FullName = "Owner", Email = "o@o.com", PasswordHash = "hash", PhoneNumber = "123456789" };
+        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
         _requestRepoMock.Setup(x => x.GetByUserIdAsync(userId)).ReturnsAsync(new List<OwnerVerificationRequest>());
+        
+        _requestRepoMock.Setup(x => x.GetWithDetailsByIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((Guid id) => new OwnerVerificationRequest
+            {
+                RequestId = id,
+                UserId = userId,
+                User = user,
+                Status = ApprovalStatus.Draft,
+                CreatedAt = DateTime.UtcNow,
+                OwnerVerificationDocuments = new List<OwnerVerificationDocument>()
+            });
 
         // Act
         var result = await _verificationService.CreateDraftVerificationRequestAsync(userId, CancellationToken.None);
 
         // Assert
-        result.Should().NotBeEmpty();
+        result.Should().NotBeNull();
+        result.RequestId.Should().NotBeEmpty();
+        result.UserId.Should().Be(userId);
+        result.Status.Should().Be("Draft");
+        
         _requestRepoMock.Verify(x => x.AddAsync(It.Is<OwnerVerificationRequest>(r => r.UserId == userId && r.Status == ApprovalStatus.Draft)), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -153,6 +194,8 @@ public class OwnerVerificationServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
+        var user = new User { UserId = userId, IsIdentityVerified = true, FullName = "Owner", Email = "o@o.com", PasswordHash = "hash", PhoneNumber = "123456789" };
+        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
         var existingDraftId = Guid.NewGuid();
         var existingRequests = new List<OwnerVerificationRequest>
         {
@@ -160,11 +203,25 @@ public class OwnerVerificationServiceTests
         };
         _requestRepoMock.Setup(x => x.GetByUserIdAsync(userId)).ReturnsAsync(existingRequests);
 
+        _requestRepoMock.Setup(x => x.GetWithDetailsByIdAsync(existingDraftId))
+            .ReturnsAsync(new OwnerVerificationRequest
+            {
+                RequestId = existingDraftId,
+                UserId = userId,
+                User = user,
+                Status = ApprovalStatus.Draft,
+                CreatedAt = DateTime.UtcNow,
+                OwnerVerificationDocuments = new List<OwnerVerificationDocument>()
+            });
+
         // Act
         var result = await _verificationService.CreateDraftVerificationRequestAsync(userId, CancellationToken.None);
 
         // Assert
-        result.Should().Be(existingDraftId);
+        result.Should().NotBeNull();
+        result.RequestId.Should().Be(existingDraftId);
+        result.UserId.Should().Be(userId);
+        
         _requestRepoMock.Verify(x => x.AddAsync(It.IsAny<OwnerVerificationRequest>()), Times.Never);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -174,6 +231,8 @@ public class OwnerVerificationServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
+        var user = new User { UserId = userId, IsIdentityVerified = true, FullName = "Owner", Email = "o@o.com", PasswordHash = "hash", PhoneNumber = "123456789" };
+        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
         var existingRequests = new List<OwnerVerificationRequest>
         {
             new OwnerVerificationRequest { RequestId = Guid.NewGuid(), UserId = userId, Status = ApprovalStatus.Pending }
@@ -185,6 +244,36 @@ public class OwnerVerificationServiceTests
 
         // Assert
         act.Should().ThrowAsync<ConflictException>().WithMessage("*active or approved*");
+    }
+
+    [Test]
+    public void CreateDraftVerificationRequestAsync_ShouldThrowForbiddenException_WhenUserNotIdentityVerified()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var user = new User { UserId = userId, IsIdentityVerified = false, FullName = "Owner", Email = "o@o.com", PasswordHash = "hash", PhoneNumber = "123456789" };
+        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+
+        // Act
+        Func<Task> act = async () => await _verificationService.CreateDraftVerificationRequestAsync(userId, CancellationToken.None);
+
+        // Assert
+        act.Should().ThrowAsync<ForbiddenException>();
+    }
+
+    [Test]
+    public void CreateDraftVerificationRequestAsync_ShouldThrowNotFoundException_WhenUserDoesNotExist()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(userId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new NotFoundException("User", userId));
+
+        // Act
+        Func<Task> act = async () => await _verificationService.CreateDraftVerificationRequestAsync(userId, CancellationToken.None);
+
+        // Assert
+        act.Should().ThrowAsync<NotFoundException>();
     }
 
     [Test]
@@ -224,7 +313,7 @@ public class OwnerVerificationServiceTests
     }
 
     [Test]
-    public async Task UploadVerificationDocumentAsync_ShouldUpdateDocumentAndCleanOldFile_WhenDocumentOfThatTypeExists()
+    public async Task UploadVerificationDocumentAsync_ShouldDeleteOldDocumentAndLinkNewDocument_WhenDocumentOfThatTypeExists()
     {
         // Arrange
         var userId = Guid.NewGuid();
@@ -269,13 +358,42 @@ public class OwnerVerificationServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result.DocumentId.Should().Be(existingDocId);
         result.DocumentUrl.Should().Be("/uploads/new_pan.pdf");
 
-        existingDoc.DocumentUrl.Should().Be("/uploads/new_pan.pdf");
         _fileStorageServiceMock.Verify(x => x.DeleteFileAsync("/uploads/old_pan.pdf"), Times.Once);
+        _documentRepoMock.Verify(x => x.UpdateAsync(existingDoc), Times.Once);
+        _documentRepoMock.Verify(x => x.DeleteAsync(It.IsAny<Document>()), Times.Never);
         _documentRepoMock.Verify(x => x.AddAsync(It.IsAny<Document>()), Times.Never);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task UploadVerificationDocumentAsync_ShouldThrowBadRequestException_WhenFileIsNotPdf()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var requestId = Guid.NewGuid();
+        var fileMock = new Mock<IFormFile>();
+        fileMock.Setup(f => f.FileName).Returns("pan.png");
+        fileMock.Setup(f => f.ContentType).Returns("image/png");
+        fileMock.Setup(f => f.Length).Returns(150);
+
+        var requestEntity = new OwnerVerificationRequest
+        {
+            RequestId = requestId,
+            UserId = userId,
+            Status = ApprovalStatus.Draft,
+            OwnerVerificationDocuments = new List<OwnerVerificationDocument>()
+        };
+
+        _requestRepoMock.Setup(x => x.GetWithDetailsByIdAsync(requestId)).ReturnsAsync(requestEntity);
+
+        // Act
+        Func<Task> act = async () => await _verificationService.UploadVerificationDocumentAsync(userId, requestId, fileMock.Object, DocumentType.PAN, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<BadRequestException>()
+            .WithMessage("Only PDF documents are allowed.");
     }
 
     [Test]
@@ -285,6 +403,7 @@ public class OwnerVerificationServiceTests
         var adminId = Guid.NewGuid();
         var requestId = Guid.NewGuid();
         var userId = Guid.NewGuid();
+        var ownerRoleId = Guid.NewGuid();
 
         var requestEntity = new OwnerVerificationRequest
         {
@@ -305,7 +424,12 @@ public class OwnerVerificationServiceTests
         };
 
         _requestRepoMock.Setup(x => x.GetWithDetailsByIdAsync(requestId)).ReturnsAsync(requestEntity);
-        _userRepoMock.Setup(x => x.GetWithRolesByIdAsync(userId)).ReturnsAsync(user);
+        _userRepoMock.Setup(x => x.GetByIdWithRolesAsync(userId)).ReturnsAsync(user);
+        _roleRepoMock.Setup(x => x.GetByNameAsync("Owner")).ReturnsAsync(new Role
+        {
+            RoleId = ownerRoleId,
+            Name = "Owner"
+        });
 
         // Act
         await _verificationService.VerifyRequestAsync(requestId, adminId, "Approved", "All looks good.", CancellationToken.None);
@@ -315,7 +439,7 @@ public class OwnerVerificationServiceTests
         requestEntity.ReviewedById.Should().Be(adminId);
         requestEntity.ReviewRemarks.Should().Be("All looks good.");
 
-        user.UserRoles.Should().ContainSingle(ur => ur.RoleId == Guid.Parse("22222222-2222-2222-2222-222222222222"));
+        user.UserRoles.Should().ContainSingle(ur => ur.RoleId == ownerRoleId);
 
         _requestRepoMock.Verify(x => x.UpdateAsync(requestEntity), Times.Once);
         _userRepoMock.Verify(x => x.UpdateAsync(user), Times.Once);

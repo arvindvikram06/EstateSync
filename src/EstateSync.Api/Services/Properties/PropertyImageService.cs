@@ -45,37 +45,9 @@ public class PropertyImageService : IPropertyImageService
             throw new NotFoundException("Property", id);
         }
 
-        if (property.OwnerId != ownerId)
-        {
-            throw new ForbiddenException("You do not own this property.");
-        }
+        ValidateUploadImagesRequest(property, files, ownerId);
 
-        var existingCount = property.PropertyImages.Count;
-        if (existingCount + files.Count > 10)
-        {
-            throw new BadRequestException("A property can have a maximum of 10 images.");
-        }
-
-        var newImages = new List<PropertyImage>();
-        var displayOrder = existingCount > 0 ? property.PropertyImages.Max(pi => pi.DisplayOrder) + 1 : 1;
-        foreach (var file in files)
-        {
-            var fileUrl = await _fileStorageService.SaveFileAsync(file, $"properties/{property.PropertyId}/images", ct);
-
-            var isPrimary = !property.PropertyImages.Any(pi => pi.IsPrimary) && !newImages.Any();
-
-            var propertyImage = new PropertyImage
-            {
-                PropertyId = property.PropertyId,
-                Image = fileUrl,
-                IsPrimary = isPrimary,
-                DisplayOrder = displayOrder++,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            property.PropertyImages.Add(propertyImage);
-            newImages.Add(propertyImage);
-        }
+        var newImages = await ProcessAndSaveImagesAsync(property, files, ct);
 
         await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -119,5 +91,47 @@ public class PropertyImageService : IPropertyImageService
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Deleted image {ImageId} for property {PropertyId} by owner {OwnerId}", imageId, id, ownerId);
+    }
+
+    private void ValidateUploadImagesRequest(Property property, List<IFormFile> files, Guid ownerId)
+    {
+        if (property.OwnerId != ownerId)
+        {
+            throw new ForbiddenException("You do not own this property.");
+        }
+
+        var existingCount = property.PropertyImages.Count;
+        if (existingCount + files.Count > 10)
+        {
+            throw new BadRequestException("A property can have a maximum of 10 images.");
+        }
+    }
+
+    private async Task<List<PropertyImage>> ProcessAndSaveImagesAsync(Property property, List<IFormFile> files, CancellationToken ct)
+    {
+        var newImages = new List<PropertyImage>();
+        var existingCount = property.PropertyImages.Count;
+        var displayOrder = existingCount > 0 ? property.PropertyImages.Max(pi => pi.DisplayOrder) + 1 : 1;
+
+        foreach (var file in files)
+        {
+            var fileUrl = await _fileStorageService.SaveFileAsync(file, $"properties/{property.PropertyId}/images", ct);
+
+            var isPrimary = !property.PropertyImages.Any(pi => pi.IsPrimary) && !newImages.Any();
+
+            var propertyImage = new PropertyImage
+            {
+                PropertyId = property.PropertyId,
+                Image = fileUrl,
+                IsPrimary = isPrimary,
+                DisplayOrder = displayOrder++,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            property.PropertyImages.Add(propertyImage);
+            newImages.Add(propertyImage);
+        }
+
+        return newImages;
     }
 }

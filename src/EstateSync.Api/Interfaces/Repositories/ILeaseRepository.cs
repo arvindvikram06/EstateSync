@@ -8,8 +8,12 @@ namespace EstateSync.Api.Repositories.Interfaces;
 public interface ILeaseRepository : IRepository<Lease>
 {
     Task<Lease?> GetWithDetailsByIdAsync(Guid id);
-    Task<IEnumerable<Lease>> GetByPropertyIdAsync(Guid propertyId);
     Task<Lease?> GetActiveLeaseByPropertyIdAsync(Guid propertyId);
-    Task<IEnumerable<Lease>> GetByTenantIdAsync(Guid tenantId);
-    Task<IEnumerable<Lease>> GetByOwnerIdAsync(Guid ownerId);
+    Task<(IEnumerable<Lease> Items, int Total)> GetByTenantIdPagedAsync(Guid tenantId, int page, int limit);
+    Task<(IEnumerable<Lease> Items, int Total)> GetByOwnerIdPagedAsync(Guid ownerId, int page, int limit);
+
+    // Reserved for future modules (e.g. Charges, Reports) — not yet called by any service
+    // Task<IEnumerable<Lease>> GetByPropertyIdAsync(Guid propertyId);
+    // Task<IEnumerable<Lease>> GetByTenantIdAsync(Guid tenantId);
+    // Task<IEnumerable<Lease>> GetByOwnerIdAsync(Guid ownerId);
 }

@@ -11,9 +11,9 @@ public interface IPropertyService
     Task<PagedResponse<PropertySummaryResponse>> SearchAsync(PropertySearchRequest request, CancellationToken ct);
     Task<PropertyDetailResponse> GetByIdAsync(Guid id, CancellationToken ct);
 
-    Task<List<PropertySummaryResponse>> GetByOwnerIdAsync(Guid ownerId, CancellationToken ct);
-    Task<Guid> CreateAsync(CreatePropertyRequest request, Guid ownerId, CancellationToken ct);
+    Task<List<PropertyDetailResponse>> GetByOwnerIdAsync(Guid ownerId, CancellationToken ct);
+    Task<PropertyDetailResponse> CreateAsync(CreatePropertyRequest request, Guid ownerId, CancellationToken ct);
     Task<PropertyDetailResponse> UpdateAsync(Guid id, UpdatePropertyRequest request, Guid ownerId, CancellationToken ct);
-    Task DeleteAsync(Guid id, Guid userId, string userRole, CancellationToken ct);
+    Task DeleteAsync(Guid id, Guid userId, bool isAdmin, CancellationToken ct);
     Task<PagedResponse<ReviewResponse>> GetReviewsAsync(Guid id, int page, int limit, CancellationToken ct);
 }

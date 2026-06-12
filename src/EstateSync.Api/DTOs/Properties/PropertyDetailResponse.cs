@@ -27,7 +27,6 @@ public record PropertyDetailResponse
     public int Bedrooms { get; init; }
     public int Bathrooms { get; init; }
     public string? ApproveRemarks { get; init; }
-    public Guid? AgreementTypeId { get; init; }
     public List<string> Amenities { get; init; } = new();
     public List<PropertyImageResponse> Images { get; init; } = new();
 }

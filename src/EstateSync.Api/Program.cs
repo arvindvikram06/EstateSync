@@ -22,12 +22,15 @@ using EstateSync.Api.Interfaces.Services.Auth;
 using EstateSync.Api.Interfaces.Services.Tokens;
 using EstateSync.Api.Interfaces.Services.Storage;
 using EstateSync.Api.Interfaces.Services.OwnerVerification;
+using EstateSync.Api.Interfaces.Services.IdentityVerification;
+using EstateSync.Api.Services.IdentityVerification;
 using EstateSync.Api.Interfaces.Services.RentalApplications;
 using EstateSync.Api.Services.RentalApplications;
 using EstateSync.Api.Validators;
 using Serilog;
 using System.Diagnostics;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, loggerConfiguration) =>
@@ -36,6 +39,7 @@ builder.Host.UseSerilog((context, loggerConfiguration) =>
 });
 
 // Add services to the container.
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -95,16 +99,20 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Register Repositories
 #region Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPropertyRepository, PropertyRepository>();
 builder.Services.AddScoped<ILeaseRepository, LeaseRepository>();
-builder.Services.AddScoped<IChargeRepository, ChargeRepository>();
+builder.Services.AddScoped<ILeaseBillRepository, LeaseBillRepository>();
 builder.Services.AddScoped<IRentalApplicationRepository, RentalApplicationRepository>();
 builder.Services.AddScoped<IComplaintRepository, ComplaintRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IOwnerVerificationRequestRepository, OwnerVerificationRequestRepository>();
+builder.Services.AddScoped<IIdentityVerificationRequestRepository, IdentityVerificationRequestRepository>();
+builder.Services.AddScoped<ITenantVerificationRequestRepository, TenantVerificationRequestRepository>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 #endregion
 
 // Register FluentValidation
@@ -116,6 +124,9 @@ builder.Services.AddSingleton<EstateSync.Api.Mappers.AuthMapper>();
 builder.Services.AddSingleton<EstateSync.Api.Mappers.PropertyMapper>();
 builder.Services.AddSingleton<EstateSync.Api.Mappers.UserMapper>();
 builder.Services.AddSingleton<EstateSync.Api.Mappers.RentalApplicationMapper>();
+builder.Services.AddSingleton<EstateSync.Api.Mappers.LeaseMapper>();
+builder.Services.AddSingleton<EstateSync.Api.Mappers.TenantVerificationMapper>();
+builder.Services.AddSingleton<EstateSync.Api.Mappers.AuditLogMapper>();
 
 // Register Services
 builder.Services.AddScoped<IPropertyService, PropertyService>();
@@ -125,12 +136,17 @@ builder.Services.AddScoped<IPropertyApprovalService, PropertyApprovalService>();
 builder.Services.AddScoped<IPropertyDocumentService, PropertyDocumentService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<IOwnerVerificationService, OwnerVerificationService>();
+builder.Services.AddScoped<IIdentityVerificationService, IdentityVerificationService>();
 builder.Services.AddScoped<IRentalApplicationService, RentalApplicationService>();
+builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.TenantVerification.ITenantVerificationService, EstateSync.Api.Services.TenantVerification.TenantVerificationService>();
+builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.Leases.ILeaseService, EstateSync.Api.Services.Leases.LeaseService>();
+builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.AuditLogs.IAuditLogService, EstateSync.Api.Services.AuditLogs.AuditLogService>();
 
 // Register Auth Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
+builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.Auth.ICurrentUserService, EstateSync.Api.Services.Auth.CurrentUserService>();
 
 // Configure HS256 JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "SuperSecretKeyForEstateSyncApp12345678901234567890!";
@@ -183,20 +199,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
-        await DbSeeder.SeedAgreementTypesAsync(context);
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
-    }
-}
+// Database migrations or seeding can go here if needed.
 
 // Configure the HTTP request pipeline.
 app.UseSerilogRequestLogging();

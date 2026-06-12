@@ -14,12 +14,6 @@ public class Lease : BaseEntity
     public Guid TenantId { get; set; }
     public User? Tenant { get; set; }
 
-    public Guid AgreementTypeId { get; set; }
-    public AgreementType? AgreementType { get; set; }
-
-    public Guid TemplateId { get; set; }
-    public AgreementTemplate? Template { get; set; }
-
     public Guid ApplicationId { get; set; }
     public RentalApplication? RentalApplication { get; set; }
 
@@ -34,9 +28,14 @@ public class Lease : BaseEntity
     public int? NoticePeriodDays { get; set; }
     public decimal? PenaltyPercentage { get; set; }
 
-    public string? AgreementData { get; set; }
-    public string? FinalAgreementHtml { get; set; }
-    public string? AgreementDocumentUrl { get; set; }
+    public string? AgreementText { get; set; }
+    public string? UnsignedAgreementUrl { get; set; }
+    public string? SignedAgreementUrl { get; set; }
+
+    public DateTime? TenantSignedAt { get; set; }
+    public string? TenantSignature { get; set; }
+    public DateTime? OwnerSignedAt { get; set; }
+    public string? OwnerSignature { get; set; }
 
     public LeaseStatus Status { get; set; }
 
@@ -48,8 +47,7 @@ public class Lease : BaseEntity
     public DateTime? CancelledAt { get; set; }
 
     public ICollection<LeaseDocument> LeaseDocuments { get; set; } = new List<LeaseDocument>();
-    public ICollection<AgreementAcknowledgement> AgreementAcknowledgements { get; set; } = new List<AgreementAcknowledgement>();
-    public ICollection<Charge> Charges { get; set; } = new List<Charge>();
+    public ICollection<LeaseBill> LeaseBills { get; set; } = new List<LeaseBill>();
     public ICollection<RentIncreaseProposal> RentIncreaseProposals { get; set; } = new List<RentIncreaseProposal>();
     public ICollection<Complaint> Complaints { get; set; } = new List<Complaint>();
 }

@@ -12,6 +12,8 @@ using EstateSync.Api.DTOs.Users;
 using EstateSync.Api.Interfaces.Services.Properties;
 using EstateSync.Api.Models;
 
+using EstateSync.Api.Extensions;
+
 namespace EstateSync.Api.Controllers;
 
 [ApiController]
@@ -41,12 +43,12 @@ public class PropertiesController : ControllerBase
     // search (public)
     [HttpGet]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<PagedResponse<PropertySummaryResponse>>>> Search(
+    public async Task<ActionResult<PagedResponse<PropertySummaryResponse>>> Search(
         [FromQuery] PropertySearchRequest request,
         CancellationToken ct)
     {
         var result = await _propertyService.SearchAsync(request, ct);
-        return Ok(new ApiResponse<PagedResponse<PropertySummaryResponse>> { Data = result });
+        return Ok(result);
     }
 
     // get by id (public)
@@ -62,31 +64,31 @@ public class PropertiesController : ControllerBase
 
     [HttpGet("me")]
     [Authorize(Roles = "Owner")]
-    public async Task<ActionResult<ApiResponse<List<PropertySummaryResponse>>>> GetMyProperties(
+    public async Task<ActionResult<ApiResponse<List<PropertyDetailResponse>>>> GetMyProperties(
         CancellationToken ct)
     {
-        var ownerId = GetUserId();
+        var ownerId = User.GetUserId();
         var result = await _propertyService.GetByOwnerIdAsync(ownerId, ct);
-        return Ok(new ApiResponse<List<PropertySummaryResponse>> { Data = result });
+        return Ok(new ApiResponse<List<PropertyDetailResponse>> { Data = result });
     }
 
     // Create Property (Owner)
     [HttpPost]
     [Authorize(Roles = "Owner")]
-    public async Task<ActionResult<ApiResponse<object>>> Create(
+    public async Task<ActionResult<ApiResponse<PropertyDetailResponse>>> Create(
         [FromBody] CreatePropertyRequest request,
         CancellationToken ct)
     {
-        var ownerId = GetUserId();
-        var propertyId = await _propertyService.CreateAsync(request, ownerId, ct);
+        var ownerId = User.GetUserId();
+        var result = await _propertyService.CreateAsync(request, ownerId, ct);
         
-        var response = new ApiResponse<object>
+        var response = new ApiResponse<PropertyDetailResponse>
         {
-            Data = new { propertyId },
+            Data = result,
             Message = "property created successfully"
         };
 
-        return CreatedAtAction(nameof(GetById), new { id = propertyId }, response);
+        return CreatedAtAction(nameof(GetById), new { id = result.PropertyId }, response);
     }
     
     // Update Property (Owner)
@@ -97,7 +99,7 @@ public class PropertiesController : ControllerBase
         [FromBody] UpdatePropertyRequest request,
         CancellationToken ct)
     {
-        var ownerId = GetUserId();
+        var ownerId = User.GetUserId();
         var result = await _propertyService.UpdateAsync(id, request, ownerId, ct);
         return Ok(new ApiResponse<PropertyDetailResponse> { Data = result });
     }
@@ -107,9 +109,9 @@ public class PropertiesController : ControllerBase
     [Authorize(Roles = "Owner,Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
-        var userId = GetUserId();
-        var userRole = GetUserRole();
-        await _propertyService.DeleteAsync(id, userId, userRole, ct);
+        var userId = User.GetUserId();
+        var isAdmin = User.IsInRole("Admin");
+        await _propertyService.DeleteAsync(id, userId, isAdmin, ct);
         return NoContent();
     }
 
@@ -118,7 +120,7 @@ public class PropertiesController : ControllerBase
     [Authorize(Roles = "Owner")]
     public async Task<ActionResult<ApiResponse<object>>> Submit(Guid id, CancellationToken ct)
     {
-        var ownerId = GetUserId();
+        var ownerId = User.GetUserId();
         await _propertyApprovalService.SubmitForApprovalAsync(id, ownerId, ct);
         return Ok(new ApiResponse<object> { Data = new { status = "PendingApproval" } });
     }
@@ -131,7 +133,7 @@ public class PropertiesController : ControllerBase
         [FromForm] List<IFormFile> files,
         CancellationToken ct)
     {
-        var ownerId = GetUserId();
+        var ownerId = User.GetUserId();
         var imageIds = await _propertyImageService.UploadImagesAsync(id, files, ownerId, ct);
         return StatusCode(StatusCodes.Status201Created, new ApiResponse<object> { Data = new { imageIds } });
     }
@@ -141,7 +143,7 @@ public class PropertiesController : ControllerBase
     [Authorize(Roles = "Owner")]
     public async Task<IActionResult> DeleteImage(Guid id, Guid imageId, CancellationToken ct)
     {
-        var ownerId = GetUserId();
+        var ownerId = User.GetUserId();
         await _propertyImageService.DeleteImageAsync(id, imageId, ownerId, ct);
         return NoContent();
     }
@@ -153,7 +155,7 @@ public class PropertiesController : ControllerBase
         [FromBody] AddAmenitiesRequest request,
         CancellationToken ct)
     {
-        var ownerId = GetUserId();
+        var ownerId = User.GetUserId();
         await _propertyAmenityService.AddAmenitiesAsync(id, request.AmenityNames, ownerId, ct);
         return Ok(new ApiResponse<object> { Message = "Amenities added successfully." });
     }
@@ -165,7 +167,7 @@ public class PropertiesController : ControllerBase
         [FromBody] AddAmenitiesRequest request,
         CancellationToken ct)
     {
-        var ownerId = GetUserId();
+        var ownerId = User.GetUserId();
         await _propertyAmenityService.UpdateAmenitiesAsync(id, request.AmenityNames, ownerId, ct);
         return Ok(new ApiResponse<object> { Message = "Amenities list updated successfully." });
     }
@@ -177,7 +179,7 @@ public class PropertiesController : ControllerBase
         [FromBody] AddAmenitiesRequest request,
         CancellationToken ct)
     {
-        var ownerId = GetUserId();
+        var ownerId = User.GetUserId();
         await _propertyAmenityService.DeleteAmenitiesAsync(id, request.AmenityNames, ownerId, ct);
         return Ok(new ApiResponse<object> { Message = "Amenities removed successfully." });
     }
@@ -203,7 +205,7 @@ public class PropertiesController : ControllerBase
         DocumentType documentType,
         CancellationToken ct)
     {
-        var ownerId = GetUserId();
+        var ownerId = User.GetUserId();
         var response = await _propertyDocumentService.UploadDocumentAsync(id, file, documentType, ownerId, ct);
         return StatusCode(StatusCodes.Status201Created, new ApiResponse<DocumentResponse> { Data = response });
     }
@@ -213,21 +215,24 @@ public class PropertiesController : ControllerBase
     [Authorize(Roles = "Owner")]
     public async Task<IActionResult> DeleteDocument(Guid id, Guid documentId, CancellationToken ct)
     {
-        var ownerId = GetUserId();
+        var ownerId = User.GetUserId();
         await _propertyDocumentService.DeleteDocumentAsync(id, documentId, ownerId, ct);
         return NoContent();
     }
 
-    private Guid GetUserId()
+    // Get Property Documents (Owner/Admin)
+    [HttpGet("{id:guid}/documents")]
+    [Authorize(Roles = "Owner,Admin")]
+    public async Task<ActionResult<ApiResponse<List<DocumentResponse>>>> GetPropertyDocuments(
+        Guid id,
+        CancellationToken ct)
     {
-        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.TryParse(userIdStr, out var id) ? id : Guid.Empty;
+        var userId = User.GetUserId();
+        var isAdmin = User.IsInRole("Admin");
+        var response = await _propertyDocumentService.GetPropertyDocumentsAsync(id, userId, isAdmin, ct);
+        return Ok(new ApiResponse<List<DocumentResponse>> { Data = response });
     }
 
-    private string GetUserRole()
-    {
-        return User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
-    }
 }
 
 public record AddAmenitiesRequest(List<string> AmenityNames);

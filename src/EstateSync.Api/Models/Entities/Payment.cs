@@ -6,10 +6,8 @@ namespace EstateSync.Api.Models;
 public class Payment : BaseEntity
 {
     public Guid PaymentId { get; set; }
-    public Guid ChargeId { get; set; }
-    public Charge? Charge { get; set; }
-    public Guid LeaseId { get; set; }
-    public Lease? Lease { get; set; }
+    public Guid LeaseBillId { get; set; }
+    public LeaseBill? LeaseBill { get; set; }
     public Guid PaidByUserId { get; set; }
     public User? PaidByUser { get; set; }
     public decimal Amount { get; set; }

@@ -21,8 +21,8 @@ public class PropertyServiceTests
     private Mock<IPropertyRepository> _propertyRepoMock;
     private Mock<IRepository<Location>> _locationRepoMock;
     private Mock<IUserRepository> _userRepoMock;
+    private Mock<ILeaseRepository> _leaseRepoMock;
     private Mock<IUnitOfWork> _unitOfWorkMock;
-    private Mock<IRepository<AgreementType>> _agreementTypeRepoMock;
     private PropertyMapper _propertyMapper;
     private Mock<ILogger<PropertyService>> _loggerMock;
     private PropertyService _propertyService;
@@ -33,8 +33,8 @@ public class PropertyServiceTests
         _propertyRepoMock = new Mock<IPropertyRepository>();
         _locationRepoMock = new Mock<IRepository<Location>>();
         _userRepoMock = new Mock<IUserRepository>();
+        _leaseRepoMock = new Mock<ILeaseRepository>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _agreementTypeRepoMock = new Mock<IRepository<AgreementType>>();
         _propertyMapper = new PropertyMapper();
         _loggerMock = new Mock<ILogger<PropertyService>>();
 
@@ -47,8 +47,8 @@ public class PropertyServiceTests
             _propertyRepoMock.Object,
             _locationRepoMock.Object,
             _userRepoMock.Object,
+            _leaseRepoMock.Object,
             _unitOfWorkMock.Object,
-            _agreementTypeRepoMock.Object,
             _propertyMapper,
             _loggerMock.Object);
     }
@@ -106,12 +106,28 @@ public class PropertyServiceTests
 
         _userRepoMock.Setup(x => x.IsUserVerifiedOwnerAsync(ownerId)).ReturnsAsync(true);
         _locationRepoMock.Setup(x => x.GetByIdAsync(locationId)).ReturnsAsync(location);
+        _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((Guid id) => new Property 
+            { 
+                PropertyId = id, 
+                Title = request.Title, 
+                Description = request.Description,
+                AddressLine = request.AddressLine,
+                OwnerId = ownerId, 
+                LocationId = locationId, 
+                Location = location,
+                Status = PropertyStatus.Draft,
+                PropertyImages = new List<PropertyImage>()
+            });
 
         // Act
         var result = await _propertyService.CreateAsync(request, ownerId, CancellationToken.None);
 
         // Assert
-        result.Should().NotBeEmpty();
+        result.Should().NotBeNull();
+        result.PropertyId.Should().NotBeEmpty();
+        result.Title.Should().Be(request.Title);
+        result.OwnerId.Should().Be(ownerId);
 
         _propertyRepoMock.Verify(x => x.AddAsync(It.Is<Property>(p =>
             p.Title == request.Title &&
@@ -122,85 +138,117 @@ public class PropertyServiceTests
     }
 
     [Test]
-    public void CreateAsync_ShouldThrowNotFoundException_WhenAgreementTypeDoesNotExist()
+    public void DeleteAsync_ShouldThrowNotFoundException_WhenPropertyDoesNotExist()
     {
         // Arrange
-        var ownerId = Guid.NewGuid();
-        var locationId = Guid.NewGuid();
-        var agreementTypeId = Guid.NewGuid();
-        var request = new CreatePropertyRequest
-        {
-            Title = "Test Property",
-            Description = "Test Description",
-            AddressLine = "Test Address Line",
-            LocationId = locationId,
-            AgreementTypeId = agreementTypeId
-        };
-
-        var location = new Location
-        {
-            LocationId = locationId,
-            StateName = "WA",
-            District = "King",
-            Pincode = "98101",
-            Country = "USA"
-        };
-
-        _userRepoMock.Setup(x => x.IsUserVerifiedOwnerAsync(ownerId)).ReturnsAsync(true);
-        _locationRepoMock.Setup(x => x.GetByIdAsync(locationId)).ReturnsAsync(location);
-        _agreementTypeRepoMock.Setup(x => x.GetByIdAsync(agreementTypeId)).ReturnsAsync((AgreementType?)null);
+        var propertyId = Guid.NewGuid();
+        _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync((Property?)null);
 
         // Act
-        Func<Task> act = async () => await _propertyService.CreateAsync(request, ownerId, CancellationToken.None);
+        Func<Task> act = async () => await _propertyService.DeleteAsync(propertyId, Guid.NewGuid(), false, CancellationToken.None);
 
         // Assert
-        act.Should().ThrowAsync<NotFoundException>()
-            .WithMessage($"AgreementType with id {agreementTypeId} was not found.");
+        act.Should().ThrowAsync<NotFoundException>();
     }
 
     [Test]
-    public void UpdateAsync_ShouldThrowNotFoundException_WhenAgreementTypeDoesNotExist()
+    public void DeleteAsync_ShouldThrowForbiddenException_WhenUserIsNotAdminAndDoesNotOwnProperty()
     {
         // Arrange
-        var id = Guid.NewGuid();
+        var propertyId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
-        var locationId = Guid.NewGuid();
-        var agreementTypeId = Guid.NewGuid();
-        var request = new UpdatePropertyRequest
-        {
-            Title = "Test Property",
-            Description = "Test Description",
-            AddressLine = "Test Address Line",
-            LocationId = locationId,
-            AgreementTypeId = agreementTypeId
-        };
-
+        var callerId = Guid.NewGuid();
         var property = new Property
         {
-            PropertyId = id,
+            PropertyId = propertyId,
             OwnerId = ownerId,
             Title = "Test Property",
-            Description = "Test Description",
-            AddressLine = "Test Address Line"
+            Description = "Description",
+            AddressLine = "Address"
         };
-        var location = new Location
-        {
-            LocationId = locationId,
-            StateName = "WA",
-            District = "King",
-            Pincode = "98101",
-            Country = "USA"
-        };
-
-        _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(id)).ReturnsAsync(property);
-        _locationRepoMock.Setup(x => x.GetByIdAsync(locationId)).ReturnsAsync(location);
-        _agreementTypeRepoMock.Setup(x => x.GetByIdAsync(agreementTypeId)).ReturnsAsync((AgreementType?)null);
+        _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync(property);
 
         // Act
-        Func<Task> act = async () => await _propertyService.UpdateAsync(id, request, ownerId, CancellationToken.None);
+        Func<Task> act = async () => await _propertyService.DeleteAsync(propertyId, callerId, false, CancellationToken.None);
 
         // Assert
-        act.Should().ThrowAsync<NotFoundException>()
-            .WithMessage($"AgreementType with id {agreementTypeId} was not found.");
+        act.Should().ThrowAsync<ForbiddenException>();
+    }
+
+    [Test]
+    public void DeleteAsync_ShouldThrowConflictException_WhenPropertyHasActiveLease()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var property = new Property
+        {
+            PropertyId = propertyId,
+            OwnerId = ownerId,
+            Title = "Test Property",
+            Description = "Description",
+            AddressLine = "Address"
+        };
+        _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync(property);
+        _leaseRepoMock.Setup(x => x.GetActiveLeaseByPropertyIdAsync(propertyId))
+            .ReturnsAsync(new Lease { LeaseId = Guid.NewGuid(), PropertyId = propertyId, Status = LeaseStatus.Active });
+
+        // Act
+        Func<Task> act = async () => await _propertyService.DeleteAsync(propertyId, ownerId, false, CancellationToken.None);
+
+        // Assert
+        act.Should().ThrowAsync<ConflictException>()
+            .WithMessage("Cannot delete property because it has an active lease agreement.");
+    }
+
+    [Test]
+    public async Task DeleteAsync_ShouldDeleteProperty_WhenUserIsOwnerAndNoActiveLease()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var property = new Property
+        {
+            PropertyId = propertyId,
+            OwnerId = ownerId,
+            Title = "Test Property",
+            Description = "Description",
+            AddressLine = "Address"
+        };
+        _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync(property);
+        _leaseRepoMock.Setup(x => x.GetActiveLeaseByPropertyIdAsync(propertyId)).ReturnsAsync((Lease?)null);
+
+        // Act
+        await _propertyService.DeleteAsync(propertyId, ownerId, false, CancellationToken.None);
+
+        // Assert
+        _propertyRepoMock.Verify(x => x.DeleteAsync(property), Times.Once);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task DeleteAsync_ShouldDeleteProperty_WhenUserIsAdminAndNoActiveLease()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var adminId = Guid.NewGuid();
+        var property = new Property
+        {
+            PropertyId = propertyId,
+            OwnerId = ownerId,
+            Title = "Test Property",
+            Description = "Description",
+            AddressLine = "Address"
+        };
+        _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync(property);
+        _leaseRepoMock.Setup(x => x.GetActiveLeaseByPropertyIdAsync(propertyId)).ReturnsAsync((Lease?)null);
+
+        // Act
+        await _propertyService.DeleteAsync(propertyId, adminId, true, CancellationToken.None);
+
+        // Assert
+        _propertyRepoMock.Verify(x => x.DeleteAsync(property), Times.Once);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

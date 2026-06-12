@@ -11,4 +11,5 @@ public interface IPropertyDocumentService
 {
     Task<DocumentResponse> UploadDocumentAsync(Guid propertyId, IFormFile file, DocumentType documentType, Guid ownerId, CancellationToken ct);
     Task DeleteDocumentAsync(Guid propertyId, Guid documentId, Guid ownerId, CancellationToken ct);
+    Task<List<DocumentResponse>> GetPropertyDocumentsAsync(Guid propertyId, Guid userId, bool isAdmin, CancellationToken ct);
 }

@@ -18,5 +18,4 @@ public abstract record PropertyRequestBase
     public decimal SecurityDeposit { get; init; }
     public int Bedrooms { get; init; }
     public int Bathrooms { get; init; }
-    public Guid? AgreementTypeId { get; init; }
 }

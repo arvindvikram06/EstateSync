@@ -5,8 +5,7 @@ namespace EstateSync.Api.DTOs.RentalApplications;
 public record CreateRentalApplicationRequest
 {
     public required string Message { get; init; }
-    public DateTime MoveInDate { get; init; }
-    public DateTime MoveOutDate { get; init; }
-    public decimal NegotiatedPrice { get; init; }
+    public DateOnly ExpectedMoveInDate { get; init; }
+    public int DurationMonths { get; init; }
     public decimal CommuteDistance { get; init; }
 }

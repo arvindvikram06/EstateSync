@@ -20,7 +20,7 @@ namespace EstateSync.Tests.Services;
 public class AuthServiceTests
 {
     private Mock<IUserRepository> _userRepositoryMock;
-    private Mock<IRepository<Role>> _roleRepositoryMock;
+    private Mock<IRoleRepository> _roleRepositoryMock;
     private Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
     private Mock<IPasswordService> _passwordServiceMock;
     private Mock<ITokenService> _tokenServiceMock;
@@ -31,7 +31,7 @@ public class AuthServiceTests
     public void SetUp()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
-        _roleRepositoryMock = new Mock<IRepository<Role>>();
+        _roleRepositoryMock = new Mock<IRoleRepository>();
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
         _passwordServiceMock = new Mock<IPasswordService>();
         _tokenServiceMock = new Mock<ITokenService>();
@@ -64,8 +64,8 @@ public class AuthServiceTests
             .ReturnsAsync((User?)null);
 
         var tenantRole = new Role { RoleId = Guid.NewGuid(), Name = "Tenant" };
-        _roleRepositoryMock.Setup(x => x.GetAllAsync(1, 100))
-            .ReturnsAsync((new List<Role> { tenantRole }, 1));
+        _roleRepositoryMock.Setup(x => x.GetByNameAsync("Tenant"))
+            .ReturnsAsync(tenantRole);
 
         _passwordServiceMock.Setup(x => x.HashPassword(request.Password))
             .Returns("hashed_pwd");
@@ -140,7 +140,7 @@ public class AuthServiceTests
             IsActive = true
         };
         
-        _userRepositoryMock.Setup(x => x.GetWithRolesByEmailAsync(request.Email))
+        _userRepositoryMock.Setup(x => x.GetByEmailWithRolesAsync(request.Email))
             .ReturnsAsync(user);
 
         _passwordServiceMock.Setup(x => x.VerifyPassword(request.Password, user.PasswordHash))
@@ -184,7 +184,7 @@ public class AuthServiceTests
             IsActive = true
         };
 
-        _userRepositoryMock.Setup(x => x.GetWithRolesByEmailAsync(request.Email))
+        _userRepositoryMock.Setup(x => x.GetByEmailWithRolesAsync(request.Email))
             .ReturnsAsync(user);
 
         _passwordServiceMock.Setup(x => x.VerifyPassword(request.Password, user.PasswordHash))
@@ -216,7 +216,7 @@ public class AuthServiceTests
             IsActive = false
         };
 
-        _userRepositoryMock.Setup(x => x.GetWithRolesByEmailAsync(request.Email))
+        _userRepositoryMock.Setup(x => x.GetByEmailWithRolesAsync(request.Email))
             .ReturnsAsync(user);
 
         _passwordServiceMock.Setup(x => x.VerifyPassword(request.Password, user.PasswordHash))
@@ -258,7 +258,7 @@ public class AuthServiceTests
         _userRepositoryMock.Setup(x => x.GetByIdAsync(tokenEntity.UserId))
             .ReturnsAsync(user);
 
-        _userRepositoryMock.Setup(x => x.GetWithRolesByEmailAsync(user.Email))
+        _userRepositoryMock.Setup(x => x.GetByEmailWithRolesAsync(user.Email))
             .ReturnsAsync(user);
 
         _tokenServiceMock.Setup(x => x.GenerateAccessToken(user))

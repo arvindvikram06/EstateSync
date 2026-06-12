@@ -9,9 +9,4 @@ namespace EstateSync.Api.Controllers;
 [Route("api/v1/[controller]")]
 public class UsersController : ControllerBase
 {
-    private Guid GetUserId()
-    {
-        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.TryParse(userIdStr, out var id) ? id : Guid.Empty;
-    }
 }

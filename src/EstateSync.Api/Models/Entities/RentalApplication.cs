@@ -13,9 +13,8 @@ public class RentalApplication : BaseEntity
     public User? Tenant { get; set; }
     public required string Message { get; set; }
     public int DocumentCount { get; set; }
-    public DateTime MoveInDate { get; set; }
-    public DateTime MoveOutDate { get; set; }
-    public decimal NegotiatedPrice { get; set; }
+    public DateOnly ExpectedMoveInDate { get; set; }
+    public int DurationMonths { get; set; }
     public decimal CommuteDistance { get; set; }
     public ApplicationStatus Status { get; set; }
     public string? ReviewRemarks { get; set; }

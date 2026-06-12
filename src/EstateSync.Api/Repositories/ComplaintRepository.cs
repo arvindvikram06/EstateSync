@@ -23,12 +23,13 @@ public class ComplaintRepository : BaseRepository<Complaint>, IComplaintReposito
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Complaint>> GetOpenComplaintsOlderThanDaysAsync(int days)
-    {
-        var thresholdDate = DateTime.UtcNow.AddDays(-days);
-        return await _dbSet
-            .AsNoTracking()
-            .Where(c => c.Status == ComplaintStatus.Open && c.CreatedAt < thresholdDate)
-            .ToListAsync();
-    }
+    // Reserved for background escalation job — not yet implemented
+    // public async Task<IEnumerable<Complaint>> GetOpenComplaintsOlderThanDaysAsync(int days)
+    // {
+    //     var thresholdDate = DateTime.UtcNow.AddDays(-days);
+    //     return await _dbSet
+    //         .AsNoTracking()
+    //         .Where(c => c.Status == ComplaintStatus.Open && c.CreatedAt < thresholdDate)
+    //         .ToListAsync();
+    // }
 }

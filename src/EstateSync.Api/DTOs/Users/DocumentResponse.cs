@@ -11,6 +11,5 @@ public record DocumentResponse
     public required string MimeType { get; init; }
     public long FileSize { get; init; }
     public required string ReviewStatus { get; init; }
-    public string? ReviewNotes { get; init; }
     public DateTime UploadedAt { get; init; }
 }

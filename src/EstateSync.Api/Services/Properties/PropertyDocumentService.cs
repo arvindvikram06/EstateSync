@@ -48,85 +48,11 @@ public class PropertyDocumentService : IPropertyDocumentService
             throw new NotFoundException("Property", propertyId);
         }
 
-        if (property.OwnerId != ownerId)
-        {
-            throw new ForbiddenException("You do not own this property.");
-        }
-
-        if (property.Status != PropertyStatus.Draft && property.Status != PropertyStatus.Rejected)
-        {
-            throw new BadRequestException("Documents can only be uploaded to properties in Draft or Rejected status.");
-        }
-
-        if (file == null || file.Length == 0)
-        {
-            throw new BadRequestException("File is empty.");
-        }
-
-        if (file.Length > 10 * 1024 * 1024)
-        {
-            throw new BadRequestException("File size exceeds 10MB limit.");
-        }
-
-        var allowedExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
-        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (!allowedExtensions.Contains(extension))
-        {
-            throw new BadRequestException("Only PDF, JPG, JPEG, and PNG files are allowed.");
-        }
+        ValidateUploadRequest(property, file, ownerId);
 
         var fileUrl = await _fileStorageService.SaveFileAsync(file, $"properties/{propertyId}/documents", ct);
 
-        var existingLink = property.PropertyDocuments
-            .FirstOrDefault(pd => pd.Document?.DocumentType == documentType);
-
-        Document doc;
-
-        if (existingLink != null && existingLink.Document != null)
-        {
-            doc = existingLink.Document;
-            await _fileStorageService.DeleteFileAsync(doc.DocumentUrl);
-
-            doc.DocumentUrl = fileUrl;
-            doc.OriginalFileName = file.FileName;
-            doc.MimeType = file.ContentType;
-            doc.FileSize = file.Length;
-            doc.UploadedAt = DateTime.UtcNow;
-            doc.ReviewStatus = ApprovalStatus.Pending;
-            doc.ReviewNotes = null;
-
-            _logger.LogInformation("Document {DocumentId} of type {DocType} updated for property {PropertyId} by owner {OwnerId}", doc.DocumentId, documentType, propertyId, ownerId);
-        }
-        else
-        {
-            doc = new Document
-            {
-                DocumentId = Guid.NewGuid(),
-                DocumentType = documentType,
-                DocumentUrl = fileUrl,
-                OriginalFileName = file.FileName,
-                MimeType = file.ContentType,
-                FileSize = file.Length,
-                UploadedById = ownerId,
-                UploadedAt = DateTime.UtcNow,
-                ReviewStatus = ApprovalStatus.Pending,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _documentRepo.AddAsync(doc);
-
-            var link = new PropertyDocument
-            {
-                PropertyId = propertyId,
-                DocumentId = doc.DocumentId,
-                Document = doc,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            property.PropertyDocuments.Add(link);
-
-            _logger.LogInformation("Document {DocumentId} of type {DocType} uploaded and linked to property {PropertyId} by owner {OwnerId}", doc.DocumentId, documentType, propertyId, ownerId);
-        }
+        var doc = await SaveOrUpdateDocumentAsync(property, file, documentType, fileUrl, ownerId);
 
         await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -166,5 +92,110 @@ public class PropertyDocumentService : IPropertyDocumentService
 
         await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task<List<DocumentResponse>> GetPropertyDocumentsAsync(Guid propertyId, Guid userId, bool isAdmin, CancellationToken ct)
+    {
+        var property = await _propertyRepo.GetWithDetailsByIdAsync(propertyId);
+        if (property == null)
+        {
+            throw new NotFoundException("Property", propertyId);
+        }
+
+        if (property.OwnerId != userId && !isAdmin)
+        {
+            throw new ForbiddenException("You are not authorized to view these documents.");
+        }
+
+        return property.PropertyDocuments
+            .Where(pd => pd.Document != null)
+            .Select(pd => _mapper.MapToDocumentResponse(pd.Document!))
+            .ToList();
+    }
+
+    private void ValidateUploadRequest(Property property, IFormFile file, Guid ownerId)
+    {
+        if (property.OwnerId != ownerId)
+        {
+            throw new ForbiddenException("You do not own this property.");
+        }
+
+        if (property.Status != PropertyStatus.Draft && property.Status != PropertyStatus.Rejected)
+        {
+            throw new BadRequestException("Documents can only be uploaded to properties in Draft or Rejected status.");
+        }
+
+        if (file == null || file.Length == 0)
+        {
+            throw new BadRequestException("File is empty.");
+        }
+
+        if (file.Length > 10 * 1024 * 1024)
+        {
+            throw new BadRequestException("File size exceeds 10MB limit.");
+        }
+
+        var allowedExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(extension))
+        {
+            throw new BadRequestException("Only PDF, JPG, JPEG, and PNG files are allowed.");
+        }
+    }
+
+    private async Task<Document> SaveOrUpdateDocumentAsync(Property property, IFormFile file, DocumentType documentType, string fileUrl, Guid ownerId)
+    {
+        var existingLink = property.PropertyDocuments
+            .FirstOrDefault(pd => pd.Document?.DocumentType == documentType);
+
+        Document doc;
+
+        if (existingLink != null && existingLink.Document != null)
+        {
+            doc = existingLink.Document;
+            await _fileStorageService.DeleteFileAsync(doc.DocumentUrl);
+
+            doc.DocumentUrl = fileUrl;
+            doc.OriginalFileName = file.FileName;
+            doc.MimeType = file.ContentType;
+            doc.FileSize = file.Length;
+            doc.UploadedAt = DateTime.UtcNow;
+            doc.ReviewStatus = ApprovalStatus.Pending;
+            doc.ReviewNotes = null;
+
+            _logger.LogInformation("Document {DocumentId} of type {DocType} updated for property {PropertyId} by owner {OwnerId}", doc.DocumentId, documentType, property.PropertyId, ownerId);
+        }
+        else
+        {
+            doc = new Document
+            {
+                DocumentId = Guid.NewGuid(),
+                DocumentType = documentType,
+                DocumentUrl = fileUrl,
+                OriginalFileName = file.FileName,
+                MimeType = file.ContentType,
+                FileSize = file.Length,
+                UploadedById = ownerId,
+                UploadedAt = DateTime.UtcNow,
+                ReviewStatus = ApprovalStatus.Pending,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _documentRepo.AddAsync(doc);
+
+            var link = new PropertyDocument
+            {
+                PropertyId = property.PropertyId,
+                DocumentId = doc.DocumentId,
+                Document = doc,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            property.PropertyDocuments.Add(link);
+
+            _logger.LogInformation("Document {DocumentId} of type {DocType} uploaded and linked to property {PropertyId} by owner {OwnerId}", doc.DocumentId, documentType, property.PropertyId, ownerId);
+        }
+
+        return doc;
     }
 }

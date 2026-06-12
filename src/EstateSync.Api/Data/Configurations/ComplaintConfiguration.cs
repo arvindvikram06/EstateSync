@@ -26,9 +26,9 @@ public class ComplaintConfiguration : IEntityTypeConfiguration<Complaint>
             .HasForeignKey(x => x.LeaseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.Charge)
+        builder.HasOne(x => x.LeaseBill)
             .WithMany(c => c.Complaints)
-            .HasForeignKey(x => x.ChargeId)
+            .HasForeignKey(x => x.LeaseBillId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

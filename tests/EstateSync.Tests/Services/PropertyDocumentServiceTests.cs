@@ -227,4 +227,130 @@ public class PropertyDocumentServiceTests
         _propertyRepoMock.Verify(x => x.UpdateAsync(property), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Test]
+    public async Task GetPropertyDocumentsAsync_ShouldReturnDocuments_WhenUserIsOwner()
+    {
+        // Arrange
+        var ownerId = Guid.NewGuid();
+        var propertyId = Guid.NewGuid();
+        var documentId = Guid.NewGuid();
+        var doc = new Document
+        {
+            DocumentId = documentId,
+            DocumentType = DocumentType.OwnerShipProof,
+            DocumentUrl = "/uploads/properties/deed.pdf",
+            OriginalFileName = "deed.pdf",
+            MimeType = "application/pdf"
+        };
+        var link = new PropertyDocument
+        {
+            PropertyId = propertyId,
+            DocumentId = documentId,
+            Document = doc
+        };
+        var property = new Property
+        {
+            PropertyId = propertyId,
+            OwnerId = ownerId,
+            Title = "Test Property",
+            Description = "Description",
+            AddressLine = "Address",
+            PropertyDocuments = new List<PropertyDocument> { link }
+        };
+
+        _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(propertyId)).ReturnsAsync(property);
+
+        // Act
+        var result = await _propertyDocumentService.GetPropertyDocumentsAsync(propertyId, ownerId, false, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().HaveCount(1);
+        result.First().DocumentId.Should().Be(documentId);
+    }
+
+    [Test]
+    public async Task GetPropertyDocumentsAsync_ShouldReturnDocuments_WhenUserIsAdmin()
+    {
+        // Arrange
+        var ownerId = Guid.NewGuid();
+        var adminId = Guid.NewGuid();
+        var propertyId = Guid.NewGuid();
+        var documentId = Guid.NewGuid();
+        var doc = new Document
+        {
+            DocumentId = documentId,
+            DocumentType = DocumentType.OwnerShipProof,
+            DocumentUrl = "/uploads/properties/deed.pdf",
+            OriginalFileName = "deed.pdf",
+            MimeType = "application/pdf"
+        };
+        var link = new PropertyDocument
+        {
+            PropertyId = propertyId,
+            DocumentId = documentId,
+            Document = doc
+        };
+        var property = new Property
+        {
+            PropertyId = propertyId,
+            OwnerId = ownerId,
+            Title = "Test Property",
+            Description = "Description",
+            AddressLine = "Address",
+            PropertyDocuments = new List<PropertyDocument> { link }
+        };
+
+        _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(propertyId)).ReturnsAsync(property);
+
+        // Act
+        var result = await _propertyDocumentService.GetPropertyDocumentsAsync(propertyId, adminId, true, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().HaveCount(1);
+        result.First().DocumentId.Should().Be(documentId);
+    }
+
+    [Test]
+    public void GetPropertyDocumentsAsync_ShouldThrowForbiddenException_WhenUserIsNeitherOwnerNorAdmin()
+    {
+        // Arrange
+        var ownerId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var propertyId = Guid.NewGuid();
+        var property = new Property
+        {
+            PropertyId = propertyId,
+            OwnerId = ownerId,
+            Title = "Test Property",
+            Description = "Description",
+            AddressLine = "Address",
+            PropertyDocuments = new List<PropertyDocument>()
+        };
+
+        _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(propertyId)).ReturnsAsync(property);
+
+        // Act
+        Func<Task> act = async () => await _propertyDocumentService.GetPropertyDocumentsAsync(propertyId, tenantId, false, CancellationToken.None);
+
+        // Assert
+        act.Should().ThrowAsync<ForbiddenException>();
+    }
+
+    [Test]
+    public void GetPropertyDocumentsAsync_ShouldThrowNotFoundException_WhenPropertyDoesNotExist()
+    {
+        // Arrange
+        var propertyId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(propertyId)).ReturnsAsync((Property?)null);
+
+        // Act
+        Func<Task> act = async () => await _propertyDocumentService.GetPropertyDocumentsAsync(propertyId, userId, false, CancellationToken.None);
+
+        // Assert
+        act.Should().ThrowAsync<NotFoundException>();
+    }
 }

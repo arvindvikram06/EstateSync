@@ -7,6 +7,7 @@ namespace EstateSync.Api.Repositories.Interfaces;
 
 public interface IDocumentRepository : IRepository<Document>
 {
-    Task<IEnumerable<Document>> GetByUploadedUserIdAsync(Guid userId);
-    Task<(IEnumerable<Document> Items, int Total)> GetByStatusAsync(ApprovalStatus status, int page, int limit);
+    // Reserved for future modules — not yet called by any service
+    // Task<IEnumerable<Document>> GetByUploadedUserIdAsync(Guid userId);
+    // Task<(IEnumerable<Document> Items, int Total)> GetByStatusAsync(ApprovalStatus status, int page, int limit);
 }

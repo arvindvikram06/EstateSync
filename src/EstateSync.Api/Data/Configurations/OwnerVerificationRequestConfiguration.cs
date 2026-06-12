@@ -13,6 +13,10 @@ public class OwnerVerificationRequestConfiguration : IEntityTypeConfiguration<Ow
 
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(50);
         builder.Property(x => x.ReviewRemarks).HasMaxLength(1000);
+        builder.Property(x => x.BankAccountNumber).HasMaxLength(100);
+        builder.Property(x => x.BankIFSCCode).HasMaxLength(50);
+        builder.Property(x => x.BankAccountHolderName).HasMaxLength(250);
+        builder.Property(x => x.BankName).HasMaxLength(250);
 
         builder.HasOne(x => x.User)
             .WithMany(u => u.OwnerVerificationRequests)

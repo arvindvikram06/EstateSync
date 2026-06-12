@@ -13,6 +13,10 @@ public class User : BaseEntity
     public required string PasswordHash { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime? LastLogin { get; set; }
+    
+    public string? AadhaarNumber { get; set; }
+    public string? PanNumber { get; set; }
+    public bool IsIdentityVerified { get; set; } = false;
 
     public Guid? CreatedById { get; set; }
     public User? CreatedBy { get; set; }
@@ -23,9 +27,13 @@ public class User : BaseEntity
     public Guid? DeletedById { get; set; }
     public User? DeletedBy { get; set; }
 
+    public OwnerProfile? OwnerProfile { get; set; }
+
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public ICollection<OwnerVerificationRequest> OwnerVerificationRequests { get; set; } = new List<OwnerVerificationRequest>();
+    public ICollection<IdentityVerificationRequest> IdentityVerificationRequests { get; set; } = new List<IdentityVerificationRequest>();
+    public ICollection<IdentityVerificationRequest> ReviewedIdentityVerificationRequests { get; set; } = new List<IdentityVerificationRequest>();
     public ICollection<Document> UploadedDocuments { get; set; } = new List<Document>();
     public ICollection<Property> Properties { get; set; } = new List<Property>();
     public ICollection<SavedProperty> SavedProperties { get; set; } = new List<SavedProperty>();

@@ -15,18 +15,12 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(x => x.GatewayResponse).HasColumnType("jsonb");
         builder.Property(x => x.PaymentStatus).HasConversion<string>().HasMaxLength(50);
 
-        builder.HasIndex(x => x.LeaseId);
-        builder.HasIndex(x => x.ChargeId);
+        builder.HasIndex(x => x.LeaseBillId);
         builder.HasIndex(x => x.PaymentStatus);
 
-        builder.HasOne(x => x.Charge)
+        builder.HasOne(x => x.LeaseBill)
             .WithMany(c => c.Payments)
-            .HasForeignKey(x => x.ChargeId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(x => x.Lease)
-            .WithMany()
-            .HasForeignKey(x => x.LeaseId)
+            .HasForeignKey(x => x.LeaseBillId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.PaidByUser)

@@ -19,8 +19,8 @@ public class PropertyService : IPropertyService
     private readonly IPropertyRepository _propertyRepo;
     private readonly IRepository<Location> _locationRepo;
     private readonly IUserRepository _userRepo;
+    private readonly ILeaseRepository _leaseRepo;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IRepository<AgreementType> _agreementTypeRepo;
     private readonly PropertyMapper _mapper;
     private readonly ILogger<PropertyService> _logger;
 
@@ -28,16 +28,16 @@ public class PropertyService : IPropertyService
         IPropertyRepository propertyRepo,
         IRepository<Location> locationRepo,
         IUserRepository userRepo,
+        ILeaseRepository leaseRepo,
         IUnitOfWork unitOfWork,
-        IRepository<AgreementType> agreementTypeRepo,
         PropertyMapper mapper,
         ILogger<PropertyService> logger)
     {
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
         _locationRepo = locationRepo ?? throw new ArgumentNullException(nameof(locationRepo));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
+        _leaseRepo = leaseRepo ?? throw new ArgumentNullException(nameof(leaseRepo));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        _agreementTypeRepo = agreementTypeRepo ?? throw new ArgumentNullException(nameof(agreementTypeRepo));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -81,13 +81,13 @@ public class PropertyService : IPropertyService
     }
 
 
-    public async Task<List<PropertySummaryResponse>> GetByOwnerIdAsync(Guid ownerId, CancellationToken ct)
+    public async Task<List<PropertyDetailResponse>> GetByOwnerIdAsync(Guid ownerId, CancellationToken ct)
     {
         var properties = await _propertyRepo.GetByOwnerIdAsync(ownerId);
-        return properties.Select(_mapper.MapToSummaryResponse).ToList();
+        return properties.Select(_mapper.MapToDetailResponse).ToList();
     }
 
-    public async Task<Guid> CreateAsync(CreatePropertyRequest request, Guid ownerId, CancellationToken ct)
+    public async Task<PropertyDetailResponse> CreateAsync(CreatePropertyRequest request, Guid ownerId, CancellationToken ct)
     {
         var isVerified = await _userRepo.IsUserVerifiedOwnerAsync(ownerId);
         if (!isVerified)
@@ -101,15 +101,6 @@ public class PropertyService : IPropertyService
             throw new NotFoundException("Location", request.LocationId);
         }
 
-        if (request.AgreementTypeId.HasValue)
-        {
-            var agreementType = await _agreementTypeRepo.GetByIdAsync(request.AgreementTypeId.Value);
-            if (agreementType == null)
-            {
-                throw new NotFoundException("AgreementType", request.AgreementTypeId.Value);
-            }
-        }
-
         var property = _mapper.MapCreateRequestToEntity(request);
         property.OwnerId = ownerId;
         property.Status = PropertyStatus.Draft;
@@ -120,7 +111,13 @@ public class PropertyService : IPropertyService
 
         _logger.LogInformation("Property {PropertyId} created successfully in Draft status by owner {OwnerId}", property.PropertyId, ownerId);
 
-        return property.PropertyId;
+        var createdProperty = await _propertyRepo.GetWithDetailsByIdAsync(property.PropertyId);
+        if (createdProperty == null)
+        {
+            throw new NotFoundException("Property", property.PropertyId);
+        }
+
+        return _mapper.MapToDetailResponse(createdProperty);
     }
 
     public async Task<PropertyDetailResponse> UpdateAsync(Guid id, UpdatePropertyRequest request, Guid ownerId, CancellationToken ct)
@@ -142,15 +139,6 @@ public class PropertyService : IPropertyService
             throw new NotFoundException("Location", request.LocationId);
         }
 
-        if (request.AgreementTypeId.HasValue)
-        {
-            var agreementType = await _agreementTypeRepo.GetByIdAsync(request.AgreementTypeId.Value);
-            if (agreementType == null)
-            {
-                throw new NotFoundException("AgreementType", request.AgreementTypeId.Value);
-            }
-        }
-
         _mapper.MapUpdateRequestToEntity(request, property);
         property.UpdatedAt = DateTime.UtcNow;
 
@@ -162,7 +150,7 @@ public class PropertyService : IPropertyService
         return _mapper.MapToDetailResponse(property);
     }
 
-    public async Task DeleteAsync(Guid id, Guid userId, string userRole, CancellationToken ct)
+    public async Task DeleteAsync(Guid id, Guid userId, bool isAdmin, CancellationToken ct)
     {
         var property = await _propertyRepo.GetByIdAsync(id);
         if (property == null)
@@ -170,15 +158,21 @@ public class PropertyService : IPropertyService
             throw new NotFoundException("Property", id);
         }
 
-        if (userRole != "Admin" && property.OwnerId != userId)
+        if (!isAdmin && property.OwnerId != userId)
         {
             throw new ForbiddenException("You do not have permission to delete this property.");
+        }
+
+        var activeLease = await _leaseRepo.GetActiveLeaseByPropertyIdAsync(id);
+        if (activeLease != null)
+        {
+            throw new ConflictException("Cannot delete property because it has an active lease agreement.");
         }
 
         await _propertyRepo.DeleteAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Property {PropertyId} deleted by user {UserId} with role {Role}", id, userId, userRole);
+        _logger.LogInformation("Property {PropertyId} deleted by user {UserId}. Admin: {IsAdmin}", id, userId, isAdmin);
     }
 
     public async Task<PagedResponse<ReviewResponse>> GetReviewsAsync(Guid id, int page, int limit, CancellationToken ct)

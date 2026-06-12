@@ -8,8 +8,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using EstateSync.Api.Common;
 using EstateSync.Api.DTOs.Users;
+using EstateSync.Api.DTOs.OwnerVerification;
 using EstateSync.Api.Models;
 using EstateSync.Api.Interfaces.Services.OwnerVerification;
+
+using EstateSync.Api.Extensions;
 
 namespace EstateSync.Api.Controllers;
 
@@ -26,18 +29,18 @@ public class OwnersController : ControllerBase
 
     [HttpPost("me/verification-request/draft")]
     [Authorize]
-    public async Task<ActionResult<ApiResponse<object>>> CreateDraft(CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<OwnerVerificationResponse>>> CreateDraft(CancellationToken ct)
     {
-        var userId = GetUserId();
-        var requestId = await _verificationService.CreateDraftVerificationRequestAsync(userId, ct);
-        return StatusCode(StatusCodes.Status201Created, new ApiResponse<object>
+        var userId = User.GetUserId();
+        var result = await _verificationService.CreateDraftVerificationRequestAsync(userId, ct);
+        return StatusCode(StatusCodes.Status201Created, new ApiResponse<OwnerVerificationResponse>
         {
-            Data = new { requestId },
+            Data = result,
             Message = "Draft verification request created successfully."
         });
     }
 
-    [HttpPost("me/verification-request/{requestId:guid}/documents")]
+    [HttpPut("me/verification-request/{requestId:guid}/documents")]
     [Authorize]
     public async Task<ActionResult<ApiResponse<DocumentResponse>>> UploadDocument(
         Guid requestId,
@@ -45,7 +48,7 @@ public class OwnersController : ControllerBase
         [FromForm] DocumentType documentType,
         CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = User.GetUserId();
         var result = await _verificationService.UploadVerificationDocumentAsync(userId, requestId, file, documentType, ct);
         return Ok(new ApiResponse<DocumentResponse>
         {
@@ -58,10 +61,11 @@ public class OwnersController : ControllerBase
     [Authorize]
     public async Task<ActionResult<ApiResponse<object>>> SubmitRequest(
         Guid requestId,
+        [FromBody] SubmitOwnerVerificationRequest request,
         CancellationToken ct)
     {
-        var userId = GetUserId();
-        await _verificationService.SubmitVerificationRequestAsync(userId, requestId, ct);
+        var userId = User.GetUserId();
+        await _verificationService.SubmitVerificationRequestAsync(userId, requestId, request, ct);
         return Ok(new ApiResponse<object>
         {
             Message = "Owner verification request submitted successfully."
@@ -70,16 +74,11 @@ public class OwnersController : ControllerBase
 
     [HttpGet("me/verification-requests")]
     [Authorize]
-    public async Task<ActionResult<ApiResponse<IEnumerable<VerificationRequestResponse>>>> GetVerificationRequests(CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<IEnumerable<OwnerVerificationResponse>>>> GetVerificationRequests(CancellationToken ct)
     {
-        var userId = GetUserId();
-        var result = await _verificationService.GetUserVerificationRequestsAsync(userId, ct);
-        return Ok(new ApiResponse<IEnumerable<VerificationRequestResponse>> { Data = result });
+        var userId = User.GetUserId();
+        var result = await _verificationService.GetOwnerVerificationRequestsByUserIdAsync(userId, ct);
+        return Ok(new ApiResponse<IEnumerable<OwnerVerificationResponse>> { Data = result });
     }
 
-    private Guid GetUserId()
-    {
-        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.TryParse(userIdStr, out var id) ? id : Guid.Empty;
-    }
 }

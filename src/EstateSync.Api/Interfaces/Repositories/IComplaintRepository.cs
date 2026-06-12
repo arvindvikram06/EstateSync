@@ -8,5 +8,7 @@ namespace EstateSync.Api.Repositories.Interfaces;
 public interface IComplaintRepository : IRepository<Complaint>
 {
     Task<IEnumerable<Complaint>> GetByLeaseIdAsync(Guid leaseId);
-    Task<IEnumerable<Complaint>> GetOpenComplaintsOlderThanDaysAsync(int days);
+
+    // Reserved for background escalation job \u2014 not yet implemented
+    // Task<IEnumerable<Complaint>> GetOpenComplaintsOlderThanDaysAsync(int days);
 }

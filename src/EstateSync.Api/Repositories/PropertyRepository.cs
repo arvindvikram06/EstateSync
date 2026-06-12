@@ -21,7 +21,6 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
             .AsNoTracking()
             .Include(p => p.Owner)
             .Include(p => p.Location)
-            .Include(p => p.AgreementType)
             .Include(p => p.PropertyImages)
             .Include(p => p.PropertyDocuments)
                 .ThenInclude(pd => pd.Document)
@@ -32,6 +31,11 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
     {
         return await _dbSet
             .AsNoTracking()
+            .Include(p => p.Owner)
+            .Include(p => p.Location)
+            .Include(p => p.PropertyImages)
+            .Include(p => p.PropertyDocuments)
+                .ThenInclude(pd => pd.Document)
             .Where(p => p.OwnerId == ownerId)
             .ToListAsync();
     }

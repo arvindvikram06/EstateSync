@@ -11,9 +11,8 @@ public record RentalApplicationResponse
     public string? TenantName { get; init; }
     public string Message { get; init; } = string.Empty;
     public int DocumentCount { get; init; }
-    public DateTime MoveInDate { get; init; }
-    public DateTime MoveOutDate { get; init; }
-    public decimal NegotiatedPrice { get; init; }
+    public DateOnly ExpectedMoveInDate { get; init; }
+    public int DurationMonths { get; init; }
     public decimal CommuteDistance { get; init; }
     public string Status { get; init; } = string.Empty;
     public string? ReviewRemarks { get; init; }

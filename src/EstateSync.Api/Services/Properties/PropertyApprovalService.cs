@@ -67,23 +67,7 @@ public class PropertyApprovalService : IPropertyApprovalService
 
         await _propertyRepo.UpdateAsync(property);
 
-        var admins = await _userRepo.GetUsersByRoleAsync("Admin");
-        foreach (var admin in admins)
-        {
-            var notification = new Notification
-            {
-                NotificationId = Guid.NewGuid(),
-                UserId = admin.UserId,
-                Type = NotificationType.General,
-                Title = "Property Verification Pending",
-                Message = $"Property '{property.Title}' is pending approval.",
-                EntityId = property.PropertyId.ToString(),
-                EntityType = "Property",
-                IsRead = false,
-                CreatedAt = DateTime.UtcNow
-            };
-            await _notificationRepo.AddAsync(notification);
-        }
+        await CreateAndSendAdminPropertyNotificationsAsync(property);
 
         await _unitOfWork.SaveChangesAsync(ct);
         _logger.LogInformation("Property {PropertyId} submitted for approval by owner {OwnerId}", id, ownerId);
@@ -115,24 +99,7 @@ public class PropertyApprovalService : IPropertyApprovalService
 
         await _propertyRepo.UpdateAsync(property);
 
-        var title = parsedStatus == PropertyStatus.Active ? "Property Approved" : "Property Rejected";
-        var message = parsedStatus == PropertyStatus.Active
-            ? $"Your property '{property.Title}' has been approved and is now active."
-            : $"Your property '{property.Title}' has been rejected. Reason: {remarks}";
-
-        var notification = new Notification
-        {
-            NotificationId = Guid.NewGuid(),
-            UserId = property.OwnerId,
-            Type = NotificationType.General,
-            Title = title,
-            Message = message,
-            EntityId = property.PropertyId.ToString(),
-            EntityType = "Property",
-            IsRead = false,
-            CreatedAt = DateTime.UtcNow
-        };
-        await _notificationRepo.AddAsync(notification);
+        await CreateAndSendOwnerPropertyNotificationAsync(property, parsedStatus, remarks);
 
         await _unitOfWork.SaveChangesAsync(ct);
         _logger.LogInformation("Property {PropertyId} approval status updated to {Status} by admin {AdminId}", id, parsedStatus, adminId);
@@ -153,5 +120,48 @@ public class PropertyApprovalService : IPropertyApprovalService
             Limit = limit,
             Total = total
         };
+    }
+
+    private async Task CreateAndSendAdminPropertyNotificationsAsync(Property property)
+    {
+        var admins = await _userRepo.GetUsersByRoleAsync("Admin");
+        foreach (var admin in admins)
+        {
+            var notification = new Notification
+            {
+                NotificationId = Guid.NewGuid(),
+                UserId = admin.UserId,
+                Type = NotificationType.General,
+                Title = "Property Verification Pending",
+                Message = $"Property '{property.Title}' is pending approval.",
+                EntityId = property.PropertyId.ToString(),
+                EntityType = "Property",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _notificationRepo.AddAsync(notification);
+        }
+    }
+
+    private async Task CreateAndSendOwnerPropertyNotificationAsync(Property property, PropertyStatus status, string remarks)
+    {
+        var title = status == PropertyStatus.Active ? "Property Approved" : "Property Rejected";
+        var message = status == PropertyStatus.Active
+            ? $"Your property '{property.Title}' has been approved and is now active."
+            : $"Your property '{property.Title}' has been rejected. Reason: {remarks}";
+
+        var notification = new Notification
+        {
+            NotificationId = Guid.NewGuid(),
+            UserId = property.OwnerId,
+            Type = NotificationType.General,
+            Title = title,
+            Message = message,
+            EntityId = property.PropertyId.ToString(),
+            EntityType = "Property",
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _notificationRepo.AddAsync(notification);
     }
 }

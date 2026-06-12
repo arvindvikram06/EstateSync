@@ -1,8 +1,9 @@
 using System;
+using EstateSync.Api.Common;
 
 namespace EstateSync.Api.Models;
 
-public class Notification
+public class Notification : BaseEntity
 {
     public Guid NotificationId { get; set; }
     public Guid UserId { get; set; }
@@ -14,5 +15,4 @@ public class Notification
     public string? EntityType { get; set; }
     public bool IsRead { get; set; }
     public DateTime? ReadAt { get; set; }
-    public DateTime CreatedAt { get; set; }
 }

@@ -35,11 +35,6 @@ public class PropertyConfiguration : IEntityTypeConfiguration<Property>
             .HasForeignKey(x => x.LocationId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.AgreementType)
-            .WithMany()
-            .HasForeignKey(x => x.AgreementTypeId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(x => x.ApproveBy)
             .WithMany()
             .HasForeignKey(x => x.ApproveById)

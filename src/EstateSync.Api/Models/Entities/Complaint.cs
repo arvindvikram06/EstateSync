@@ -9,8 +9,8 @@ public class Complaint : BaseEntity
     public Guid ComplaintId { get; set; }
     public Guid LeaseId { get; set; }
     public Lease? Lease { get; set; }
-    public Guid? ChargeId { get; set; }
-    public Charge? Charge { get; set; }
+    public Guid? LeaseBillId { get; set; }
+    public LeaseBill? LeaseBill { get; set; }
     public required string Title { get; set; }
     public required string Description { get; set; }
     public ComplaintType ComplaintType { get; set; }

@@ -24,10 +24,23 @@ public class BaseRepository<T> : IRepository<T> where T : class
         return await _dbSet.FindAsync(id);
     }
 
-    public virtual async Task<(IEnumerable<T> Items, int Total)> GetAllAsync(int page, int limit)
+
+    public virtual async Task<(IEnumerable<T> Items, int Total)> GetPagedAsync(int page, int limit)
     {
-        var total = await _dbSet.CountAsync();
-        var items = await _dbSet
+        IQueryable<T> query = _dbSet;
+        var keyName = _context.Model.FindEntityType(typeof(T))
+            ?.FindPrimaryKey()
+            ?.Properties
+            .Select(x => x.Name)
+            .FirstOrDefault();
+
+        if (keyName != null)
+        {
+            query = query.OrderBy(x => EF.Property<object>(x!, keyName));
+        }
+
+        var total = await query.CountAsync();
+        var items = await query
             .Skip((page - 1) * limit)
             .Take(limit)
             .ToListAsync();

@@ -1,8 +1,9 @@
 using System;
+using EstateSync.Api.Common;
 
 namespace EstateSync.Api.Models;
 
-public class RentIncreaseProposal
+public class RentIncreaseProposal : BaseEntity
 {
     public Guid ProposalId { get; set; }
     public Guid LeaseId { get; set; }
@@ -14,5 +15,4 @@ public class RentIncreaseProposal
     public required string Remarks { get; set; }
     public Guid ProposedById { get; set; }
     public User? ProposedBy { get; set; }
-    public DateTime CreatedAt { get; set; }
 }

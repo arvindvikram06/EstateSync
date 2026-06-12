@@ -37,13 +37,14 @@ public class NotificationRepository : BaseRepository<Notification>, INotificatio
         // SaveChangesAsync will be called by UnitOfWork, so just modify in memory.
     }
 
-    public async Task DeleteNotificationsOlderThanDaysAsync(int days)
-    {
-        var thresholdDate = DateTime.UtcNow.AddDays(-days);
-        var oldNotifications = await _dbSet
-            .Where(n => n.CreatedAt < thresholdDate)
-            .ToListAsync();
-        
-        _dbSet.RemoveRange(oldNotifications);
-    }
+    // Reserved for background cleanup job — not yet implemented
+    // public async Task DeleteNotificationsOlderThanDaysAsync(int days)
+    // {
+    //     var thresholdDate = DateTime.UtcNow.AddDays(-days);
+    //     var oldNotifications = await _dbSet
+    //         .Where(n => n.CreatedAt < thresholdDate)
+    //         .ToListAsync();
+    //     
+    //     _dbSet.RemoveRange(oldNotifications);
+    // }
 }

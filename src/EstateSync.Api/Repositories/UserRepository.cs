@@ -20,7 +20,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<User?> GetWithRolesByEmailAsync(string email)
+    public async Task<User?> GetByEmailWithRolesAsync(string email)
     {
         return await _dbSet
             .AsNoTracking()
@@ -39,9 +39,10 @@ public class UserRepository : BaseRepository<User>, IUserRepository
 
     public async Task<bool> IsUserVerifiedOwnerAsync(Guid userId)
     {
-        // First check if user is already assigned the Owner role
+        // Check if user has the Owner role by name (not hardcoded GUID)
         var hasOwnerRole = await _context.Set<UserRole>()
-            .AnyAsync(ur => ur.UserId == userId && ur.RoleId == Guid.Parse("22222222-2222-2222-2222-222222222222"));
+            .Include(ur => ur.Role)
+            .AnyAsync(ur => ur.UserId == userId && ur.Role != null && ur.Role.Name == "Owner");
 
         if (hasOwnerRole) return true;
 
@@ -50,11 +51,12 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .AnyAsync(r => r.UserId == userId && r.Status == ApprovalStatus.Approved);
     }
 
-    public async Task<User?> GetWithRolesByIdAsync(Guid userId)
+    public async Task<User?> GetByIdWithRolesAsync(Guid userId)
     {
         return await _dbSet
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
+            .Include(u => u.OwnerProfile)
             .FirstOrDefaultAsync(u => u.UserId == userId);
     }
 }
