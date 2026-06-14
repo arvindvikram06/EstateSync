@@ -10,7 +10,6 @@ public record RentalApplicationResponse
     public Guid TenantId { get; init; }
     public string? TenantName { get; init; }
     public string Message { get; init; } = string.Empty;
-    public int DocumentCount { get; init; }
     public DateOnly ExpectedMoveInDate { get; init; }
     public int DurationMonths { get; init; }
     public decimal CommuteDistance { get; init; }

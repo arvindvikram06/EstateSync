@@ -18,7 +18,6 @@ public class LeaseRepository : BaseRepository<Lease>, ILeaseRepository
     public async Task<Lease?> GetWithDetailsByIdAsync(Guid id)
     {
         return await _dbSet
-            .AsNoTracking()
             .Include(l => l.Property)
             .Include(l => l.Tenant)
             .Include(l => l.LeaseDocuments)
@@ -92,5 +91,13 @@ public class LeaseRepository : BaseRepository<Lease>, ILeaseRepository
             .ToListAsync();
 
         return (items, total);
+    }
+
+    public async Task<IEnumerable<Lease>> GetActiveLeasesWithBillsAsync()
+    {
+        return await _dbSet
+            .Include(l => l.LeaseBills)
+            .Where(l => l.Status == LeaseStatus.Active)
+            .ToListAsync();
     }
 }

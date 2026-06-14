@@ -36,6 +36,7 @@ public class UserMapper
             Status = s.Status.ToString(),
             ReviewRemarks = s.ReviewRemarks,
             CreatedAt = s.CreatedAt,
+            PanOrTaxId = s.PanOrTaxId,
             Documents = s.OwnerVerificationDocuments
                 .Where(ovd => ovd.Document != null)
                 .Select(ovd => MapToDocumentResponse(ovd.Document!))

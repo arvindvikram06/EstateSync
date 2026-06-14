@@ -100,10 +100,7 @@ public class OwnerVerificationServiceTests
 
         var requestDto = new SubmitOwnerVerificationRequest
         {
-            BankAccountNumber = "1234567890",
-            BankIFSCCode = "ABCD0123456",
-            BankAccountHolderName = "John Doe",
-            BankName = "Test Bank"
+            PanOrTaxId = "ABCDE1234F"
         };
 
         // Act
@@ -111,7 +108,7 @@ public class OwnerVerificationServiceTests
 
         // Assert
         act.Should().ThrowAsync<BadRequestException>()
-            .WithMessage("*Missing required document types*");
+            .WithMessage("*Missing required documents*");
     }
 
     [Test]
@@ -123,6 +120,7 @@ public class OwnerVerificationServiceTests
         var aadhaarId = Guid.NewGuid();
         var panId = Guid.NewGuid();
         var bankProofId = Guid.NewGuid();
+        var addressProofId = Guid.NewGuid();
 
         var requestEntity = new OwnerVerificationRequest
         {
@@ -133,7 +131,8 @@ public class OwnerVerificationServiceTests
             {
                 new OwnerVerificationDocument { DocumentId = aadhaarId, Document = new Document { DocumentId = aadhaarId, DocumentType = DocumentType.Aadhaar, DocumentUrl = "url", OriginalFileName = "a.pdf", MimeType = "application/pdf" } },
                 new OwnerVerificationDocument { DocumentId = panId, Document = new Document { DocumentId = panId, DocumentType = DocumentType.PAN, DocumentUrl = "url", OriginalFileName = "p.pdf", MimeType = "application/pdf" } },
-                new OwnerVerificationDocument { DocumentId = bankProofId, Document = new Document { DocumentId = bankProofId, DocumentType = DocumentType.BankProof, DocumentUrl = "url", OriginalFileName = "b.pdf", MimeType = "application/pdf" } }
+                new OwnerVerificationDocument { DocumentId = bankProofId, Document = new Document { DocumentId = bankProofId, DocumentType = DocumentType.BankProof, DocumentUrl = "url", OriginalFileName = "b.pdf", MimeType = "application/pdf" } },
+                new OwnerVerificationDocument { DocumentId = addressProofId, Document = new Document { DocumentId = addressProofId, DocumentType = DocumentType.AddressProof, DocumentUrl = "url", OriginalFileName = "addr.pdf", MimeType = "application/pdf" } }
             }
         };
 
@@ -141,10 +140,7 @@ public class OwnerVerificationServiceTests
 
         var requestDto = new SubmitOwnerVerificationRequest
         {
-            BankAccountNumber = "1234567890",
-            BankIFSCCode = "ABCD0123456",
-            BankAccountHolderName = "John Doe",
-            BankName = "Test Bank"
+            PanOrTaxId = "ABCDE1234F"
         };
 
         // Act
@@ -152,7 +148,7 @@ public class OwnerVerificationServiceTests
 
         // Assert
         requestEntity.Status.Should().Be(ApprovalStatus.Pending);
-        _requestRepoMock.Verify(x => x.UpdateAsync(requestEntity), Times.Once);
+        // _requestRepoMock.Verify(x => x.UpdateAsync(requestEntity), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -361,7 +357,7 @@ public class OwnerVerificationServiceTests
         result.DocumentUrl.Should().Be("/uploads/new_pan.pdf");
 
         _fileStorageServiceMock.Verify(x => x.DeleteFileAsync("/uploads/old_pan.pdf"), Times.Once);
-        _documentRepoMock.Verify(x => x.UpdateAsync(existingDoc), Times.Once);
+        // _documentRepoMock.Verify(x => x.UpdateAsync(existingDoc), Times.Once);
         _documentRepoMock.Verify(x => x.DeleteAsync(It.IsAny<Document>()), Times.Never);
         _documentRepoMock.Verify(x => x.AddAsync(It.IsAny<Document>()), Times.Never);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -405,14 +401,6 @@ public class OwnerVerificationServiceTests
         var userId = Guid.NewGuid();
         var ownerRoleId = Guid.NewGuid();
 
-        var requestEntity = new OwnerVerificationRequest
-        {
-            RequestId = requestId,
-            UserId = userId,
-            Status = ApprovalStatus.Pending,
-            OwnerVerificationDocuments = new List<OwnerVerificationDocument>()
-        };
-
         var user = new User
         {
             UserId = userId,
@@ -421,6 +409,15 @@ public class OwnerVerificationServiceTests
             PhoneNumber = "1234567890",
             PasswordHash = "hashed",
             UserRoles = new List<UserRole>()
+        };
+
+        var requestEntity = new OwnerVerificationRequest
+        {
+            RequestId = requestId,
+            UserId = userId,
+            User = user,
+            Status = ApprovalStatus.Pending,
+            OwnerVerificationDocuments = new List<OwnerVerificationDocument>()
         };
 
         _requestRepoMock.Setup(x => x.GetWithDetailsByIdAsync(requestId)).ReturnsAsync(requestEntity);
@@ -441,8 +438,6 @@ public class OwnerVerificationServiceTests
 
         user.UserRoles.Should().ContainSingle(ur => ur.RoleId == ownerRoleId);
 
-        _requestRepoMock.Verify(x => x.UpdateAsync(requestEntity), Times.Once);
-        _userRepoMock.Verify(x => x.UpdateAsync(user), Times.Once);
         _notificationRepoMock.Verify(x => x.AddAsync(It.Is<Notification>(n => n.UserId == userId && n.Type == NotificationType.VerificationApproved)), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

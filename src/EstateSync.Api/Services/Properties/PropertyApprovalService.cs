@@ -57,6 +57,11 @@ public class PropertyApprovalService : IPropertyApprovalService
             throw new BadRequestException("You must upload a property ownership document (OwnerShipProof) before submitting for approval.");
         }
 
+        if (property.PropertyImages == null || !property.PropertyImages.Any())
+        {
+            throw new BadRequestException("You must upload at least one property image before submitting for approval.");
+        }
+
         if (property.Status != PropertyStatus.Draft && property.Status != PropertyStatus.Rejected)
         {
             throw new ConflictException("Property is not in a submittable state (Draft or Rejected).");
@@ -64,8 +69,6 @@ public class PropertyApprovalService : IPropertyApprovalService
 
         property.Status = PropertyStatus.PendingApproval;
         property.UpdatedAt = DateTime.UtcNow;
-
-        await _propertyRepo.UpdateAsync(property);
 
         await CreateAndSendAdminPropertyNotificationsAsync(property);
 
@@ -75,7 +78,7 @@ public class PropertyApprovalService : IPropertyApprovalService
 
     public async Task ApproveOrRejectAsync(Guid id, Guid adminId, string status, string remarks, CancellationToken ct)
     {
-        var property = await _propertyRepo.GetByIdAsync(id);
+        var property = await _propertyRepo.GetWithDetailsByIdAsync(id);
         if (property == null)
         {
             throw new NotFoundException("Property", id);
@@ -97,7 +100,19 @@ public class PropertyApprovalService : IPropertyApprovalService
         property.ApproveRemarks = remarks;
         property.UpdatedAt = DateTime.UtcNow;
 
-        await _propertyRepo.UpdateAsync(property);
+        if (property.PropertyDocuments != null)
+        {
+            foreach (var propDoc in property.PropertyDocuments)
+            {
+                if (propDoc.Document != null)
+                {
+                    propDoc.Document.ReviewStatus = parsedStatus == PropertyStatus.Active ? ApprovalStatus.Approved : ApprovalStatus.Rejected;
+                    propDoc.Document.ReviewedAt = DateTime.UtcNow;
+                    propDoc.Document.ReviewedById = adminId;
+                    propDoc.Document.ReviewNotes = remarks;
+                }
+            }
+        }
 
         await CreateAndSendOwnerPropertyNotificationAsync(property, parsedStatus, remarks);
 

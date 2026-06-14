@@ -53,7 +53,7 @@ public class PropertyAmenityService : IPropertyAmenityService
             .Distinct()
             .ToList();
 
-        await _propertyRepo.UpdateAsync(property);
+        // await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Added amenities for property {PropertyId} by owner {OwnerId}", id, ownerId);
@@ -83,7 +83,7 @@ public class PropertyAmenityService : IPropertyAmenityService
             .Distinct()
             .ToList();
 
-        await _propertyRepo.UpdateAsync(property);
+        // await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Updated amenities list for property {PropertyId} by owner {OwnerId}", id, ownerId);
@@ -116,7 +116,7 @@ public class PropertyAmenityService : IPropertyAmenityService
             .Where(a => !toRemove.Contains(a))
             .ToList();
 
-        await _propertyRepo.UpdateAsync(property);
+        // await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Removed amenities from property {PropertyId} by owner {OwnerId}", id, ownerId);

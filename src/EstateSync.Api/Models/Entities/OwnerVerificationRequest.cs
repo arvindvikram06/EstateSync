@@ -14,10 +14,7 @@ public class OwnerVerificationRequest : BaseEntity
     public User? ReviewedBy { get; set; }
     public string? ReviewRemarks { get; set; }
 
-    public string? BankAccountNumber { get; set; }
-    public string? BankIFSCCode { get; set; }
-    public string? BankAccountHolderName { get; set; }
-    public string? BankName { get; set; }
+    public string? PanOrTaxId { get; set; }
 
     public ICollection<OwnerVerificationDocument> OwnerVerificationDocuments { get; set; } = new List<OwnerVerificationDocument>();
 }

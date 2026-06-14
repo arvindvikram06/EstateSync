@@ -10,9 +10,6 @@ public record PropertySearchRequest
     public int? Bedrooms { get; init; }
     public decimal? MinRent { get; init; }
     public decimal? MaxRent { get; init; }
-    public decimal? Lat { get; init; }
-    public decimal? Lng { get; init; }
-    public decimal? RadiusKm { get; init; }
     public int Page { get; init; } = 1;
     public int Limit { get; init; } = 20;
 }

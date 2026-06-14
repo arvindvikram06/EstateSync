@@ -64,6 +64,12 @@ public class OwnerVerificationService : IOwnerVerificationService
             throw new ForbiddenException("You must verify your identity before submitting an owner verification request.");
         }
 
+        var isVerifiedOwner = await _userRepo.IsUserVerifiedOwnerAsync(userId);
+        if (isVerifiedOwner)
+        {
+            throw new ConflictException("You are already a verified owner.");
+        }
+
         var existingRequests = await _requestRepo.GetByUserIdAsync(userId);
         
         if (existingRequests.Any(r => r.Status == ApprovalStatus.Pending || r.Status == ApprovalStatus.Approved))
@@ -97,9 +103,20 @@ public class OwnerVerificationService : IOwnerVerificationService
 
     public async Task<DocumentResponse> UploadVerificationDocumentAsync(Guid userId, Guid requestId, IFormFile file, DocumentType docType, CancellationToken ct)
     {
-        if (docType != DocumentType.Aadhaar && docType != DocumentType.PAN && docType != DocumentType.BankProof)
+        var allowedTypes = new[] 
+        { 
+            DocumentType.Passport, 
+            DocumentType.Aadhaar, 
+            DocumentType.PAN, 
+            DocumentType.VoterID, 
+            DocumentType.DrivingLicense, 
+            DocumentType.BankProof, 
+            DocumentType.AddressProof 
+        };
+
+        if (!allowedTypes.Contains(docType))
         {
-            throw new BadRequestException("Only Aadhaar, PAN, and BankProof documents are allowed for owner verification.");
+            throw new BadRequestException("Invalid document type for owner verification. Allowed: Passport, Aadhaar, PAN, VoterID, DrivingLicense, BankProof, AddressProof.");
         }
 
         var request = await _requestRepo.GetWithDetailsByIdAsync(requestId);
@@ -152,7 +169,7 @@ public class OwnerVerificationService : IOwnerVerificationService
             doc.ReviewStatus = ApprovalStatus.Pending;
             doc.UpdatedAt = DateTime.UtcNow;
 
-            await _documentRepo.UpdateAsync(doc);
+            // await _documentRepo.UpdateAsync(doc);
         }
         else
         {
@@ -210,7 +227,7 @@ public class OwnerVerificationService : IOwnerVerificationService
 
         ValidateAndPopulateSubmission(request, requestDto);
 
-        await _requestRepo.UpdateAsync(request);
+        // await _requestRepo.UpdateAsync(request);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Owner verification request {RequestId} submitted by user {UserId}", requestId, userId);
@@ -261,8 +278,6 @@ public class OwnerVerificationService : IOwnerVerificationService
         verificationRequest.ReviewRemarks = remarks;
         verificationRequest.UpdatedAt = DateTime.UtcNow;
 
-        await _requestRepo.UpdateAsync(verificationRequest);
-
         await UpdateDocumentReviewStatusAsync(verificationRequest, parsedStatus, adminId, remarks);
 
         if (parsedStatus == ApprovalStatus.Approved)
@@ -285,18 +300,27 @@ public class OwnerVerificationService : IOwnerVerificationService
             .Where(d => d != null)
             .ToList();
 
-        var requiredTypes = new[] { DocumentType.Aadhaar, DocumentType.PAN, DocumentType.BankProof };
-        var missingTypes = requiredTypes.Where(rt => !linkedDocs.Any(d => d!.DocumentType == rt)).ToList();
+        var hasBankProof = linkedDocs.Any(d => d!.DocumentType == DocumentType.BankProof);
+        var hasAddressProof = linkedDocs.Any(d => d!.DocumentType == DocumentType.AddressProof);
+        var hasPanProof = linkedDocs.Any(d => d!.DocumentType == DocumentType.PAN);
+        var hasIdentityProof = linkedDocs.Any(d => 
+            d!.DocumentType == DocumentType.Passport || 
+            d!.DocumentType == DocumentType.Aadhaar || 
+            d!.DocumentType == DocumentType.VoterID || 
+            d!.DocumentType == DocumentType.DrivingLicense);
 
-        if (missingTypes.Any())
+        var missing = new List<string>();
+        if (!hasBankProof) missing.Add("BankProof (Cancelled Cheque/Statement)");
+        if (!hasAddressProof) missing.Add("AddressProof");
+        if (!hasPanProof) missing.Add("PAN Proof");
+        if (!hasIdentityProof) missing.Add("IdentityProof (Passport, Aadhaar, VoterID, or DrivingLicense)");
+
+        if (missing.Any())
         {
-            throw new BadRequestException($"Missing required document types: {string.Join(", ", missingTypes)}");
+            throw new BadRequestException($"Missing required documents: {string.Join(", ", missing)}");
         }
 
-        request.BankAccountNumber = requestDto.BankAccountNumber;
-        request.BankIFSCCode = requestDto.BankIFSCCode;
-        request.BankAccountHolderName = requestDto.BankAccountHolderName;
-        request.BankName = requestDto.BankName;
+        request.PanOrTaxId = requestDto.PanOrTaxId;
         request.Status = ApprovalStatus.Pending;
         request.CreatedAt = DateTime.UtcNow;
     }
@@ -311,56 +335,50 @@ public class OwnerVerificationService : IOwnerVerificationService
                 reqDoc.Document.ReviewedAt = DateTime.UtcNow;
                 reqDoc.Document.ReviewedById = adminId;
                 reqDoc.Document.ReviewNotes = remarks;
-                await _documentRepo.UpdateAsync(reqDoc.Document);
             }
         }
     }
 
     private async Task AssignOwnerRoleAndProfileAsync(OwnerVerificationRequest request)
     {
-        var user = await _userRepo.GetByIdWithRolesAsync(request.UserId);
-        if (user != null)
+        var user = request.User;
+        if (user == null) return;
+
+        var ownerRole = await _roleRepo.GetByNameAsync("Owner");
+        if (ownerRole == null)
         {
-            var ownerRole = await _roleRepo.GetByNameAsync("Owner");
-            if (ownerRole == null)
-            {
-                throw new NotFoundException("Role", "Owner");
-            }
+            throw new NotFoundException("Role", "Owner");
+        }
 
-            if (!user.UserRoles.Any(ur => ur.RoleId == ownerRole.RoleId))
+        if (!user.UserRoles.Any(ur => ur.RoleId == ownerRole.RoleId))
+        {
+            // BEST PRACTICE (Chaining): Do NOT set UserRoleId. EF generates the ID and marks as Added.
+            user.UserRoles.Add(new UserRole
             {
-                user.UserRoles.Add(new UserRole
-                {
-                    UserId = user.UserId,
-                    RoleId = ownerRole.RoleId
-                });
-            }
+                UserId = user.UserId,
+                RoleId = ownerRole.RoleId
+            });
+        }
 
-            if (user.OwnerProfile == null)
+        if (user.OwnerProfile == null)
+        {
+            // BEST PRACTICE (Chaining): Do NOT set OwnerProfileId. EF generates the ID and marks as Added.
+            user.OwnerProfile = new OwnerProfile
             {
-                user.OwnerProfile = new OwnerProfile
-                {
-                    OwnerProfileId = Guid.NewGuid(),
-                    UserId = user.UserId,
-                    BankAccountNumber = request.BankAccountNumber ?? string.Empty,
-                    BankIFSCCode = request.BankIFSCCode ?? string.Empty,
-                    BankAccountHolderName = request.BankAccountHolderName ?? string.Empty,
-                    BankName = request.BankName ?? string.Empty,
-                    CreatedAt = DateTime.UtcNow
-                };
-            }
-            else
-            {
-                user.OwnerProfile.BankAccountNumber = request.BankAccountNumber ?? string.Empty;
-                user.OwnerProfile.BankIFSCCode = request.BankIFSCCode ?? string.Empty;
-                user.OwnerProfile.BankAccountHolderName = request.BankAccountHolderName ?? string.Empty;
-                user.OwnerProfile.BankName = request.BankName ?? string.Empty;
-                user.OwnerProfile.UpdatedAt = DateTime.UtcNow;
-            }
-
-            await _userRepo.UpdateAsync(user);
+                UserId = user.UserId,
+                PanOrTaxId = request.PanOrTaxId ?? string.Empty,
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+        else
+        {
+            // Already tracked — mutating properties is enough; change tracker detects the diff.
+            user.OwnerProfile.PanOrTaxId = request.PanOrTaxId ?? string.Empty;
+            user.OwnerProfile.UpdatedAt = DateTime.UtcNow;
         }
     }
+
+
 
     private async Task CreateAndSendVerificationNotificationAsync(OwnerVerificationRequest request, ApprovalStatus status, string remarks)
     {

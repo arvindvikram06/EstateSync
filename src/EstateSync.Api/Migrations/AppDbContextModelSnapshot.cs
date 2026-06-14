@@ -18,7 +18,7 @@ namespace EstateSync.Api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -582,31 +582,16 @@ namespace EstateSync.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("BankAccountHolderName")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("character varying(250)");
-
-                    b.Property<string>("BankAccountNumber")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("BankIFSCCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("BankName")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("character varying(250)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("PanOrTaxId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -621,6 +606,53 @@ namespace EstateSync.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("OwnerProfiles", (string)null);
+                });
+
+            modelBuilder.Entity("EstateSync.Api.Models.OwnerSettlement", b =>
+                {
+                    b.Property<Guid>("OwnerSettlementId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("ArrivalDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("DestinationId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StripePayoutId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("OwnerSettlementId");
+
+                    b.HasIndex("OwnerId");
+
+                    b.ToTable("OwnerSettlements");
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.OwnerVerificationDocument", b =>
@@ -654,27 +686,15 @@ namespace EstateSync.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("BankAccountHolderName")
-                        .HasMaxLength(250)
-                        .HasColumnType("character varying(250)");
-
-                    b.Property<string>("BankAccountNumber")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("BankIFSCCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("BankName")
-                        .HasMaxLength(250)
-                        .HasColumnType("character varying(250)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("PanOrTaxId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("ReviewRemarks")
                         .HasMaxLength(1000)
@@ -774,7 +794,7 @@ namespace EstateSync.Api.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<List<string>>("Amenities")
+                    b.PrimitiveCollection<List<string>>("Amenities")
                         .IsRequired()
                         .HasColumnType("text[]");
 
@@ -1027,9 +1047,6 @@ namespace EstateSync.Api.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<int>("DocumentCount")
-                        .HasColumnType("integer");
-
                     b.Property<int>("DurationMonths")
                         .HasColumnType("integer");
 
@@ -1141,6 +1158,66 @@ namespace EstateSync.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("SavedProperties", (string)null);
+                });
+
+            modelBuilder.Entity("EstateSync.Api.Models.StripeConnectedAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("StripeAccountId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId")
+                        .IsUnique();
+
+                    b.ToTable("StripeConnectedAccounts");
+                });
+
+            modelBuilder.Entity("EstateSync.Api.Models.StripeCustomerProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("StripeCustomerId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("StripeCustomerProfiles");
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.TenantVerificationDocument", b =>
@@ -1508,6 +1585,17 @@ namespace EstateSync.Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("EstateSync.Api.Models.OwnerSettlement", b =>
+                {
+                    b.HasOne("EstateSync.Api.Models.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
             modelBuilder.Entity("EstateSync.Api.Models.OwnerVerificationDocument", b =>
                 {
                     b.HasOne("EstateSync.Api.Models.Document", "Document")
@@ -1686,6 +1774,28 @@ namespace EstateSync.Api.Migrations
                     b.Navigation("Property");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EstateSync.Api.Models.StripeConnectedAccount", b =>
+                {
+                    b.HasOne("EstateSync.Api.Models.User", "Owner")
+                        .WithOne("StripeConnectedAccount")
+                        .HasForeignKey("EstateSync.Api.Models.StripeConnectedAccount", "OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("EstateSync.Api.Models.StripeCustomerProfile", b =>
+                {
+                    b.HasOne("EstateSync.Api.Models.User", "Tenant")
+                        .WithOne("StripeCustomerProfile")
+                        .HasForeignKey("EstateSync.Api.Models.StripeCustomerProfile", "TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.TenantVerificationDocument", b =>
@@ -1869,6 +1979,10 @@ namespace EstateSync.Api.Migrations
                     b.Navigation("ReviewedTenantVerificationRequests");
 
                     b.Navigation("SavedProperties");
+
+                    b.Navigation("StripeConnectedAccount");
+
+                    b.Navigation("StripeCustomerProfile");
 
                     b.Navigation("TenantVerificationRequests");
 

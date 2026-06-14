@@ -22,6 +22,7 @@ public class LeaseService : ILeaseService
     private readonly IPropertyRepository _propertyRepo;
     private readonly IFileStorageService _fileStorageService;
     private readonly INotificationRepository _notificationRepo;
+    private readonly ILeaseBillRepository _leaseBillRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly LeaseMapper _mapper;
     private readonly ILogger<LeaseService> _logger;
@@ -32,6 +33,7 @@ public class LeaseService : ILeaseService
         IPropertyRepository propertyRepo,
         IFileStorageService fileStorageService,
         INotificationRepository notificationRepo,
+        ILeaseBillRepository leaseBillRepo,
         IUnitOfWork unitOfWork,
         LeaseMapper mapper,
         ILogger<LeaseService> logger)
@@ -41,6 +43,7 @@ public class LeaseService : ILeaseService
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
         _fileStorageService = fileStorageService ?? throw new ArgumentNullException(nameof(fileStorageService));
         _notificationRepo = notificationRepo ?? throw new ArgumentNullException(nameof(notificationRepo));
+        _leaseBillRepo = leaseBillRepo ?? throw new ArgumentNullException(nameof(leaseBillRepo));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -114,14 +117,54 @@ public class LeaseService : ILeaseService
             lease.ActivatedAt = DateTime.UtcNow;
 
             property.Status = PropertyStatus.Leased;
-            await _propertyRepo.UpdateAsync(property);
+            // await _propertyRepo.UpdateAsync(property);
 
             await RejectOtherApplicationsOnLeaseActivationAsync(property.PropertyId, lease.ApplicationId, property.Title);
+
+            // 1. Generate Security Deposit Bill
+            if (lease.SecurityDeposit > 0)
+            {
+                var depositBill = new LeaseBill
+                {
+                    LeaseBillId = Guid.NewGuid(),
+                    LeaseId = lease.LeaseId,
+                    BillType = LeaseBillType.Deposit,
+                    DueDate = lease.StartDate,
+                    Amount = lease.SecurityDeposit,
+                    PendingAmount = lease.SecurityDeposit,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _leaseBillRepo.AddAsync(depositBill);
+                _logger.LogInformation("Generated initial Security Deposit bill for Lease {LeaseId}", lease.LeaseId);
+            }
+
+            // 2. Generate First Rent Bill based on payment frequency
+            int multiplier = lease.PaymentFrequency switch
+            {
+                PaymentFrequency.Monthly => 1,
+                PaymentFrequency.Quarterly => 3,
+                PaymentFrequency.HalfYearly => 6,
+                PaymentFrequency.Yearly => 12,
+                _ => 1
+            };
+
+            var rentBill = new LeaseBill
+            {
+                LeaseBillId = Guid.NewGuid(),
+                LeaseId = lease.LeaseId,
+                BillType = LeaseBillType.Rent,
+                DueDate = lease.StartDate,
+                Amount = lease.MonthlyRent * multiplier,
+                PendingAmount = lease.MonthlyRent * multiplier,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _leaseBillRepo.AddAsync(rentBill);
+            _logger.LogInformation("Generated first {Frequency} Rent bill for Lease {LeaseId}", lease.PaymentFrequency, lease.LeaseId);
 
             _logger.LogInformation("Lease {LeaseId} automatically activated as both parties have signed", leaseId);
         }
 
-        await _leaseRepo.UpdateAsync(lease);
+        // await _leaseRepo.UpdateAsync(lease);
         await _unitOfWork.SaveChangesAsync(ct);
 
         return _mapper.MapToResponse(lease);
@@ -202,8 +245,8 @@ public class LeaseService : ILeaseService
             PropertyId = propertyId,
             TenantId = tenantId,
             ApplicationId = request.ApplicationId,
-            StartDate = request.StartDate,
-            EndDate = request.EndDate,
+            StartDate = DateTime.SpecifyKind(request.StartDate, DateTimeKind.Utc),
+            EndDate = DateTime.SpecifyKind(request.EndDate, DateTimeKind.Utc),
             MonthlyRent = request.MonthlyRent,
             SecurityDeposit = request.SecurityDeposit,
             PaymentFrequency = request.PaymentFrequency,
@@ -333,7 +376,7 @@ public class LeaseService : ILeaseService
                 app.Status = ApplicationStatus.Rejected;
                 app.ReviewRemarks = "Property is reserved";
                 app.ReviewedAt = DateTime.UtcNow;
-                await _applicationRepo.UpdateAsync(app);
+                // await _applicationRepo.UpdateAsync(app);
 
                 var notification = new Notification
                 {

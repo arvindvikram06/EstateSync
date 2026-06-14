@@ -11,6 +11,7 @@ public interface ILeaseRepository : IRepository<Lease>
     Task<Lease?> GetActiveLeaseByPropertyIdAsync(Guid propertyId);
     Task<(IEnumerable<Lease> Items, int Total)> GetByTenantIdPagedAsync(Guid tenantId, int page, int limit);
     Task<(IEnumerable<Lease> Items, int Total)> GetByOwnerIdPagedAsync(Guid ownerId, int page, int limit);
+    Task<IEnumerable<Lease>> GetActiveLeasesWithBillsAsync();
 
     // Reserved for future modules (e.g. Charges, Reports) — not yet called by any service
     // Task<IEnumerable<Lease>> GetByPropertyIdAsync(Guid propertyId);

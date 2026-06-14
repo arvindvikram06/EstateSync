@@ -51,9 +51,6 @@ public class PropertyService : IPropertyService
             request.Bedrooms,
             request.MinRent,
             request.MaxRent,
-            request.Lat,
-            request.Lng,
-            request.RadiusKm,
             request.Limit,
             offset);
 
@@ -142,7 +139,7 @@ public class PropertyService : IPropertyService
         _mapper.MapUpdateRequestToEntity(request, property);
         property.UpdatedAt = DateTime.UtcNow;
 
-        await _propertyRepo.UpdateAsync(property);
+        // await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Property {PropertyId} updated successfully by owner {OwnerId}", id, ownerId);

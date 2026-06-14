@@ -18,7 +18,6 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
     public async Task<Property?> GetWithDetailsByIdAsync(Guid id)
     {
         return await _dbSet
-            .AsNoTracking()
             .Include(p => p.Owner)
             .Include(p => p.Location)
             .Include(p => p.PropertyImages)
@@ -46,9 +45,6 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
         int? bedrooms,
         decimal? minRent,
         decimal? maxRent,
-        decimal? latitude,
-        decimal? longitude,
-        decimal? radiusKm,
         int limit,
         int offset)
     {
@@ -75,19 +71,6 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
             {
                 query = query.Where(p => p.PropertyType == parsedType);
             }
-        }
-
-        if (latitude.HasValue && longitude.HasValue && radiusKm.HasValue)
-        {
-            var latRad = (double)latitude.Value * Math.PI / 180.0;
-            var lonRad = (double)longitude.Value * Math.PI / 180.0;
-
-            query = query.Where(p =>
-                6371 * Math.Acos(
-                    Math.Cos(latRad) * Math.Cos((double)(p.Latitude ?? 0) * Math.PI / 180.0) *
-                    Math.Cos(((double)(p.Longitude ?? 0) * Math.PI / 180.0) - lonRad) +
-                    Math.Sin(latRad) * Math.Sin((double)(p.Latitude ?? 0) * Math.PI / 180.0)
-                ) <= (double)radiusKm.Value);
         }
 
         var total = await query.CountAsync();

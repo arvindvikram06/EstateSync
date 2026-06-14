@@ -1,0 +1,1288 @@
+{
+  "info": {
+    "name": "EstateSync Flow",
+    "description": "This collection contains the ordered step-by-step user journeys and workflows for EstateSync. URL path parameters use standard Postman variables (:id) for easy input.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Setup & Initialization",
+      "item": [
+        {
+          "name": "Reset and Seed Database",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/System/reset-and-seed",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "System", "reset-and-seed"]
+            },
+            "description": "Resets all transactional tables and seeds default user roles, locations, and demo users."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Landlord Onboarding Flow",
+      "item": [
+        {
+          "name": "1.1 Landlord - Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Bob New Landlord\",\n  \"email\": \"owner.new@estatesync.com\",\n  \"phoneNumber\": \"3456789012\",\n  \"password\": \"Password123!\",\n  \"role\": \"Owner\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Auth", "register"]
+            },
+            "description": "Registers a new user with the Landlord/Owner role."
+          }
+        },
+        {
+          "name": "1.2 Landlord - Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set(\"ownerToken\", jsonData.data.accessToken);",
+                  "}"
+                ],
+                "type": "javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner.new@estatesync.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Auth", "login"]
+            },
+            "description": "Authenticates the landlord and saves the token to ownerToken."
+          }
+        },
+        {
+          "name": "1.3 Landlord - Initiate Verification Draft",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Owners/me/verification-request/draft",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Owners", "me", "verification-request", "draft"]
+            },
+            "description": "Creates a draft Landlord Verification Request."
+          }
+        },
+        {
+          "name": "1.4 Landlord - Upload Verification Document",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "documentType",
+                  "value": "PAN",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Owners/me/verification-request/:requestId/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Owners", "me", "verification-request", ":requestId", "documents"],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Uploads the PAN document for verification."
+          }
+        },
+        {
+          "name": "1.5 Landlord - Submit Verification Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"panOrTaxId\": \"ABCDE1234F\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Owners/me/verification-request/:requestId/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Owners", "me", "verification-request", ":requestId", "submit"],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Submits the landlord verification request for admin review."
+          }
+        },
+        {
+          "name": "1.6 Landlord - Create Stripe Connected Account",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Payments/owner-onboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Payments", "owner-onboard"]
+            },
+            "description": "Returns a Stripe connected onboarding link for the landlord to set up payouts."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Property Creation & Approval",
+      "item": [
+        {
+          "name": "2.1 Landlord - Get Locations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Properties?limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Properties"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Fetches existing location records to extract a valid locationId."
+          }
+        },
+        {
+          "name": "2.2 Landlord - Create Property",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Chennai Coastal Villa\",\n  \"description\": \"A premium coastal villa near ECR.\",\n  \"propertyType\": \"Villa\",\n  \"locationId\": \"INSERT_LOCATION_ID_HERE\",\n  \"addressLine\": \"ECR Road, Chennai\",\n  \"monthlyRent\": 35000,\n  \"securityDeposit\": 100000,\n  \"bedrooms\": 3,\n  \"bathrooms\": 3,\n  \"landArea\": 2400,\n  \"buildupArea\": 1800\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Properties",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Properties"]
+            },
+            "description": "Creates a new property listing as Draft."
+          }
+        },
+        {
+          "name": "2.3 Landlord - Upload Property Document",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "documentType",
+                  "value": "OwnerShipProof",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Properties/:propertyId/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Properties", ":propertyId", "documents"],
+              "variable": [
+                {
+                  "key": "propertyId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Uploads ownership/tax proof for the property."
+          }
+        },
+        {
+          "name": "2.4 Landlord - Upload Property Images",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Properties/:propertyId/images",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Properties",
+                ":propertyId",
+                "images"
+              ],
+              "variable": [
+                {
+                  "key": "propertyId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Uploads multiple images for the property listing."
+          }
+        },
+        {
+          "name": "2.5 Landlord - Submit Property for Approval",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Properties/:propertyId/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Properties", ":propertyId", "submit"],
+              "variable": [
+                {
+                  "key": "propertyId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Submits property status to PendingApproval."
+          }
+        },
+        {
+          "name": "2.6 Admin - Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set(\"adminToken\", jsonData.data.accessToken);",
+                  "}"
+                ],
+                "type": "javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@estatesync.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Auth", "login"]
+            },
+            "description": "Logins system administrator."
+          }
+        },
+        {
+          "name": "2.7 Admin - Verify Landlord Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\",\n  \"reviewRemarks\": \"Landlord documents and tax registration details look authentic.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Admin/owner-verification-requests/:requestId/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Admin", "owner-verification-requests", ":requestId", "verify"],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Admin approves the landlord onboarding request."
+          }
+        },
+        {
+          "name": "2.8 Admin - Approve Property",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Active\",\n  \"approveRemarks\": \"Property ownership confirmed. Approved for listing.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Admin/properties/:propertyId/approval",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Admin", "properties", ":propertyId", "approval"],
+              "variable": [
+                {
+                  "key": "propertyId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Admin approves the property, making it public."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Tenant Verification & Application",
+      "item": [
+        {
+          "name": "3.1 Tenant - Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Jane Tenant\",\n  \"email\": \"tenant.new@estatesync.com\",\n  \"phoneNumber\": \"4567890123\",\n  \"password\": \"Password123!\",\n  \"role\": \"Tenant\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Auth", "register"]
+            },
+            "description": "Registers a new tenant."
+          }
+        },
+        {
+          "name": "3.2 Tenant - Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set(\"tenantToken\", jsonData.data.accessToken);",
+                  "}"
+                ],
+                "type": "javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"tenant.new@estatesync.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Auth", "login"]
+            },
+            "description": "Logins the tenant."
+          }
+        },
+        {
+          "name": "3.3 Tenant - Create Identity Verification Draft",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Identity/verification-request/draft",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Identity", "verification-request", "draft"]
+            },
+            "description": "Creates draft verification request."
+          }
+        },
+        {
+          "name": "3.4 Tenant - Upload Identity Document",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "documentType",
+                  "value": "Aadhaar",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Identity/verification-request/:requestId/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Identity", "verification-request", ":requestId", "documents"],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Uploads Aadhaar document."
+          }
+        },
+        {
+          "name": "3.5 Tenant - Submit Identity Verification",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aadhaarNumber\": \"123456789012\",\n  \"panNumber\": \"ABCDE1234F\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Identity/verification-request/:requestId/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Identity", "verification-request", ":requestId", "submit"],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Submits identity request."
+          }
+        },
+        {
+          "name": "3.6 Admin - Verify Tenant Identity",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\",\n  \"reviewRemarks\": \"Aadhaar & PAN matched successfully.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Admin/identity-verification-requests/:requestId/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Admin", "identity-verification-requests", ":requestId", "verify"],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Admin approves identity."
+          }
+        },
+        {
+          "name": "3.7 Tenant - View Property Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Properties/:propertyId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Properties", ":propertyId"],
+              "variable": [
+                {
+                  "key": "propertyId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Views public property detail."
+          }
+        },
+        {
+          "name": "3.8 Tenant - Create Rental Application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"I am interested in leasing this coastal villa.\",\n  \"expectedMoveInDate\": \"2026-07-01\",\n  \"durationMonths\": 12,\n  \"commuteDistance\": 8.5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/RentalApplications/properties/:propertyId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "RentalApplications", "properties", ":propertyId"],
+              "variable": [
+                {
+                  "key": "propertyId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Submits a rental application to the property."
+          }
+        },
+        {
+          "name": "3.9 Tenant - Initiate Background Check Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/TenantVerifications/applications/:applicationId/initiate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "TenantVerifications", "applications", ":applicationId", "initiate"],
+              "variable": [
+                {
+                  "key": "applicationId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Initiates background check workflow for this application."
+          }
+        },
+        {
+          "name": "3.10 Tenant - Upload Background Check Docs",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "documentType",
+                  "value": "SalarySlip",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/TenantVerifications/:requestId/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "TenantVerifications", ":requestId", "documents"],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Uploads income or employment proof."
+          }
+        },
+        {
+          "name": "3.11 Tenant - Submit Background Check Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/TenantVerifications/:requestId/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "TenantVerifications", ":requestId", "submit"],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Submits background check request to the owner."
+          }
+        },
+        {
+          "name": "3.12 Owner - Review Background Check Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": true,\n  \"remarks\": \"Verified income. Approved background check.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/TenantVerifications/:requestId/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "TenantVerifications", ":requestId", "review"],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Owner reviews background check."
+          }
+        },
+        {
+          "name": "3.13 Owner - Approve Rental Application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": true,\n  \"remarks\": \"Background check completed and tenant has excellent references. Approved!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/RentalApplications/:applicationId/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "RentalApplications", ":applicationId", "review"],
+              "variable": [
+                {
+                  "key": "applicationId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Owner approves application."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Lease Creation & Signing",
+      "item": [
+        {
+          "name": "4.1 Owner - Create Lease Draft",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "applicationId",
+                  "value": "INSERT_APPLICATION_ID_HERE",
+                  "type": "text"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-07-01T00:00:00Z",
+                  "type": "text"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2027-07-01T00:00:00Z",
+                  "type": "text"
+                },
+                {
+                  "key": "monthlyRent",
+                  "value": "35000",
+                  "type": "text"
+                },
+                {
+                  "key": "securityDeposit",
+                  "value": "100000",
+                  "type": "text"
+                },
+                {
+                  "key": "paymentFrequency",
+                  "value": "Monthly",
+                  "type": "text"
+                },
+                {
+                  "key": "noticePeriodDays",
+                  "value": "30",
+                  "type": "text"
+                },
+                {
+                  "key": "penaltyPercentage",
+                  "value": "5.0",
+                  "type": "text"
+                },
+                {
+                  "key": "agreementText",
+                  "value": "Lease Agreement details and standard terms.",
+                  "type": "text"
+                },
+                {
+                  "key": "unsignedAgreement",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Leases",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Leases"]
+            },
+            "description": "Owner drafts lease for approved application."
+          }
+        },
+        {
+          "name": "4.2 Tenant - Sign Lease",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "signatureText",
+                  "value": "Jane Tenant Digital Signature",
+                  "type": "text"
+                },
+                {
+                  "key": "signedAgreementFile",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Leases/:leaseId/sign",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Leases", ":leaseId", "sign"],
+              "variable": [
+                {
+                  "key": "leaseId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Tenant signs agreement."
+          }
+        },
+        {
+          "name": "4.3 Owner - Sign & Activate Lease",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "signatureText",
+                  "value": "Bob Landlord Digital Signature",
+                  "type": "text"
+                },
+                {
+                  "key": "signedAgreementFile",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Leases/:leaseId/sign",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Leases", ":leaseId", "sign"],
+              "variable": [
+                {
+                  "key": "leaseId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Owner signs lease. This triggers automatic activation, generating the Security Deposit and first Rent bill!"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Billing & Payments Flow",
+      "item": [
+        {
+          "name": "5.1 Tenant - Pay Bill (Stripe Checkout Session)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Payments/checkout/:leaseBillId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "Payments", "checkout", ":leaseBillId"],
+              "variable": [
+                {
+                  "key": "leaseBillId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Generates Stripe checkout session URL for paying the bill."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Complaint Management Flow",
+      "item": [
+        {
+          "name": "6.1 Tenant - Create Complaint",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaseId\": \"INSERT_LEASE_ID_HERE\",\n  \"title\": \"Water Leak in Bathroom\",\n  \"description\": \"Water is leaking from pipe joints under the bathroom sink.\",\n  \"complaintType\": \"Maintenance\",\n  \"priority\": \"High\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/complaints",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "complaints"]
+            },
+            "description": "Files a property maintenance complaint."
+          }
+        },
+        {
+          "name": "6.2 Tenant - Upload Complaint Attachment Proof",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/complaints/:complaintId/images",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "complaints", ":complaintId", "images"],
+              "variable": [
+                {
+                  "key": "complaintId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Uploads a photo/image proof of the issue."
+          }
+        },
+        {
+          "name": "6.3 Owner - Update Complaint Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"InProgress\",\n  \"reviewRemarks\": \"Plumber has been dispatched, will repair on Monday morning.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/complaints/:complaintId/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "complaints", ":complaintId", "status"],
+              "variable": [
+                {
+                  "key": "complaintId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Landlord marks issue status as InProgress and leaves remarks."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5118",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ownerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tenantToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

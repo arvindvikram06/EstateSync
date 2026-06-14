@@ -11,5 +11,6 @@ public enum DocumentType
     RentalAgreement,
     SalarySlip,
     BankProof,
-    OwnerShipProof
+    OwnerShipProof,
+    AddressProof
 }

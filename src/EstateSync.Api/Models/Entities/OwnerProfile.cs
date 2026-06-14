@@ -10,8 +10,5 @@ public class OwnerProfile : BaseEntity
     public Guid UserId { get; set; }
     public User? User { get; set; }
 
-    public required string BankAccountNumber { get; set; }
-    public required string BankIFSCCode { get; set; }
-    public required string BankAccountHolderName { get; set; }
-    public required string BankName { get; set; }
+    public required string PanOrTaxId { get; set; }
 }

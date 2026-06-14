@@ -47,6 +47,9 @@ public partial class AppDbContext : DbContext
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<IdentityVerificationRequest> IdentityVerificationRequests => Set<IdentityVerificationRequest>();
     public DbSet<IdentityVerificationDocument> IdentityVerificationDocuments => Set<IdentityVerificationDocument>();
+    public DbSet<StripeConnectedAccount> StripeConnectedAccounts => Set<StripeConnectedAccount>();
+    public DbSet<StripeCustomerProfile> StripeCustomerProfiles => Set<StripeCustomerProfile>();
+    public DbSet<OwnerSettlement> OwnerSettlements => Set<OwnerSettlement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -66,6 +69,9 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<Lease>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<Complaint>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<Payment>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<StripeConnectedAccount>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<StripeCustomerProfile>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<OwnerSettlement>().HasQueryFilter(x => x.DeletedAt == null);
 
         modelBuilder.Entity<LeaseBill>().HasQueryFilter(x => x.DeletedAt == null && (x.Lease == null || x.Lease.DeletedAt == null));
         modelBuilder.Entity<RentIncreaseProposal>().HasQueryFilter(x => x.DeletedAt == null && (x.Lease == null || x.Lease.DeletedAt == null));

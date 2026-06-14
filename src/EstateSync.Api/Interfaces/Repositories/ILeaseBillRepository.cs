@@ -9,4 +9,5 @@ public interface ILeaseBillRepository : IRepository<LeaseBill>
 {
     Task<IEnumerable<LeaseBill>> GetByLeaseIdAsync(Guid leaseId);
     Task<IEnumerable<LeaseBill>> GetOverdueBillsAsync(DateTime currentDate);
+    Task<LeaseBill?> GetByIdWithLeaseAndPropertyAsync(Guid leaseBillId);
 }

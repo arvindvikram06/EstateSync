@@ -16,14 +16,12 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     public async Task<User?> GetByEmailAsync(string email)
     {
         return await _dbSet
-            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email);
     }
 
     public async Task<User?> GetByEmailWithRolesAsync(string email)
     {
         return await _dbSet
-            .AsNoTracking()
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Email == email);
@@ -46,9 +44,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
 
         if (hasOwnerRole) return true;
 
-        // If not, check if they have an approved OwnerVerificationRequest
-        return await _context.Set<OwnerVerificationRequest>()
-            .AnyAsync(r => r.UserId == userId && r.Status == ApprovalStatus.Approved);
+        return false;
     }
 
     public async Task<User?> GetByIdWithRolesAsync(Guid userId)

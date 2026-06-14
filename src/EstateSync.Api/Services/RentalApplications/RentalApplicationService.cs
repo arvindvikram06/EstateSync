@@ -229,7 +229,6 @@ public class RentalApplicationService : IRentalApplicationService
             PropertyId = propertyId,
             TenantId = tenantId,
             Message = request.Message,
-            DocumentCount = 0,
             ExpectedMoveInDate = request.ExpectedMoveInDate,
             DurationMonths = request.DurationMonths,
             CommuteDistance = request.CommuteDistance,
@@ -274,7 +273,7 @@ public class RentalApplicationService : IRentalApplicationService
         application.ReviewRemarks = remarks;
         application.ReviewedAt = DateTime.UtcNow;
 
-        await _rentalAppRepo.UpdateAsync(application);
+        // await _rentalAppRepo.UpdateAsync(application);
 
         var approveNotification = new Notification
         {
@@ -297,7 +296,7 @@ public class RentalApplicationService : IRentalApplicationService
         application.ReviewRemarks = remarks;
         application.ReviewedAt = DateTime.UtcNow;
 
-        await _rentalAppRepo.UpdateAsync(application);
+        // await _rentalAppRepo.UpdateAsync(application);
 
         var rejectNotification = new Notification
         {

@@ -18,14 +18,12 @@ public class RefreshTokenRepository : BaseRepository<RefreshToken>, IRefreshToke
     public async Task<RefreshToken?> GetByTokenAsync(string token)
     {
         return await _dbSet
-            .AsNoTracking()
             .FirstOrDefaultAsync(rt => rt.Token == token);
     }
 
     public async Task<IEnumerable<RefreshToken>> GetActiveTokensInFamilyAsync(string tokenFamily)
     {
         return await _dbSet
-            .AsNoTracking()
             .Where(rt => rt.TokenFamily == tokenFamily && rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow)
             .ToListAsync();
     }

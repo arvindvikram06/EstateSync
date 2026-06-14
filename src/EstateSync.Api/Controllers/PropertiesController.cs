@@ -200,24 +200,14 @@ public class PropertiesController : ControllerBase
     [HttpPost("{id:guid}/documents")]
     [Authorize(Roles = "Owner")]
     public async Task<ActionResult<ApiResponse<DocumentResponse>>> UploadDocument(
-        Guid id,
+        [FromRoute] Guid id,
         IFormFile file,
-        DocumentType documentType,
+        [FromForm] DocumentType documentType,
         CancellationToken ct)
     {
         var ownerId = User.GetUserId();
         var response = await _propertyDocumentService.UploadDocumentAsync(id, file, documentType, ownerId, ct);
         return StatusCode(StatusCodes.Status201Created, new ApiResponse<DocumentResponse> { Data = response });
-    }
-
-    // Delete Document (Owner)
-    [HttpDelete("{id:guid}/documents/{documentId:guid}")]
-    [Authorize(Roles = "Owner")]
-    public async Task<IActionResult> DeleteDocument(Guid id, Guid documentId, CancellationToken ct)
-    {
-        var ownerId = User.GetUserId();
-        await _propertyDocumentService.DeleteDocumentAsync(id, documentId, ownerId, ct);
-        return NoContent();
     }
 
     // Get Property Documents (Owner/Admin)

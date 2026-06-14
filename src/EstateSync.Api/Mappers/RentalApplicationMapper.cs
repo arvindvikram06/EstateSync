@@ -16,7 +16,6 @@ public class RentalApplicationMapper
             TenantId = app.TenantId,
             TenantName = app.Tenant != null ? app.Tenant.FullName : string.Empty,
             Message = app.Message,
-            DocumentCount = app.DocumentCount,
             ExpectedMoveInDate = app.ExpectedMoveInDate,
             DurationMonths = app.DurationMonths,
             CommuteDistance = app.CommuteDistance,

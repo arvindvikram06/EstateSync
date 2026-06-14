@@ -30,4 +30,12 @@ public class LeaseBillRepository : BaseRepository<LeaseBill>, ILeaseBillReposito
             .Where(b => b.DueDate < currentDate && b.PendingAmount > 0)
             .ToListAsync();
     }
+
+    public async Task<LeaseBill?> GetByIdWithLeaseAndPropertyAsync(Guid billId)
+    {
+        return await _dbSet
+            .Include(b => b.Lease)
+                .ThenInclude(l => l!.Property)
+            .FirstOrDefaultAsync(b => b.LeaseBillId == billId);
+    }
 }

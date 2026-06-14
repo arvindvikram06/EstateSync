@@ -15,9 +15,6 @@ public interface IPropertyRepository : IRepository<Property>
         int? bedrooms,
         decimal? minRent,
         decimal? maxRent,
-        decimal? latitude,
-        decimal? longitude,
-        decimal? radiusKm,
         int limit,
         int offset);
     Task<(IEnumerable<Property> Items, int Total)> GetPendingApprovalPropertiesAsync(int limit, int offset);

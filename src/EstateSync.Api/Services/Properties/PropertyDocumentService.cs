@@ -48,50 +48,16 @@ public class PropertyDocumentService : IPropertyDocumentService
             throw new NotFoundException("Property", propertyId);
         }
 
-        ValidateUploadRequest(property, file, ownerId);
+        ValidateUploadRequest(property, file, documentType, ownerId);
 
         var fileUrl = await _fileStorageService.SaveFileAsync(file, $"properties/{propertyId}/documents", ct);
 
         var doc = await SaveOrUpdateDocumentAsync(property, file, documentType, fileUrl, ownerId);
 
-        await _propertyRepo.UpdateAsync(property);
+        // await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
 
         return _mapper.MapToDocumentResponse(doc);
-    }
-
-    public async Task DeleteDocumentAsync(Guid propertyId, Guid documentId, Guid ownerId, CancellationToken ct)
-    {
-        var property = await _propertyRepo.GetWithDetailsByIdAsync(propertyId);
-        if (property == null)
-        {
-            throw new NotFoundException("Property", propertyId);
-        }
-
-        if (property.OwnerId != ownerId)
-        {
-            throw new ForbiddenException("You do not own this property.");
-        }
-
-        if (property.Status != PropertyStatus.Draft && property.Status != PropertyStatus.Rejected)
-        {
-            throw new BadRequestException("Documents can only be deleted from properties in Draft or Rejected status.");
-        }
-
-        var link = property.PropertyDocuments.FirstOrDefault(pd => pd.DocumentId == documentId);
-        if (link == null || link.Document == null)
-        {
-            throw new NotFoundException("PropertyDocument", documentId);
-        }
-
-        await _fileStorageService.DeleteFileAsync(link.Document.DocumentUrl);
-        await _documentRepo.DeleteAsync(link.Document);
-        property.PropertyDocuments.Remove(link);
-
-        _logger.LogInformation("Document {DocumentId} deleted from property {PropertyId} by owner {OwnerId}", documentId, propertyId, ownerId);
-
-        await _propertyRepo.UpdateAsync(property);
-        await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task<List<DocumentResponse>> GetPropertyDocumentsAsync(Guid propertyId, Guid userId, bool isAdmin, CancellationToken ct)
@@ -113,11 +79,16 @@ public class PropertyDocumentService : IPropertyDocumentService
             .ToList();
     }
 
-    private void ValidateUploadRequest(Property property, IFormFile file, Guid ownerId)
+    private void ValidateUploadRequest(Property property, IFormFile file, DocumentType documentType, Guid ownerId)
     {
         if (property.OwnerId != ownerId)
         {
             throw new ForbiddenException("You do not own this property.");
+        }
+
+        if (documentType != DocumentType.OwnerShipProof)
+        {
+            throw new BadRequestException("Only OwnerShipProof is allowed for properties.");
         }
 
         if (property.Status != PropertyStatus.Draft && property.Status != PropertyStatus.Rejected)

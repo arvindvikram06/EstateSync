@@ -19,7 +19,49 @@ public class ComplaintRepository : BaseRepository<Complaint>, IComplaintReposito
     {
         return await _dbSet
             .AsNoTracking()
+            .Include(c => c.ComplaintImages)
             .Where(c => c.LeaseId == leaseId)
+            .ToListAsync();
+    }
+
+    public async Task<Complaint?> GetWithDetailsByIdAsync(Guid id)
+    {
+        return await _dbSet
+            .Include(c => c.ComplaintImages)
+            .Include(c => c.Lease)
+                .ThenInclude(l => l!.Property)
+            .FirstOrDefaultAsync(c => c.ComplaintId == id);
+    }
+
+    public async Task<IEnumerable<Complaint>> GetByTenantIdAsync(Guid tenantId)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Include(c => c.ComplaintImages)
+            .Include(c => c.Lease)
+                .ThenInclude(l => l!.Property)
+            .Where(c => c.Lease != null && c.Lease.TenantId == tenantId)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Complaint>> GetByOwnerIdAsync(Guid ownerId)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Include(c => c.ComplaintImages)
+            .Include(c => c.Lease)
+                .ThenInclude(l => l!.Property)
+            .Where(c => c.Lease != null && c.Lease.Property != null && c.Lease.Property.OwnerId == ownerId)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Complaint>> GetAllAsync()
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Include(c => c.ComplaintImages)
+            .Include(c => c.Lease)
+                .ThenInclude(l => l!.Property)
             .ToListAsync();
     }
 

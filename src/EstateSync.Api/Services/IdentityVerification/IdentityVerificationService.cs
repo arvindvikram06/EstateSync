@@ -140,7 +140,7 @@ public class IdentityVerificationService : IIdentityVerificationService
             document.ReviewStatus = ApprovalStatus.Pending;
             document.UpdatedAt = DateTime.UtcNow;
 
-            await _documentRepo.UpdateAsync(document);
+            // await _documentRepo.UpdateAsync(document);
         }
         else
         {
@@ -192,7 +192,7 @@ public class IdentityVerificationService : IIdentityVerificationService
 
         ValidateAndPopulateIdentitySubmission(verificationRequest, request);
 
-        await _requestRepo.UpdateAsync(verificationRequest);
+        // await _requestRepo.UpdateAsync(verificationRequest);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Submitted identity verification request {RequestId} for user {UserId}", requestId, userId);
@@ -243,7 +243,7 @@ public class IdentityVerificationService : IIdentityVerificationService
         verificationRequest.ReviewRemarks = remarks;
         verificationRequest.UpdatedAt = DateTime.UtcNow;
 
-        await _requestRepo.UpdateAsync(verificationRequest);
+        // await _requestRepo.UpdateAsync(verificationRequest);
 
         await UpdateIdentityDocumentsReviewStatusAsync(verificationRequest, parsedStatus, adminId, remarks);
 
@@ -291,7 +291,7 @@ public class IdentityVerificationService : IIdentityVerificationService
                 reqDoc.Document.ReviewedAt = DateTime.UtcNow;
                 reqDoc.Document.ReviewedById = adminId;
                 reqDoc.Document.ReviewNotes = remarks;
-                await _documentRepo.UpdateAsync(reqDoc.Document);
+                // await _documentRepo.UpdateAsync(reqDoc.Document);
             }
         }
     }
@@ -305,7 +305,7 @@ public class IdentityVerificationService : IIdentityVerificationService
             user.PanNumber = request.PanNumber;
             user.IsIdentityVerified = true;
             user.UpdatedAt = DateTime.UtcNow;
-            await _userRepo.UpdateAsync(user);
+            // await _userRepo.UpdateAsync(user);
         }
     }
 

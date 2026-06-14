@@ -19,6 +19,10 @@ public class OwnerVerificationRequestRepository : BaseRepository<OwnerVerificati
     {
         return await _dbSet
             .Include(r => r.User)
+                .ThenInclude(u => u!.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+            .Include(r => r.User)
+                .ThenInclude(u => u!.OwnerProfile)
             .Include(r => r.OwnerVerificationDocuments)
                 .ThenInclude(d => d.Document)
             .FirstOrDefaultAsync(r => r.RequestId == id);

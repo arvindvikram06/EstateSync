@@ -72,6 +72,15 @@ public class PropertyApprovalServiceTests
                         MimeType = "application/pdf"
                     }
                 }
+            },
+            PropertyImages = new List<PropertyImage>
+            {
+                new()
+                {
+                    ImageId = Guid.NewGuid(),
+                    Image = "/images/prop.jpg",
+                    IsPrimary = true
+                }
             }
         };
 
@@ -95,9 +104,47 @@ public class PropertyApprovalServiceTests
 
         // Assert
         property.Status.Should().Be(PropertyStatus.PendingApproval);
-        _propertyRepoMock.Verify(x => x.UpdateAsync(property), Times.Once);
         _notificationRepoMock.Verify(x => x.AddAsync(It.Is<Notification>(n => n.UserId == admins[0].UserId && n.Type == NotificationType.General)), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public void SubmitForApprovalAsync_ShouldThrowBadRequestException_WhenNoImagesUploaded()
+    {
+        // Arrange
+        var ownerId = Guid.NewGuid();
+        var propertyId = Guid.NewGuid();
+        var property = new Property
+        {
+            PropertyId = propertyId,
+            OwnerId = ownerId,
+            Title = "Property Title",
+            Description = "Test Description",
+            AddressLine = "Test Address Line",
+            Status = PropertyStatus.Draft,
+            PropertyDocuments = new List<PropertyDocument>
+            {
+                new()
+                {
+                    Document = new Document
+                    {
+                        DocumentType = DocumentType.OwnerShipProof,
+                        DocumentUrl = "/docs/deed.pdf",
+                        OriginalFileName = "deed.pdf",
+                        MimeType = "application/pdf"
+                    }
+                }
+            },
+            PropertyImages = new List<PropertyImage>()
+        };
+
+        _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(propertyId)).ReturnsAsync(property);
+
+        // Act
+        Func<Task> act = async () => await _propertyApprovalService.SubmitForApprovalAsync(propertyId, ownerId, CancellationToken.None);
+
+        // Assert
+        act.Should().ThrowAsync<BadRequestException>().WithMessage("*at least one property image*");
     }
 
     [Test]
@@ -117,7 +164,7 @@ public class PropertyApprovalServiceTests
             Status = PropertyStatus.PendingApproval
         };
 
-        _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync(property);
+        _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(propertyId)).ReturnsAsync(property);
 
         // Act
         await _propertyApprovalService.ApproveOrRejectAsync(propertyId, adminId, "Active", "Approved remarks", CancellationToken.None);
@@ -126,8 +173,6 @@ public class PropertyApprovalServiceTests
         property.Status.Should().Be(PropertyStatus.Active);
         property.ApproveById.Should().Be(adminId);
         property.ApproveRemarks.Should().Be("Approved remarks");
-
-        _propertyRepoMock.Verify(x => x.UpdateAsync(property), Times.Once);
         _notificationRepoMock.Verify(x => x.AddAsync(It.Is<Notification>(n => n.UserId == ownerId && n.Title == "Property Approved")), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

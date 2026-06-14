@@ -113,6 +113,10 @@ builder.Services.AddScoped<IOwnerVerificationRequestRepository, OwnerVerificatio
 builder.Services.AddScoped<IIdentityVerificationRequestRepository, IdentityVerificationRequestRepository>();
 builder.Services.AddScoped<ITenantVerificationRequestRepository, TenantVerificationRequestRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IStripeConnectedAccountRepository, StripeConnectedAccountRepository>();
+builder.Services.AddScoped<IStripeCustomerProfileRepository, StripeCustomerProfileRepository>();
+builder.Services.AddScoped<IOwnerSettlementRepository, OwnerSettlementRepository>();
 #endregion
 
 // Register FluentValidation
@@ -127,6 +131,7 @@ builder.Services.AddSingleton<EstateSync.Api.Mappers.RentalApplicationMapper>();
 builder.Services.AddSingleton<EstateSync.Api.Mappers.LeaseMapper>();
 builder.Services.AddSingleton<EstateSync.Api.Mappers.TenantVerificationMapper>();
 builder.Services.AddSingleton<EstateSync.Api.Mappers.AuditLogMapper>();
+builder.Services.AddSingleton<EstateSync.Api.Mappers.ComplaintMapper>();
 
 // Register Services
 builder.Services.AddScoped<IPropertyService, PropertyService>();
@@ -141,6 +146,8 @@ builder.Services.AddScoped<IRentalApplicationService, RentalApplicationService>(
 builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.TenantVerification.ITenantVerificationService, EstateSync.Api.Services.TenantVerification.TenantVerificationService>();
 builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.Leases.ILeaseService, EstateSync.Api.Services.Leases.LeaseService>();
 builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.AuditLogs.IAuditLogService, EstateSync.Api.Services.AuditLogs.AuditLogService>();
+builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.Payments.IPaymentService, EstateSync.Api.Services.Payments.PaymentService>();
+builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.Complaints.IComplaintService, EstateSync.Api.Services.Complaints.ComplaintService>();
 
 // Register Auth Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -197,7 +204,12 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddHostedService<EstateSync.Api.Services.Background.LeaseBillScheduler>();
+
 var app = builder.Build();
+
+// Configure Stripe Global API Key
+Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 // Database migrations or seeding can go here if needed.
 

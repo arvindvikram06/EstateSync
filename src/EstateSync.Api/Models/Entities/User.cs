@@ -18,6 +18,10 @@ public class User : BaseEntity
     public string? PanNumber { get; set; }
     public bool IsIdentityVerified { get; set; } = false;
 
+    // Stripe Mappings
+    public StripeConnectedAccount? StripeConnectedAccount { get; set; }
+    public StripeCustomerProfile? StripeCustomerProfile { get; set; }
+
     public Guid? CreatedById { get; set; }
     public User? CreatedBy { get; set; }
 

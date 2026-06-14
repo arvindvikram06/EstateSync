@@ -14,6 +14,7 @@ using EstateSync.Api.Interfaces.Services.Properties;
 using EstateSync.Api.Interfaces.Services.IdentityVerification;
 
 using EstateSync.Api.Extensions;
+using EstateSync.Api.Models;
 
 namespace EstateSync.Api.Controllers;
 
@@ -64,7 +65,7 @@ public class AdminController : ControllerBase
         CancellationToken ct)
     {
         var adminId = User.GetUserId();
-        await _verificationService.VerifyRequestAsync(id, adminId, request.Status, request.ReviewRemarks, ct);
+        await _verificationService.VerifyRequestAsync(id, adminId, request.Status.ToString(), request.ReviewRemarks, ct);
         return Ok(new ApiResponse<object> { Message = "Verification request status updated successfully." });
     }
 
@@ -86,7 +87,7 @@ public class AdminController : ControllerBase
         CancellationToken ct)
     {
         var adminId = User.GetUserId();
-        await _identityService.VerifyIdentityRequestAsync(id, adminId, request.Status, request.ReviewRemarks, ct);
+        await _identityService.VerifyIdentityRequestAsync(id, adminId, request.Status.ToString(), request.ReviewRemarks, ct);
         return Ok(new ApiResponse<object> { Message = "Identity verification request status updated successfully." });
     }
 
@@ -97,13 +98,13 @@ public class AdminController : ControllerBase
         CancellationToken ct)
     {
         var adminId = User.GetUserId();
-        await _propertyApprovalService.ApproveOrRejectAsync(id, adminId, request.Status, request.ApproveRemarks, ct);
+        await _propertyApprovalService.ApproveOrRejectAsync(id, adminId, request.Status.ToString(), request.ApproveRemarks, ct);
         return Ok(new ApiResponse<object> { Message = "Property status updated successfully." });
     }
 
 
 }
 
-public record VerifyOwnerRequest(string Status, string ReviewRemarks);
-public record VerifyIdentityRequestDto(string Status, string ReviewRemarks);
-public record ApprovePropertyRequest(string Status, string ApproveRemarks);
+public record VerifyOwnerRequest(ApprovalStatus Status, string ReviewRemarks);
+public record VerifyIdentityRequestDto(ApprovalStatus Status, string ReviewRemarks);
+public record ApprovePropertyRequest(PropertyStatus Status, string ApproveRemarks);

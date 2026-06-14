@@ -97,7 +97,7 @@ public class AuthService : IAuthService
         await _refreshTokenRepository.AddAsync(refreshTokenEntity);
 
         user.LastLogin = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(user);
+        // await _userRepository.UpdateAsync(user);
 
         await _unitOfWork.SaveChangesAsync();
 
@@ -127,7 +127,7 @@ public class AuthService : IAuthService
         }
 
         tokenEntity.RevokedAt = DateTime.UtcNow;
-        await _refreshTokenRepository.UpdateAsync(tokenEntity);
+        // await _refreshTokenRepository.UpdateAsync(tokenEntity);
 
         var user = await GetAndVerifyUserForRefreshAsync(tokenEntity.UserId);
 
@@ -167,7 +167,7 @@ public class AuthService : IAuthService
 
         newUser.UserRoles.Add(new UserRole
         {
-            UserRoleId = Guid.NewGuid(),
+            // Do NOT generate UserRoleId manually
             UserId = newUser.UserId,
             RoleId = tenantRole.RoleId,
             Role = tenantRole
@@ -197,7 +197,7 @@ public class AuthService : IAuthService
         foreach (var token in familyTokens)
         {
             token.RevokedAt = DateTime.UtcNow;
-            await _refreshTokenRepository.UpdateAsync(token);
+            // await _refreshTokenRepository.UpdateAsync(token);
         }
     }
 

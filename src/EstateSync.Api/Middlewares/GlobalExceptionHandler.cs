@@ -56,6 +56,7 @@ public sealed class GlobalExceptionHandler(
         ArgumentNullException => (StatusCodes.Status400BadRequest, "Invalid argument provided."),
         ArgumentException => (StatusCodes.Status400BadRequest, "Invalid argument provided."),
         UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized access."),
+        Stripe.StripeException => (StatusCodes.Status400BadRequest, "Stripe API or webhook validation error."),
         _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred on the server.")
     };
 

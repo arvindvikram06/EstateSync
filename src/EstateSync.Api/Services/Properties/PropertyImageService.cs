@@ -49,7 +49,7 @@ public class PropertyImageService : IPropertyImageService
 
         var newImages = await ProcessAndSaveImagesAsync(property, files, ct);
 
-        await _propertyRepo.UpdateAsync(property);
+        // await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
 
         var uploadedIds = newImages.Select(pi => pi.ImageId).ToList();
@@ -87,7 +87,7 @@ public class PropertyImageService : IPropertyImageService
             nextPrimary.IsPrimary = true;
         }
 
-        await _propertyRepo.UpdateAsync(property);
+        // await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Deleted image {ImageId} for property {PropertyId} by owner {OwnerId}", imageId, id, ownerId);

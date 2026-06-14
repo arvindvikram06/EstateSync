@@ -171,7 +171,7 @@ public class TenantVerificationService : ITenantVerificationService
         }
 
         request.Status = ApprovalStatus.Pending;
-        await _requestRepo.UpdateAsync(request);
+        // await _requestRepo.UpdateAsync(request);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Submitted tenant verification request {RequestId}", requestId);
@@ -201,7 +201,18 @@ public class TenantVerificationService : ITenantVerificationService
         tvRequest.ReviewRemarks = request.Remarks;
         tvRequest.UpdatedAt = DateTime.UtcNow;
 
-        await _requestRepo.UpdateAsync(tvRequest);
+        foreach (var reqDoc in tvRequest.TenantVerificationDocuments)
+        {
+            if (reqDoc.Document != null)
+            {
+                reqDoc.Document.ReviewStatus = tvRequest.Status;
+                reqDoc.Document.ReviewedAt = DateTime.UtcNow;
+                reqDoc.Document.ReviewedById = ownerId;
+                reqDoc.Document.ReviewNotes = request.Remarks;
+            }
+        }
+
+        // await _requestRepo.UpdateAsync(tvRequest);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Reviewed tenant verification request {RequestId}. Approved: {Approved}", requestId, request.Approve);
@@ -282,7 +293,7 @@ public class TenantVerificationService : ITenantVerificationService
             document.ReviewStatus = ApprovalStatus.Pending;
             document.ReviewNotes = null;
 
-            await _documentRepo.UpdateAsync(document);
+            // await _documentRepo.UpdateAsync(document);
         }
         else
         {
