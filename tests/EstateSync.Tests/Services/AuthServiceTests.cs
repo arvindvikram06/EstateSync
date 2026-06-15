@@ -13,6 +13,7 @@ using EstateSync.Api.Services.Auth;
 using EstateSync.Api.Services.Tokens;
 using EstateSync.Api.Interfaces.Services.Auth;
 using EstateSync.Api.Interfaces.Services.Tokens;
+using EstateSync.Api.Mappers;
 
 namespace EstateSync.Tests.Services;
 
@@ -44,7 +45,7 @@ public class AuthServiceTests
             _passwordServiceMock.Object,
             _tokenServiceMock.Object,
             _unitOfWorkMock.Object,
-            new EstateSync.Api.Mappers.AuthMapper()
+            new AuthMapper()
         );
     }
 
@@ -275,7 +276,6 @@ public class AuthServiceTests
         refreshToken.Should().Be("new_refresh_token");
         tokenEntity.RevokedAt.Should().NotBeNull();
 
-        // _refreshTokenRepositoryMock.Verify(x => x.UpdateAsync(tokenEntity), Times.Once);
         _refreshTokenRepositoryMock.Verify(x => x.AddAsync(It.Is<RefreshToken>(rt => rt.TokenFamily == "family_id")), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<System.Threading.CancellationToken>()), Times.Once);
     }

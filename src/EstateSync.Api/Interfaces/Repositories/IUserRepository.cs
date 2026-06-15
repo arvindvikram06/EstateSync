@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using EstateSync.Api.Models;
 
@@ -8,7 +9,7 @@ public interface IUserRepository : IRepository<User>
 {
     Task<User?> GetByEmailAsync(string email);
     Task<User?> GetByEmailWithRolesAsync(string email);
-    Task<System.Collections.Generic.IEnumerable<User>> GetUsersByRoleAsync(string roleName);
+    Task<IEnumerable<User>> GetUsersByRoleAsync(string roleName);
     Task<bool> IsUserVerifiedOwnerAsync(Guid userId);
     Task<User?> GetByIdWithRolesAsync(Guid userId);
 }

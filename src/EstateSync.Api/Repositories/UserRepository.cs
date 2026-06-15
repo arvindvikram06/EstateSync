@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using EstateSync.Api.Data;
@@ -27,7 +28,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<System.Collections.Generic.IEnumerable<User>> GetUsersByRoleAsync(string roleName)
+    public async Task<IEnumerable<User>> GetUsersByRoleAsync(string roleName)
     {
         return await _dbSet
             .AsNoTracking()

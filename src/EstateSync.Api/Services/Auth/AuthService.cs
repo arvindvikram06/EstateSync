@@ -197,7 +197,6 @@ public class AuthService : IAuthService
         foreach (var token in familyTokens)
         {
             token.RevokedAt = DateTime.UtcNow;
-            // await _refreshTokenRepository.UpdateAsync(token);
         }
     }
 

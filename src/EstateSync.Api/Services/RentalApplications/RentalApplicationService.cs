@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -110,7 +111,7 @@ public class RentalApplicationService : IRentalApplicationService
     public async Task<PagedResponse<RentalApplicationResponse>> GetOwnerApplicationsAsync(Guid ownerId, int page, int limit, CancellationToken ct)
     {
         var (apps, total) = await _rentalAppRepo.GetByOwnerIdPagedAsync(ownerId, page, limit);
-        var mapped = System.Linq.Enumerable.Select(apps, _mapper.MapToResponse);
+        var mapped = apps.Select(_mapper.MapToResponse);
         return new PagedResponse<RentalApplicationResponse>
         {
             Success = true,
@@ -140,7 +141,7 @@ public class RentalApplicationService : IRentalApplicationService
         }
 
         var (apps, total) = await _rentalAppRepo.GetByPropertyIdWithDetailsPagedAsync(propertyId, page, limit);
-        var mapped = System.Linq.Enumerable.Select(apps, _mapper.MapToResponse);
+        var mapped = apps.Select(_mapper.MapToResponse);
         return new PagedResponse<RentalApplicationResponse>
         {
             Success = true,
@@ -154,7 +155,7 @@ public class RentalApplicationService : IRentalApplicationService
     public async Task<PagedResponse<RentalApplicationResponse>> GetTenantApplicationsAsync(Guid tenantId, int page, int limit, CancellationToken ct)
     {
         var (apps, total) = await _rentalAppRepo.GetByTenantIdWithDetailsPagedAsync(tenantId, page, limit);
-        var mapped = System.Linq.Enumerable.Select(apps, _mapper.MapToResponse);
+        var mapped = apps.Select(_mapper.MapToResponse);
         return new PagedResponse<RentalApplicationResponse>
         {
             Success = true,
