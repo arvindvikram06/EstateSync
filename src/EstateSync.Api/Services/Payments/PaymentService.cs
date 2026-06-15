@@ -71,7 +71,7 @@ public class PaymentService : IPaymentService
                 BusinessProfile = new AccountBusinessProfileOptions
                 {
                     ProductDescription = "Real estate property owner receiving rent.",
-                    Url = "https://estatesync.com" // Pre-filling this hides the website question from the owner!
+                    Url = "https://estatesync.com"
                 },
                 Individual = new AccountIndividualOptions
                 {

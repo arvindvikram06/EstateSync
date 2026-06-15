@@ -205,6 +205,5 @@ flowchart TD
 ### Key Architectural Highlights:
 1. **Middlewares**: `GlobalExceptionHandler` intercepts all crashes and returns RFC 7807 standard JSON `ProblemDetails`, hiding stack traces in production.
 2. **Controllers**: Kept extremely thin. They handle HTTP routing, role authorization (`[Authorize(Roles="...")]`), and delegate all logic to Services.
-3. **Services**: Contains 100% of the business logic. Completely independent of HTTP concepts and deeply unit tested.
-4. **Unit of Work & Repositories**: Ensures database atomicity. If a service needs to insert an `Application` and update a `Property`, it happens in a single transaction.
-5. **Audit Interceptor**: A low-level hook inside EF Core `AppDbContext` that transparently watches for data mutations and automatically saves snapshots to the `AuditLogs` table without the Service layer even knowing.
+3. **Unit of Work & Repositories**: Ensures database atomicity. If a service needs to insert an `Application` and update a `Property`, it happens in a single transaction.
+4. **Audit Interceptor**: A low-level hook inside EF Core `AppDbContext` that transparently watches for data mutations and automatically saves snapshots to the `AuditLogs` table without the Service layer even knowing.
