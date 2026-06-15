@@ -125,19 +125,6 @@ flowchart TD
 
 ---
 
-## 6. Complaints & Maintenance Ticketing
-
-A simple state machine allowing tenants and owners to manage property issues.
-
-```mermaid
-flowchart LR
-    A((Open)) -->|Owner sends Plumber| B((In Progress))
-    B -->|Issue Fixed| C((Resolved))
-    C -->|Tenant Approves| D((Closed))
-    C -->|Tenant Dissatisfied| A
-```
-
----
 
 # 🏗️ High-Level System Architecture
 
