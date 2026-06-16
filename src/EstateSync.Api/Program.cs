@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -153,7 +150,6 @@ builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.Complaints.ICompla
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
-builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.Auth.ICurrentUserService, EstateSync.Api.Services.Auth.CurrentUserService>();
 
 // Configure HS256 JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "SuperSecretKeyForEstateSyncApp12345678901234567890!";
@@ -178,33 +174,12 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 
-    // options.Events = new JwtBearerEvents
-    // {
-    //     OnMessageReceived = context =>
-    //     {
-    //         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-    //         var authorizationHeader = context.Request.Headers.Authorization.ToString();
-    //         logger.LogInformation("Incoming Authorization Header: {Header}", authorizationHeader);
-    //         return Task.CompletedTask;
-    //     },
-    //     OnAuthenticationFailed = context =>
-    //     {
-    //         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-    //         logger.LogError(context.Exception, "JWT Authentication failed");
-    //         return Task.CompletedTask;
-    //     },
-    //     OnTokenValidated = context =>
-    //     {
-    //         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-    //         logger.LogInformation("JWT Token validated successfully for user");
-    //         return Task.CompletedTask;
-    //     }
-    // };
 });
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddHostedService<EstateSync.Api.Services.Background.LeaseBillScheduler>();
+// Turn off background service for now
+// builder.Services.AddHostedService<EstateSync.Api.Services.Background.LeaseBillScheduler>();
 
 var app = builder.Build();
 

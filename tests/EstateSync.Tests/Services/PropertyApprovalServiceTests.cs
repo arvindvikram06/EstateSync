@@ -214,6 +214,6 @@ public class PropertyApprovalServiceTests
         result.Total.Should().Be(2);
         result.Page.Should().Be(1);
         result.Limit.Should().Be(10);
-        result.Data.First().Title.Should().Be("Pending Property 1");
+        result.Data!.First().Title.Should().Be("Pending Property 1");
     }
 }

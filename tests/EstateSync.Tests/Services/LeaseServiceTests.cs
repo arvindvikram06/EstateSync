@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -301,10 +302,19 @@ public class LeaseServiceTests
             Property = CreateTestProperty(propertyId, ownerId)
         };
 
+        var fileMock = new Mock<IFormFile>();
+        fileMock.Setup(f => f.FileName).Returns("agreement.pdf");
+        fileMock.Setup(f => f.ContentType).Returns("application/pdf");
+        fileMock.Setup(f => f.Length).Returns(500);
+
         var request = new SignLeaseRequest
         {
-            SignatureText = "John Tenant Signature"
+            SignatureText = "John Tenant Signature",
+            SignedAgreementFile = fileMock.Object
         };
+
+        _fileStorageServiceMock.Setup(x => x.SaveFileAsync(fileMock.Object, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("http://storage/agreement.pdf");
 
         _leaseRepoMock.Setup(x => x.GetWithDetailsByIdAsync(leaseId)).ReturnsAsync(lease);
 

@@ -18,7 +18,6 @@ using EstateSync.Api.Services.Storage;
 using EstateSync.Api.Services.OwnerVerification;
 using EstateSync.Api.Interfaces.Services.OwnerVerification;
 using EstateSync.Api.Interfaces.Services.Storage;
-using EstateSync.Api.Interfaces.Services.Auth;
 
 namespace EstateSync.Tests.Services;
 
@@ -34,7 +33,6 @@ public class OwnerVerificationServiceTests
     private Mock<IUnitOfWork> _unitOfWorkMock;
     private UserMapper _userMapper;
     private Mock<ILogger<OwnerVerificationService>> _loggerMock;
-    private Mock<ICurrentUserService> _currentUserServiceMock;
     private OwnerVerificationService _verificationService;
 
     [SetUp]
@@ -49,7 +47,6 @@ public class OwnerVerificationServiceTests
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _userMapper = new UserMapper();
         _loggerMock = new Mock<ILogger<OwnerVerificationService>>();
-        _currentUserServiceMock = new Mock<ICurrentUserService>();
 
         _verificationService = new OwnerVerificationService(
             _requestRepoMock.Object,
@@ -60,8 +57,7 @@ public class OwnerVerificationServiceTests
             _roleRepoMock.Object,
             _unitOfWorkMock.Object,
             _userMapper,
-            _loggerMock.Object,
-            _currentUserServiceMock.Object);
+            _loggerMock.Object);
     }
 
     [Test]
@@ -158,7 +154,7 @@ public class OwnerVerificationServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var user = new User { UserId = userId, IsIdentityVerified = true, FullName = "Owner", Email = "o@o.com", PasswordHash = "hash", PhoneNumber = "123456789" };
-        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _userRepoMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync(user);
         _requestRepoMock.Setup(x => x.GetByUserIdAsync(userId)).ReturnsAsync(new List<OwnerVerificationRequest>());
         
         _requestRepoMock.Setup(x => x.GetWithDetailsByIdAsync(It.IsAny<Guid>()))
@@ -191,7 +187,7 @@ public class OwnerVerificationServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var user = new User { UserId = userId, IsIdentityVerified = true, FullName = "Owner", Email = "o@o.com", PasswordHash = "hash", PhoneNumber = "123456789" };
-        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _userRepoMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync(user);
         var existingDraftId = Guid.NewGuid();
         var existingRequests = new List<OwnerVerificationRequest>
         {
@@ -228,7 +224,7 @@ public class OwnerVerificationServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var user = new User { UserId = userId, IsIdentityVerified = true, FullName = "Owner", Email = "o@o.com", PasswordHash = "hash", PhoneNumber = "123456789" };
-        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _userRepoMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync(user);
         var existingRequests = new List<OwnerVerificationRequest>
         {
             new OwnerVerificationRequest { RequestId = Guid.NewGuid(), UserId = userId, Status = ApprovalStatus.Pending }
@@ -248,7 +244,7 @@ public class OwnerVerificationServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var user = new User { UserId = userId, IsIdentityVerified = false, FullName = "Owner", Email = "o@o.com", PasswordHash = "hash", PhoneNumber = "123456789" };
-        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _userRepoMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync(user);
 
         // Act
         Func<Task> act = async () => await _verificationService.CreateDraftVerificationRequestAsync(userId, CancellationToken.None);
@@ -262,7 +258,7 @@ public class OwnerVerificationServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(userId, It.IsAny<CancellationToken>()))
+        _userRepoMock.Setup(x => x.GetByIdAsync(userId))
             .ThrowsAsync(new NotFoundException("User", userId));
 
         // Act

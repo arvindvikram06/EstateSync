@@ -18,6 +18,7 @@ public class PropertyMapper
             Bedrooms = s.Bedrooms,
             Bathrooms = s.Bathrooms,
             State = s.Location != null ? s.Location.StateName : string.Empty,
+            AddressLine = s.AddressLine,
             PrimaryImage = s.PropertyImages.FirstOrDefault(i => i.IsPrimary)?.Image,
             PropertyType = s.PropertyType.ToString(),
             Status = s.Status.ToString()

@@ -23,7 +23,6 @@ public class RentalApplicationService : IRentalApplicationService
     private readonly IUnitOfWork _unitOfWork;
     private readonly RentalApplicationMapper _mapper;
     private readonly ILogger<RentalApplicationService> _logger;
-    private readonly ICurrentUserService _currentUserService;
 
     public RentalApplicationService(
         IRentalApplicationRepository rentalAppRepo,
@@ -32,8 +31,7 @@ public class RentalApplicationService : IRentalApplicationService
         INotificationRepository notificationRepo,
         IUnitOfWork unitOfWork,
         RentalApplicationMapper mapper,
-        ILogger<RentalApplicationService> logger,
-        ICurrentUserService currentUserService)
+        ILogger<RentalApplicationService> logger)
     {
         _rentalAppRepo = rentalAppRepo ?? throw new ArgumentNullException(nameof(rentalAppRepo));
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
@@ -42,7 +40,6 @@ public class RentalApplicationService : IRentalApplicationService
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _currentUserService = currentUserService ?? throw new ArgumentNullException(nameof(currentUserService));
     }
 
     public async Task<RentalApplicationResponse> CreateApplicationAsync(
@@ -51,7 +48,8 @@ public class RentalApplicationService : IRentalApplicationService
         Guid tenantId,
         CancellationToken ct)
     {
-        var tenant = await _currentUserService.GetUserOrThrowAsync(tenantId, ct);
+        var tenant = await _userRepo.GetByIdAsync(tenantId);
+        if (tenant == null) throw new NotFoundException("User", tenantId);
 
         var property = await _propertyRepo.GetByIdAsync(propertyId);
         if (property == null)

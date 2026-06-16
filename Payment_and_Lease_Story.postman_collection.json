@@ -1,0 +1,605 @@
+{
+  "info": {
+    "name": "EstateSync - Payment & Lease Story",
+    "description": "Extracted story for EstateSync - Payment & Lease Story",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "4. Lease Creation & Signing",
+      "item": [
+        {
+          "name": "4.1 Owner - Create Lease Draft",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "applicationId",
+                  "value": "INSERT_APPLICATION_ID_HERE",
+                  "type": "text"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-07-01T00:00:00Z",
+                  "type": "text"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2027-07-01T00:00:00Z",
+                  "type": "text"
+                },
+                {
+                  "key": "monthlyRent",
+                  "value": "35000",
+                  "type": "text"
+                },
+                {
+                  "key": "securityDeposit",
+                  "value": "100000",
+                  "type": "text"
+                },
+                {
+                  "key": "paymentFrequency",
+                  "value": "Monthly",
+                  "type": "text"
+                },
+                {
+                  "key": "noticePeriodDays",
+                  "value": "30",
+                  "type": "text"
+                },
+                {
+                  "key": "penaltyPercentage",
+                  "value": "5.0",
+                  "type": "text"
+                },
+                {
+                  "key": "agreementText",
+                  "value": "Lease Agreement details and standard terms.",
+                  "type": "text"
+                },
+                {
+                  "key": "unsignedAgreement",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Leases",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Leases"
+              ]
+            },
+            "description": "Owner drafts lease for approved application."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.2 Tenant - Sign Lease",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "signatureText",
+                  "value": "Jane Tenant Digital Signature",
+                  "type": "text"
+                },
+                {
+                  "key": "signedAgreementFile",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Leases/:leaseId/sign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Leases",
+                ":leaseId",
+                "sign"
+              ],
+              "variable": [
+                {
+                  "key": "leaseId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Tenant signs agreement."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.3 Owner - Sign & Activate Lease",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "signatureText",
+                  "value": "Bob Landlord Digital Signature",
+                  "type": "text"
+                },
+                {
+                  "key": "signedAgreementFile",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Leases/:leaseId/sign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Leases",
+                ":leaseId",
+                "sign"
+              ],
+              "variable": [
+                {
+                  "key": "leaseId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Owner signs lease. This triggers automatic activation, generating the Security Deposit and first Rent bill!"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Billing & Payments Flow",
+      "item": [
+        {
+          "name": "5.1 Tenant - Pay Bill (Stripe Checkout Session)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Payments/checkout/:leaseBillId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Payments",
+                "checkout",
+                ":leaseBillId"
+              ],
+              "variable": [
+                {
+                  "key": "leaseBillId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Generates Stripe checkout session URL for paying the bill."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Complaint Management Flow",
+      "item": [
+        {
+          "name": "6.1 Tenant - Create Complaint",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaseId\": \"{{leaseId}}\",\n  \"title\": \"Water Leak in Bathroom\",\n  \"description\": \"Water is leaking from pipe joints under the bathroom sink.\",\n  \"complaintType\": \"Maintenance\",\n  \"priority\": \"High\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/complaints",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "complaints"
+              ]
+            },
+            "description": "Files a property maintenance complaint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6.2 Tenant - Upload Complaint Attachment Proof",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/complaints/:complaintId/images",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "complaints",
+                ":complaintId",
+                "images"
+              ],
+              "variable": [
+                {
+                  "key": "complaintId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Uploads a photo/image proof of the issue."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6.3 Owner - Update Complaint Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"InProgress\",\n  \"reviewRemarks\": \"Plumber has been dispatched, will repair on Monday morning.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/complaints/:complaintId/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "complaints",
+                ":complaintId",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "complaintId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Landlord marks issue status as InProgress and leaves remarks."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5118",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ownerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tenantToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

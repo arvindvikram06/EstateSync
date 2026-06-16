@@ -38,4 +38,15 @@ public class LeaseBillRepository : BaseRepository<LeaseBill>, ILeaseBillReposito
                 .ThenInclude(l => l!.Property)
             .FirstOrDefaultAsync(b => b.LeaseBillId == billId);
     }
+
+    public async Task<IEnumerable<LeaseBill>> GetByTenantIdAsync(Guid tenantId)
+    {
+        return await _dbSet
+            .Include(b => b.Lease)
+                .ThenInclude(l => l!.Property)
+            .AsNoTracking()
+            .Where(b => b.Lease != null && b.Lease.TenantId == tenantId)
+            .OrderByDescending(b => b.DueDate)
+            .ToListAsync();
+    }
 }

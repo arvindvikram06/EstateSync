@@ -156,7 +156,7 @@ public class TenantVerificationServiceTests
         result.Should().NotBeNull();
         result.Status.Should().Be("Draft");
         savedRequest.Should().NotBeNull();
-        savedRequest.ApplicationId.Should().Be(appId);
+        savedRequest!.ApplicationId.Should().Be(appId);
         savedRequest.TenantId.Should().Be(tenantId);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -346,7 +346,7 @@ public class TenantVerificationServiceTests
         result.Success.Should().BeTrue();
         result.Total.Should().Be(1);
         result.Data.Should().HaveCount(1);
-        result.Data.First().Status.Should().Be("Draft");
+        result.Data!.First().Status.Should().Be("Draft");
     }
 
     [Test]
@@ -365,7 +365,7 @@ public class TenantVerificationServiceTests
         result.Success.Should().BeTrue();
         result.Total.Should().Be(1);
         result.Data.Should().HaveCount(1);
-        result.Data.First().Status.Should().Be("Pending");
+        result.Data!.First().Status.Should().Be("Pending");
     }
 
     [Test]

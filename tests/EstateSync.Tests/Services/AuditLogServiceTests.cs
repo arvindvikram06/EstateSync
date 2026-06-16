@@ -78,7 +78,7 @@ public class AuditLogServiceTests
         result.Total.Should().Be(2);
         result.Data.Should().HaveCount(2);
 
-        var first = result.Data.First();
+        var first = result.Data!.First();
         first.AuditLogId.Should().Be(1);
         first.EntityId.Should().Be("guid-1");
         first.EntityType.Should().Be("Property");

@@ -29,7 +29,6 @@ public class OwnerVerificationService : IOwnerVerificationService
     private readonly IUnitOfWork _unitOfWork;
     private readonly UserMapper _mapper;
     private readonly ILogger<OwnerVerificationService> _logger;
-    private readonly ICurrentUserService _currentUserService;
 
     public OwnerVerificationService(
         IOwnerVerificationRequestRepository requestRepo,
@@ -40,8 +39,7 @@ public class OwnerVerificationService : IOwnerVerificationService
         IRoleRepository roleRepo,
         IUnitOfWork unitOfWork,
         UserMapper mapper,
-        ILogger<OwnerVerificationService> logger,
-        ICurrentUserService currentUserService)
+        ILogger<OwnerVerificationService> logger)
     {
         _requestRepo = requestRepo ?? throw new ArgumentNullException(nameof(requestRepo));
         _documentRepo = documentRepo ?? throw new ArgumentNullException(nameof(documentRepo));
@@ -52,12 +50,12 @@ public class OwnerVerificationService : IOwnerVerificationService
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _currentUserService = currentUserService ?? throw new ArgumentNullException(nameof(currentUserService));
     }
 
     public async Task<OwnerVerificationResponse> CreateDraftVerificationRequestAsync(Guid userId, CancellationToken ct)
     {
-        var user = await _currentUserService.GetUserOrThrowAsync(userId, ct);
+        var user = await _userRepo.GetByIdAsync(userId);
+        if (user == null) throw new NotFoundException("User", userId);
 
         if (!user.IsIdentityVerified)
         {

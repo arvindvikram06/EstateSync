@@ -26,7 +26,7 @@ public class TokenService : ITokenService
         _audience = _configuration["Jwt:Audience"] ?? "EstateSyncClient";
         _expiryMinutes = int.TryParse(_configuration["Jwt:ExpiryMinutes"], out var val) ? val : 15;
 
-        var secret = _configuration["Jwt:Secret"] ?? "SuperSecretKeyForEstateSyncApp12345678901234567890!";
+        var secret = _configuration["Jwt:SecretKey"] ?? "SuperSecretKeyForEstateSyncApp12345678901234567890!";
         _signingKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(secret));
     }
 

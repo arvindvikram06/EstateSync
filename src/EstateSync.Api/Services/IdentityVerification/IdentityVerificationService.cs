@@ -53,6 +53,12 @@ public class IdentityVerificationService : IIdentityVerificationService
     // Creates a new draft identity verification request for the user if no active or approved requests exist. If a draft already exists, returns the existing draft's ID.
     public async Task<IdentityVerificationResponse> CreateDraftIdentityRequestAsync(Guid userId, CancellationToken ct)
     {
+        var user = await _userRepo.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new NotFoundException("User", userId);
+        }
+
         var existingRequests = await _requestRepo.GetByUserIdAsync(userId);
         
         if (existingRequests.Any(r => r.Status == ApprovalStatus.Pending || r.Status == ApprovalStatus.Approved))

@@ -54,7 +54,7 @@ public class PaymentService : IPaymentService
 
         string stripeAccountId;
         var connectedAccount = await _stripeConnectedAccountRepo.GetByOwnerIdAsync(ownerId);
-
+        
         // 1. Create the Stripe Connect Express account if it doesn't exist
         if (connectedAccount == null)
         {
@@ -99,6 +99,14 @@ public class PaymentService : IPaymentService
         else
         {
             stripeAccountId = connectedAccount.StripeAccountId;
+            
+            // Check if they already completed onboarding
+            var accountService = new AccountService();
+            var account = await accountService.GetAsync(stripeAccountId, cancellationToken: ct);
+            if (account.DetailsSubmitted && account.ChargesEnabled)
+            {
+                throw new ConflictException("You have already completed your payment onboarding.");
+            }
         }
 
         // 2. Generate the onboarding URL
@@ -119,6 +127,11 @@ public class PaymentService : IPaymentService
     {
         var bill = await _leaseBillRepo.GetByIdWithLeaseAndPropertyAsync(leaseBillId);
         if (bill == null) throw new NotFoundException("LeaseBill", leaseBillId);
+
+        if (bill.PendingAmount <= 0)
+        {
+            throw new ConflictException("This bill has already been fully paid.");
+        }
 
         // Find Owner's Stripe ID to route the money
         var ownerAccount = await _stripeConnectedAccountRepo.GetByOwnerIdAsync(bill.Lease!.Property!.OwnerId);

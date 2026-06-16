@@ -41,7 +41,7 @@ public class LeasesController : ControllerBase
         });
     }
 
-    [HttpPost("{id:guid}/sign")]
+    [HttpPut("{id:guid}/sign")]
     [Authorize(Roles = "Owner,Tenant")]
     public async Task<ActionResult<ApiResponse<LeaseResponse>>> Sign(
         Guid id,

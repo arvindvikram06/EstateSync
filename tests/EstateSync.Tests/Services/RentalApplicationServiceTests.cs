@@ -12,7 +12,6 @@ using EstateSync.Api.Mappers;
 using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
 using EstateSync.Api.Services.RentalApplications;
-using EstateSync.Api.Interfaces.Services.Auth;
 
 namespace EstateSync.Tests.Services;
 
@@ -25,7 +24,6 @@ public class RentalApplicationServiceTests
     private Mock<INotificationRepository> _notificationRepoMock;
     private Mock<IUnitOfWork> _unitOfWorkMock;
     private Mock<ILogger<RentalApplicationService>> _loggerMock;
-    private Mock<ICurrentUserService> _currentUserServiceMock;
     private RentalApplicationMapper _mapper;
     private RentalApplicationService _service;
 
@@ -39,7 +37,6 @@ public class RentalApplicationServiceTests
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _loggerMock = new Mock<ILogger<RentalApplicationService>>();
         _mapper = new RentalApplicationMapper();
-        _currentUserServiceMock = new Mock<ICurrentUserService>();
 
         _service = new RentalApplicationService(
             _rentalAppRepoMock.Object,
@@ -48,8 +45,7 @@ public class RentalApplicationServiceTests
             _notificationRepoMock.Object,
             _unitOfWorkMock.Object,
             _mapper,
-            _loggerMock.Object,
-            _currentUserServiceMock.Object);
+            _loggerMock.Object);
     }
 
     [Test]
@@ -90,7 +86,7 @@ public class RentalApplicationServiceTests
 
         _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync(property);
         _rentalAppRepoMock.Setup(x => x.HasTenantAppliedAsync(propertyId, tenantId)).ReturnsAsync(false);
-        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(tenant);
+        _userRepoMock.Setup(x => x.GetByIdAsync(tenantId)).ReturnsAsync(tenant);
 
         // Act
         var result = await _service.CreateApplicationAsync(propertyId, request, tenantId, CancellationToken.None);
@@ -143,7 +139,7 @@ public class RentalApplicationServiceTests
 
         _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync(property);
         _rentalAppRepoMock.Setup(x => x.HasTenantAppliedAsync(propertyId, tenantId)).ReturnsAsync(false);
-        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(tenant);
+        _userRepoMock.Setup(x => x.GetByIdAsync(tenantId)).ReturnsAsync(tenant);
 
         // Act & Assert
         Func<Task> act = async () => await _service.CreateApplicationAsync(propertyId, request, tenantId, CancellationToken.None);
@@ -162,7 +158,7 @@ public class RentalApplicationServiceTests
         };
         var tenant = new User { UserId = tenantId, IsIdentityVerified = true, FullName = "Tenant", Email = "t@t.com", PasswordHash = "hash", PhoneNumber = "123" };
 
-        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(tenant);
+        _userRepoMock.Setup(x => x.GetByIdAsync(tenantId)).ReturnsAsync(tenant);
         _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync((Property?)null);
 
         // Act & Assert
@@ -191,7 +187,7 @@ public class RentalApplicationServiceTests
         };
         var tenant = new User { UserId = tenantId, IsIdentityVerified = true, FullName = "Tenant", Email = "t@t.com", PasswordHash = "hash", PhoneNumber = "123" };
 
-        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(tenant);
+        _userRepoMock.Setup(x => x.GetByIdAsync(tenantId)).ReturnsAsync(tenant);
         _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync(property);
 
         // Act & Assert
@@ -220,7 +216,7 @@ public class RentalApplicationServiceTests
         };
         var tenant = new User { UserId = tenantId, IsIdentityVerified = true, FullName = "Tenant", Email = "t@t.com", PasswordHash = "hash", PhoneNumber = "123" };
 
-        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(tenant);
+        _userRepoMock.Setup(x => x.GetByIdAsync(tenantId)).ReturnsAsync(tenant);
         _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync(property);
 
         // Act & Assert
@@ -249,7 +245,7 @@ public class RentalApplicationServiceTests
         };
         var tenant = new User { UserId = tenantId, IsIdentityVerified = true, FullName = "Tenant", Email = "t@t.com", PasswordHash = "hash", PhoneNumber = "123" };
 
-        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(tenant);
+        _userRepoMock.Setup(x => x.GetByIdAsync(tenantId)).ReturnsAsync(tenant);
         _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync(property);
         _rentalAppRepoMock.Setup(x => x.HasTenantAppliedAsync(propertyId, tenantId)).ReturnsAsync(true);
 
@@ -280,7 +276,7 @@ public class RentalApplicationServiceTests
 
         _propertyRepoMock.Setup(x => x.GetByIdAsync(propertyId)).ReturnsAsync(property);
         _rentalAppRepoMock.Setup(x => x.HasTenantAppliedAsync(propertyId, tenantId)).ReturnsAsync(false);
-        _currentUserServiceMock.Setup(x => x.GetUserOrThrowAsync(tenantId, It.IsAny<CancellationToken>()))
+        _userRepoMock.Setup(x => x.GetByIdAsync(tenantId))
             .ThrowsAsync(new NotFoundException("User", tenantId));
 
         // Act & Assert

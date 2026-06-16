@@ -9,6 +9,7 @@ public record PropertySummaryResponse
     public required string Title { get; init; }
     public decimal MonthlyRent { get; init; }
     public required string State { get; init; }
+    public required string? AddressLine { get; init; }
     public string? PrimaryImage { get; init; }
     public string? PropertyType { get; init; }
     public int Bedrooms { get; init; }

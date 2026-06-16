@@ -70,6 +70,7 @@ public class IdentityVerificationServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var requestId = Guid.NewGuid();
+        _userRepoMock.Setup(u => u.GetByIdAsync(userId)).ReturnsAsync(new User { UserId = userId, FullName = "Test", Email = "a@a.com", PhoneNumber = "123", PasswordHash = "h" });
         _requestRepoMock.Setup(r => r.GetByUserIdAsync(userId))
             .ReturnsAsync(new List<IdentityVerificationRequest>());
         
@@ -101,6 +102,7 @@ public class IdentityVerificationServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
+        _userRepoMock.Setup(u => u.GetByIdAsync(userId)).ReturnsAsync(new User { UserId = userId, FullName = "Test", Email = "a@a.com", PhoneNumber = "123", PasswordHash = "h" });
         var requests = new List<IdentityVerificationRequest>
         {
             new IdentityVerificationRequest { Status = ApprovalStatus.Pending }

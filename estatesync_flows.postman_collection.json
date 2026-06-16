@@ -15,11 +15,47 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/System/reset-and-seed",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "System", "reset-and-seed"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "System",
+                "reset-and-seed"
+              ]
             },
             "description": "Resets all transactional tables and seeds default user roles, locations, and demo users."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -42,11 +78,47 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Auth", "register"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Auth",
+                "register"
+              ]
             },
             "description": "Registers a new user with the Landlord/Owner role."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "1.2 Landlord - Login",
@@ -56,8 +128,23 @@
               "script": {
                 "exec": [
                   "var jsonData = pm.response.json();",
-                  "if (jsonData && jsonData.data && jsonData.data.accessToken) {",
-                  "    pm.collectionVariables.set(\"ownerToken\", jsonData.data.accessToken);",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
                   "}"
                 ],
                 "type": "javascript"
@@ -78,8 +165,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Auth",
+                "login"
+              ]
             },
             "description": "Authenticates the landlord and saves the token to ownerToken."
           }
@@ -100,12 +194,50 @@
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/Owners/me/verification-request/draft",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Owners", "me", "verification-request", "draft"]
+              "raw": "{{baseUrl}}/api/v1/Owners/me/verification-request/{{requestId}}raft",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Owners",
+                "me",
+                "verification-request",
+                "draft"
+              ]
             },
             "description": "Creates a draft Landlord Verification Request."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "1.4 Landlord - Upload Verification Document",
@@ -139,8 +271,18 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Owners/me/verification-request/:requestId/documents",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Owners", "me", "verification-request", ":requestId", "documents"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Owners",
+                "me",
+                "verification-request",
+                ":requestId",
+                "documents"
+              ],
               "variable": [
                 {
                   "key": "requestId",
@@ -149,7 +291,36 @@
               ]
             },
             "description": "Uploads the PAN document for verification."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "1.5 Landlord - Submit Verification Request",
@@ -177,8 +348,18 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Owners/me/verification-request/:requestId/submit",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Owners", "me", "verification-request", ":requestId", "submit"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Owners",
+                "me",
+                "verification-request",
+                ":requestId",
+                "submit"
+              ],
               "variable": [
                 {
                   "key": "requestId",
@@ -187,30 +368,36 @@
               ]
             },
             "description": "Submits the landlord verification request for admin review."
-          }
-        },
-        {
-          "name": "1.6 Landlord - Create Stripe Connected Account",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{ownerToken}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/Payments/owner-onboard",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Payments", "owner-onboard"]
-            },
-            "description": "Returns a Stripe connected onboarding link for the landlord to set up payouts."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -224,8 +411,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/Properties?limit=5",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Properties"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Properties"
+              ],
               "query": [
                 {
                   "key": "limit",
@@ -234,7 +427,36 @@
               ]
             },
             "description": "Fetches existing location records to extract a valid locationId."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "2.2 Landlord - Create Property",
@@ -262,11 +484,46 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Properties",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Properties"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Properties"
+              ]
             },
             "description": "Creates a new property listing as Draft."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "2.3 Landlord - Upload Property Document",
@@ -300,8 +557,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Properties/:propertyId/documents",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Properties", ":propertyId", "documents"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Properties",
+                ":propertyId",
+                "documents"
+              ],
               "variable": [
                 {
                   "key": "propertyId",
@@ -310,7 +575,36 @@
               ]
             },
             "description": "Uploads ownership/tax proof for the property."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "2.4 Landlord - Upload Property Images",
@@ -357,7 +651,36 @@
               ]
             },
             "description": "Uploads multiple images for the property listing."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "2.5 Landlord - Submit Property for Approval",
@@ -376,8 +699,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/Properties/:propertyId/submit",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Properties", ":propertyId", "submit"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Properties",
+                ":propertyId",
+                "submit"
+              ],
               "variable": [
                 {
                   "key": "propertyId",
@@ -386,7 +717,36 @@
               ]
             },
             "description": "Submits property status to PendingApproval."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "2.6 Admin - Login",
@@ -396,8 +756,23 @@
               "script": {
                 "exec": [
                   "var jsonData = pm.response.json();",
-                  "if (jsonData && jsonData.data && jsonData.data.accessToken) {",
-                  "    pm.collectionVariables.set(\"adminToken\", jsonData.data.accessToken);",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
                   "}"
                 ],
                 "type": "javascript"
@@ -418,8 +793,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Auth",
+                "login"
+              ]
             },
             "description": "Logins system administrator."
           }
@@ -450,8 +832,17 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Admin/owner-verification-requests/:requestId/verify",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Admin", "owner-verification-requests", ":requestId", "verify"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Admin",
+                "owner-verification-requests",
+                ":requestId",
+                "verify"
+              ],
               "variable": [
                 {
                   "key": "requestId",
@@ -460,7 +851,95 @@
               ]
             },
             "description": "Admin approves the landlord onboarding request."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.7.5 Landlord - Create Stripe Connected Account",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Payments/owner-onboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Payments",
+                "owner-onboard"
+              ]
+            },
+            "description": "Returns a Stripe connected onboarding link for the landlord to set up payouts."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "2.8 Admin - Approve Property",
@@ -488,8 +967,17 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Admin/properties/:propertyId/approval",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Admin", "properties", ":propertyId", "approval"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Admin",
+                "properties",
+                ":propertyId",
+                "approval"
+              ],
               "variable": [
                 {
                   "key": "propertyId",
@@ -498,7 +986,36 @@
               ]
             },
             "description": "Admin approves the property, making it public."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -521,11 +1038,47 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Auth", "register"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Auth",
+                "register"
+              ]
             },
             "description": "Registers a new tenant."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "3.2 Tenant - Login",
@@ -535,8 +1088,23 @@
               "script": {
                 "exec": [
                   "var jsonData = pm.response.json();",
-                  "if (jsonData && jsonData.data && jsonData.data.accessToken) {",
-                  "    pm.collectionVariables.set(\"tenantToken\", jsonData.data.accessToken);",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
                   "}"
                 ],
                 "type": "javascript"
@@ -557,8 +1125,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Auth",
+                "login"
+              ]
             },
             "description": "Logins the tenant."
           }
@@ -580,11 +1155,48 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/Identity/verification-request/draft",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Identity", "verification-request", "draft"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Identity",
+                "verification-request",
+                "draft"
+              ]
             },
             "description": "Creates draft verification request."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "3.4 Tenant - Upload Identity Document",
@@ -618,8 +1230,17 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Identity/verification-request/:requestId/documents",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Identity", "verification-request", ":requestId", "documents"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Identity",
+                "verification-request",
+                ":requestId",
+                "documents"
+              ],
               "variable": [
                 {
                   "key": "requestId",
@@ -628,7 +1249,36 @@
               ]
             },
             "description": "Uploads Aadhaar document."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "3.5 Tenant - Submit Identity Verification",
@@ -656,8 +1306,17 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Identity/verification-request/:requestId/submit",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Identity", "verification-request", ":requestId", "submit"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Identity",
+                "verification-request",
+                ":requestId",
+                "submit"
+              ],
               "variable": [
                 {
                   "key": "requestId",
@@ -666,7 +1325,36 @@
               ]
             },
             "description": "Submits identity request."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "3.6 Admin - Verify Tenant Identity",
@@ -694,8 +1382,17 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Admin/identity-verification-requests/:requestId/verify",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Admin", "identity-verification-requests", ":requestId", "verify"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Admin",
+                "identity-verification-requests",
+                ":requestId",
+                "verify"
+              ],
               "variable": [
                 {
                   "key": "requestId",
@@ -704,7 +1401,36 @@
               ]
             },
             "description": "Admin approves identity."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "3.7 Tenant - View Property Details",
@@ -713,8 +1439,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/Properties/:propertyId",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Properties", ":propertyId"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Properties",
+                ":propertyId"
+              ],
               "variable": [
                 {
                   "key": "propertyId",
@@ -723,7 +1456,36 @@
               ]
             },
             "description": "Views public property detail."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "3.8 Tenant - Create Rental Application",
@@ -751,8 +1513,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/RentalApplications/properties/:propertyId",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "RentalApplications", "properties", ":propertyId"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "RentalApplications",
+                "properties",
+                ":propertyId"
+              ],
               "variable": [
                 {
                   "key": "propertyId",
@@ -761,7 +1531,36 @@
               ]
             },
             "description": "Submits a rental application to the property."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "3.9 Tenant - Initiate Background Check Request",
@@ -780,8 +1579,17 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/TenantVerifications/applications/:applicationId/initiate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "TenantVerifications", "applications", ":applicationId", "initiate"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "TenantVerifications",
+                "applications",
+                ":applicationId",
+                "initiate"
+              ],
               "variable": [
                 {
                   "key": "applicationId",
@@ -790,7 +1598,36 @@
               ]
             },
             "description": "Initiates background check workflow for this application."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "3.10 Tenant - Upload Background Check Docs",
@@ -824,8 +1661,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/TenantVerifications/:requestId/documents",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "TenantVerifications", ":requestId", "documents"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "TenantVerifications",
+                ":requestId",
+                "documents"
+              ],
               "variable": [
                 {
                   "key": "requestId",
@@ -834,7 +1679,36 @@
               ]
             },
             "description": "Uploads income or employment proof."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "3.11 Tenant - Submit Background Check Request",
@@ -853,8 +1727,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/TenantVerifications/:requestId/submit",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "TenantVerifications", ":requestId", "submit"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "TenantVerifications",
+                ":requestId",
+                "submit"
+              ],
               "variable": [
                 {
                   "key": "requestId",
@@ -863,7 +1745,36 @@
               ]
             },
             "description": "Submits background check request to the owner."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "3.12 Owner - Review Background Check Request",
@@ -891,8 +1802,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/TenantVerifications/:requestId/review",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "TenantVerifications", ":requestId", "review"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "TenantVerifications",
+                ":requestId",
+                "review"
+              ],
               "variable": [
                 {
                   "key": "requestId",
@@ -901,7 +1820,36 @@
               ]
             },
             "description": "Owner reviews background check."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "3.13 Owner - Approve Rental Application",
@@ -929,8 +1877,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/RentalApplications/:applicationId/review",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "RentalApplications", ":applicationId", "review"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "RentalApplications",
+                ":applicationId",
+                "review"
+              ],
               "variable": [
                 {
                   "key": "applicationId",
@@ -939,7 +1895,36 @@
               ]
             },
             "description": "Owner approves application."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1018,11 +2003,46 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Leases",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Leases"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Leases"
+              ]
             },
             "description": "Owner drafts lease for approved application."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "4.2 Tenant - Sign Lease",
@@ -1056,8 +2076,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Leases/:leaseId/sign",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Leases", ":leaseId", "sign"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Leases",
+                ":leaseId",
+                "sign"
+              ],
               "variable": [
                 {
                   "key": "leaseId",
@@ -1066,7 +2094,36 @@
               ]
             },
             "description": "Tenant signs agreement."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "4.3 Owner - Sign & Activate Lease",
@@ -1100,8 +2157,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/Leases/:leaseId/sign",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Leases", ":leaseId", "sign"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Leases",
+                ":leaseId",
+                "sign"
+              ],
               "variable": [
                 {
                   "key": "leaseId",
@@ -1110,7 +2175,36 @@
               ]
             },
             "description": "Owner signs lease. This triggers automatic activation, generating the Security Deposit and first Rent bill!"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1134,8 +2228,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/Payments/checkout/:leaseBillId",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "Payments", "checkout", ":leaseBillId"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Payments",
+                "checkout",
+                ":leaseBillId"
+              ],
               "variable": [
                 {
                   "key": "leaseBillId",
@@ -1144,7 +2246,36 @@
               ]
             },
             "description": "Generates Stripe checkout session URL for paying the bill."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -1173,15 +2304,50 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"leaseId\": \"INSERT_LEASE_ID_HERE\",\n  \"title\": \"Water Leak in Bathroom\",\n  \"description\": \"Water is leaking from pipe joints under the bathroom sink.\",\n  \"complaintType\": \"Maintenance\",\n  \"priority\": \"High\"\n}"
+              "raw": "{\n  \"leaseId\": \"{{leaseId}}\",\n  \"title\": \"Water Leak in Bathroom\",\n  \"description\": \"Water is leaking from pipe joints under the bathroom sink.\",\n  \"complaintType\": \"Maintenance\",\n  \"priority\": \"High\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/complaints",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "complaints"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "complaints"
+              ]
             },
             "description": "Files a property maintenance complaint."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "6.2 Tenant - Upload Complaint Attachment Proof",
@@ -1210,8 +2376,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/complaints/:complaintId/images",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "complaints", ":complaintId", "images"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "complaints",
+                ":complaintId",
+                "images"
+              ],
               "variable": [
                 {
                   "key": "complaintId",
@@ -1220,7 +2394,36 @@
               ]
             },
             "description": "Uploads a photo/image proof of the issue."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "6.3 Owner - Update Complaint Status",
@@ -1248,8 +2451,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/v1/complaints/:complaintId/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "complaints", ":complaintId", "status"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "complaints",
+                ":complaintId",
+                "status"
+              ],
               "variable": [
                 {
                   "key": "complaintId",
@@ -1258,7 +2469,36 @@
               ]
             },
             "description": "Landlord marks issue status as InProgress and leaves remarks."
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

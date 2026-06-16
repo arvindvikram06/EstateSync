@@ -6,8 +6,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using EstateSync.Api.DTOs.Complaints;
-using EstateSync.Api.Interfaces.Services.Auth;
 using EstateSync.Api.Interfaces.Services.Complaints;
+
+using EstateSync.Api.Extensions;
 
 namespace EstateSync.Api.Controllers;
 
@@ -17,52 +18,50 @@ namespace EstateSync.Api.Controllers;
 public class ComplaintsController : ControllerBase
 {
     private readonly IComplaintService _complaintService;
-    private readonly ICurrentUserService _currentUserService;
 
-    public ComplaintsController(IComplaintService complaintService, ICurrentUserService currentUserService)
+    public ComplaintsController(IComplaintService complaintService)
     {
         _complaintService = complaintService;
-        _currentUserService = currentUserService;
     }
 
     [HttpPost]
     [Authorize(Roles = "Tenant")]
     public async Task<ActionResult<ComplaintResponse>> CreateComplaint(CreateComplaintRequest request, CancellationToken ct)
     {
-        var tenantId = _currentUserService.UserId;
-        if (!tenantId.HasValue || tenantId.Value == Guid.Empty) throw new UnauthorizedAccessException();
+        var tenantId = User.GetUserId();
+        if (tenantId == Guid.Empty) throw new UnauthorizedAccessException();
 
-        var result = await _complaintService.CreateComplaintAsync(tenantId.Value, request, ct);
+        var result = await _complaintService.CreateComplaintAsync(tenantId, request, ct);
         return CreatedAtAction(nameof(GetById), new { id = result.ComplaintId }, result);
     }
 
     [HttpPut("{id}/status")]
     public async Task<ActionResult<ComplaintResponse>> UpdateStatus(Guid id, UpdateComplaintStatusRequest request, CancellationToken ct)
     {
-        var userId = _currentUserService.UserId;
-        if (!userId.HasValue || userId.Value == Guid.Empty) throw new UnauthorizedAccessException();
+        var userId = User.GetUserId();
+        if (userId == Guid.Empty) throw new UnauthorizedAccessException();
 
-        var result = await _complaintService.UpdateComplaintStatusAsync(userId.Value, id, request, ct);
+        var result = await _complaintService.UpdateComplaintStatusAsync(userId, id, request, ct);
         return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<ComplaintResponse>> GetById(Guid id, CancellationToken ct)
     {
-        var userId = _currentUserService.UserId;
-        if (!userId.HasValue || userId.Value == Guid.Empty) throw new UnauthorizedAccessException();
+        var userId = User.GetUserId();
+        if (userId == Guid.Empty) throw new UnauthorizedAccessException();
 
-        var result = await _complaintService.GetByIdAsync(id, userId.Value, ct);
+        var result = await _complaintService.GetByIdAsync(id, userId, ct);
         return Ok(result);
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ComplaintResponse>>> GetMyComplaints(CancellationToken ct)
     {
-        var userId = _currentUserService.UserId;
-        if (!userId.HasValue || userId.Value == Guid.Empty) throw new UnauthorizedAccessException();
+        var userId = User.GetUserId();
+        if (userId == Guid.Empty) throw new UnauthorizedAccessException();
 
-        var result = await _complaintService.GetMyComplaintsAsync(userId.Value, ct);
+        var result = await _complaintService.GetMyComplaintsAsync(userId, ct);
         return Ok(result);
     }
 
@@ -70,10 +69,10 @@ public class ComplaintsController : ControllerBase
     [Authorize(Roles = "Tenant")]
     public async Task<ActionResult<ComplaintResponse>> UploadImage(Guid id, IFormFile file, CancellationToken ct)
     {
-        var tenantId = _currentUserService.UserId;
-        if (!tenantId.HasValue || tenantId.Value == Guid.Empty) throw new UnauthorizedAccessException();
+        var tenantId = User.GetUserId();
+        if (tenantId == Guid.Empty) throw new UnauthorizedAccessException();
 
-        var result = await _complaintService.UploadComplaintImageAsync(tenantId.Value, id, file, ct);
+        var result = await _complaintService.UploadComplaintImageAsync(tenantId, id, file, ct);
         return Ok(result);
     }
 }

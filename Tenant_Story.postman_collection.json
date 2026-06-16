@@ -1,0 +1,1103 @@
+{
+  "info": {
+    "name": "EstateSync - Tenant Story",
+    "description": "Extracted story for EstateSync - Tenant Story",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "3. Tenant Verification & Application",
+      "item": [
+        {
+          "name": "3.1 Tenant - Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Jane Tenant\",\n  \"email\": \"tenant.new@estatesync.com\",\n  \"phoneNumber\": \"4567890123\",\n  \"password\": \"Password123!\",\n  \"role\": \"Tenant\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Auth",
+                "register"
+              ]
+            },
+            "description": "Registers a new tenant."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.2 Tenant - Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ],
+                "type": "javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"tenant.new@estatesync.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Auth",
+                "login"
+              ]
+            },
+            "description": "Logins the tenant."
+          }
+        },
+        {
+          "name": "3.3 Tenant - Create Identity Verification Draft",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Identity/verification-request/draft",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Identity",
+                "verification-request",
+                "draft"
+              ]
+            },
+            "description": "Creates draft verification request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.4.1 Tenant - Upload Aadhaar",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "documentType",
+                  "value": "Aadhaar",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Identity/verification-request/:requestId/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Identity",
+                "verification-request",
+                ":requestId",
+                "documents"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Uploads Aadhaar document."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.4.2 Tenant - Upload PAN",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "documentType",
+                  "value": "PAN",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Identity/verification-request/:requestId/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Identity",
+                "verification-request",
+                ":requestId",
+                "documents"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Uploads Aadhaar document."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.5 Tenant - Submit Identity Verification",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aadhaarNumber\": \"123456789012\",\n  \"panNumber\": \"ABCDE1234F\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Identity/verification-request/:requestId/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Identity",
+                "verification-request",
+                ":requestId",
+                "submit"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Submits identity request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.6 Admin - Verify Tenant Identity",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\",\n  \"reviewRemarks\": \"Aadhaar & PAN matched successfully.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Admin/identity-verification-requests/:requestId/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Admin",
+                "identity-verification-requests",
+                ":requestId",
+                "verify"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Admin approves identity."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.7 Tenant - View Property Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/Properties/:propertyId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "Properties",
+                ":propertyId"
+              ],
+              "variable": [
+                {
+                  "key": "propertyId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Views public property detail."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.8 Tenant - Create Rental Application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"I am interested in leasing this coastal villa.\",\n  \"expectedMoveInDate\": \"2026-07-01\",\n  \"durationMonths\": 12,\n  \"commuteDistance\": 8.5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/RentalApplications/properties/:propertyId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "RentalApplications",
+                "properties",
+                ":propertyId"
+              ],
+              "variable": [
+                {
+                  "key": "propertyId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Submits a rental application to the property."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.9 Tenant - Initiate Background Check Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/TenantVerifications/applications/:applicationId/initiate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "TenantVerifications",
+                "applications",
+                ":applicationId",
+                "initiate"
+              ],
+              "variable": [
+                {
+                  "key": "applicationId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Initiates background check workflow for this application."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.10.1 Tenant - Upload IncomeProof",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "documentType",
+                  "value": "IncomeProof",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/TenantVerifications/:requestId/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "TenantVerifications",
+                ":requestId",
+                "documents"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Uploads income or employment proof."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.10.2 Tenant - Upload EmploymentProof",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "documentType",
+                  "value": "EmploymentProof",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/TenantVerifications/:requestId/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "TenantVerifications",
+                ":requestId",
+                "documents"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Uploads income or employment proof."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.11 Tenant - Submit Background Check Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tenantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/TenantVerifications/:requestId/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "TenantVerifications",
+                ":requestId",
+                "submit"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Submits background check request to the owner."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.12 Owner - Review Background Check Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": true,\n  \"remarks\": \"Verified income. Approved background check.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/TenantVerifications/:requestId/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "TenantVerifications",
+                ":requestId",
+                "review"
+              ],
+              "variable": [
+                {
+                  "key": "requestId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Owner reviews background check."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.13 Owner - Approve Rental Application",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": true,\n  \"remarks\": \"Background check completed and tenant has excellent references. Approved!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/RentalApplications/:applicationId/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "RentalApplications",
+                ":applicationId",
+                "review"
+              ],
+              "variable": [
+                {
+                  "key": "applicationId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Owner approves application."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    var data = jsonData.data;",
+                  "    if (data.propertyId) pm.collectionVariables.set('propertyId', data.propertyId);",
+                  "    if (data.applicationId) pm.collectionVariables.set('applicationId', data.applicationId);",
+                  "    if (data.leaseId) pm.collectionVariables.set('leaseId', data.leaseId);",
+                  "    if (data.requestId) pm.collectionVariables.set('requestId', data.requestId);",
+                  "    if (data.complaintId) pm.collectionVariables.set('complaintId', data.complaintId);",
+                  "    if (data.accessToken) {",
+                  "        var reqName = pm.info.requestName.toLowerCase();",
+                  "        if (reqName.includes('tenant')) {",
+                  "             pm.collectionVariables.set('tenantToken', data.accessToken);",
+                  "        } else if (reqName.includes('admin')) {",
+                  "             pm.collectionVariables.set('adminToken', data.accessToken);",
+                  "        } else {",
+                  "             pm.collectionVariables.set('ownerToken', data.accessToken);",
+                  "        }",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5118",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ownerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tenantToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

@@ -107,6 +107,11 @@ public class LeaseService : ILeaseService
             throw new ForbiddenException("You are not authorized to sign this lease.");
         }
 
+        if (isTenant && request.SignedAgreementFile == null)
+        {
+            throw new BadRequestException("Tenant must upload the signed agreement document.");
+        }
+
         var signedAgreementUrl = await ProcessSignedAgreementAsync(property.PropertyId, request.SignedAgreementFile, ct);
         UpdateLeaseSignature(lease, request.SignatureText, isTenant, signedAgreementUrl);
 
@@ -376,7 +381,6 @@ public class LeaseService : ILeaseService
                 app.Status = ApplicationStatus.Rejected;
                 app.ReviewRemarks = "Property is reserved";
                 app.ReviewedAt = DateTime.UtcNow;
-                // await _applicationRepo.UpdateAsync(app);
 
                 var notification = new Notification
                 {
