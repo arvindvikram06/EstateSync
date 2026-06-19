@@ -20,6 +20,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.IsIdentityVerified).HasDefaultValue(false);
 
         builder.HasIndex(x => x.Email).IsUnique();
+        builder.HasIndex(x => x.AadhaarNumber).IsUnique();
+        builder.HasIndex(x => x.PanNumber).IsUnique();
         builder.HasIndex(x => x.IsActive).HasFilter("\"DeletedAt\" IS NULL");
 
         builder.HasOne(x => x.CreatedBy)

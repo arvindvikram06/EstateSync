@@ -12,4 +12,6 @@ public interface IUserRepository : IRepository<User>
     Task<IEnumerable<User>> GetUsersByRoleAsync(string roleName);
     Task<bool> IsUserVerifiedOwnerAsync(Guid userId);
     Task<User?> GetByIdWithRolesAsync(Guid userId);
+    Task<bool> IsAadhaarInUseAsync(string aadhaarNumber, Guid? excludeUserId = null);
+    Task<bool> IsPanInUseAsync(string panNumber, Guid? excludeUserId = null);
 }

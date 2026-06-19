@@ -258,6 +258,40 @@ public class IdentityVerificationServiceTests
         await act.Should().ThrowAsync<BadRequestException>()
             .WithMessage("Missing required document types: Aadhaar, PAN");
     }
+    [Test]
+    public async Task SubmitIdentityRequestAsync_ShouldThrowConflictException_WhenAadhaarInUse()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var requestId = Guid.NewGuid();
+        var request = new SubmitIdentityVerificationRequest { AadhaarNumber = "123", PanNumber = "456" };
+        var requestEntity = new IdentityVerificationRequest { RequestId = requestId, UserId = userId, Status = ApprovalStatus.Draft };
+        
+        _requestRepoMock.Setup(r => r.GetWithDetailsByIdAsync(requestId)).ReturnsAsync(requestEntity);
+        _userRepoMock.Setup(u => u.IsAadhaarInUseAsync("123", userId)).ReturnsAsync(true);
+
+        // Act & Assert
+        Func<Task> act = async () => await _service.SubmitIdentityRequestAsync(userId, requestId, request, CancellationToken.None);
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("The provided Aadhaar number is already in use by another account.");
+    }
+
+    [Test]
+    public async Task SubmitIdentityRequestAsync_ShouldThrowConflictException_WhenPanInUse()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var requestId = Guid.NewGuid();
+        var request = new SubmitIdentityVerificationRequest { AadhaarNumber = "123", PanNumber = "456" };
+        var requestEntity = new IdentityVerificationRequest { RequestId = requestId, UserId = userId, Status = ApprovalStatus.Draft };
+        
+        _requestRepoMock.Setup(r => r.GetWithDetailsByIdAsync(requestId)).ReturnsAsync(requestEntity);
+        _userRepoMock.Setup(u => u.IsAadhaarInUseAsync("123", userId)).ReturnsAsync(false);
+        _userRepoMock.Setup(u => u.IsPanInUseAsync("456", userId)).ReturnsAsync(true);
+
+        // Act & Assert
+        Func<Task> act = async () => await _service.SubmitIdentityRequestAsync(userId, requestId, request, CancellationToken.None);
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("The provided PAN number is already in use by another account.");
+    }
 
     [Test]
     public async Task VerifyIdentityRequestAsync_ShouldUpdateUserAndApproveDocuments_WhenApproved()

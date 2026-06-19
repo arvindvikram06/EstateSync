@@ -7,5 +7,6 @@ public enum PropertyStatus
     Active,
     Rejected,
     Rented,
-    Leased
+    Leased,
+    AvailableSoon
 }

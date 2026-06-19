@@ -280,7 +280,7 @@ public class OwnerVerificationService : IOwnerVerificationService
 
         if (parsedStatus == ApprovalStatus.Approved)
         {
-            await AssignOwnerRoleAndProfileAsync(verificationRequest);
+            await AssignOwnerRoleAsync(verificationRequest);
         }
 
         await CreateAndSendVerificationNotificationAsync(verificationRequest, parsedStatus, remarks);
@@ -318,7 +318,6 @@ public class OwnerVerificationService : IOwnerVerificationService
             throw new BadRequestException($"Missing required documents: {string.Join(", ", missing)}");
         }
 
-        request.PanOrTaxId = requestDto.PanOrTaxId;
         request.Status = ApprovalStatus.Pending;
         request.CreatedAt = DateTime.UtcNow;
     }
@@ -337,7 +336,7 @@ public class OwnerVerificationService : IOwnerVerificationService
         }
     }
 
-    private async Task AssignOwnerRoleAndProfileAsync(OwnerVerificationRequest request)
+    private async Task AssignOwnerRoleAsync(OwnerVerificationRequest request)
     {
         var user = request.User;
         if (user == null) return;
@@ -350,29 +349,11 @@ public class OwnerVerificationService : IOwnerVerificationService
 
         if (!user.UserRoles.Any(ur => ur.RoleId == ownerRole.RoleId))
         {
-            // BEST PRACTICE (Chaining): Do NOT set UserRoleId. EF generates the ID and marks as Added.
             user.UserRoles.Add(new UserRole
             {
                 UserId = user.UserId,
                 RoleId = ownerRole.RoleId
             });
-        }
-
-        if (user.OwnerProfile == null)
-        {
-            // BEST PRACTICE (Chaining): Do NOT set OwnerProfileId. EF generates the ID and marks as Added.
-            user.OwnerProfile = new OwnerProfile
-            {
-                UserId = user.UserId,
-                PanOrTaxId = request.PanOrTaxId ?? string.Empty,
-                CreatedAt = DateTime.UtcNow
-            };
-        }
-        else
-        {
-            // Already tracked — mutating properties is enough; change tracker detects the diff.
-            user.OwnerProfile.PanOrTaxId = request.PanOrTaxId ?? string.Empty;
-            user.OwnerProfile.UpdatedAt = DateTime.UtcNow;
         }
     }
 

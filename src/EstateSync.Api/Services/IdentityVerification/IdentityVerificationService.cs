@@ -196,6 +196,16 @@ public class IdentityVerificationService : IIdentityVerificationService
             throw new ConflictException("Request is not in a draft state.");
         }
 
+        if (await _userRepo.IsAadhaarInUseAsync(request.AadhaarNumber, userId))
+        {
+            throw new ConflictException("The provided Aadhaar number is already in use by another account.");
+        }
+
+        if (await _userRepo.IsPanInUseAsync(request.PanNumber, userId))
+        {
+            throw new ConflictException("The provided PAN number is already in use by another account.");
+        }
+
         ValidateAndPopulateIdentitySubmission(verificationRequest, request);
 
         // await _requestRepo.UpdateAsync(verificationRequest);

@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.Threading;
+using Microsoft.EntityFrameworkCore;
+using Stripe;
 using EstateSync.Api.Exceptions;
 
 namespace EstateSync.Api.Middleware;
@@ -52,12 +54,23 @@ public sealed class GlobalExceptionHandler(
 
     private static (int StatusCode, string Title) MapException(Exception exception) => exception switch
     {
-        AppException appEx => ((int)appEx.StatusCode, appEx.Message),
+        AppException appEx => ((int)appEx.StatusCode, GetDefaultTitleForStatus((int)appEx.StatusCode)),
         ArgumentNullException => (StatusCodes.Status400BadRequest, "Invalid argument provided."),
         ArgumentException => (StatusCodes.Status400BadRequest, "Invalid argument provided."),
         UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized access."),
-        Stripe.StripeException => (StatusCodes.Status400BadRequest, "Stripe API or webhook validation error."),
+        StripeException => (StatusCodes.Status400BadRequest, "Stripe API or webhook validation error."),
+        DbUpdateException => (StatusCodes.Status500InternalServerError, "A database error occurred while saving your changes."),
         _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred on the server.")
+    };
+
+    private static string GetDefaultTitleForStatus(int statusCode) => statusCode switch
+    {
+        400 => "Bad Request",
+        401 => "Unauthorized",
+        403 => "Forbidden",
+        404 => "Not Found",
+        409 => "Conflict",
+        _ => "Error"
     };
 
     private static string GetProblemType(int statusCode) => statusCode switch
@@ -72,7 +85,8 @@ public sealed class GlobalExceptionHandler(
 
     private static string? GetSafeErrorMessage(Exception exception, IHostEnvironment env)
     {
+        if (exception is AppException) return exception.Message;
         if (env.IsDevelopment()) return exception.Message;
-        return exception is AppException ? null : "Please contact support if the issue persists.";
+        return "Please contact support if the issue persists.";
     }
 }

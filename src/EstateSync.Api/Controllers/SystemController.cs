@@ -48,7 +48,7 @@ public class SystemController : ControllerBase
         await _context.SavedProperties.ExecuteDeleteAsync();
         await _context.PropertyImages.ExecuteDeleteAsync();
         await _context.Properties.ExecuteDeleteAsync();
-        await _context.OwnerProfiles.ExecuteDeleteAsync();
+
         await _context.StripeConnectedAccounts.ExecuteDeleteAsync();
         await _context.StripeCustomerProfiles.ExecuteDeleteAsync();
         await _context.RefreshTokens.ExecuteDeleteAsync();

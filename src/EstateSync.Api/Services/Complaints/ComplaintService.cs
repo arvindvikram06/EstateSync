@@ -196,7 +196,6 @@ public class ComplaintService : IComplaintService
 
         var complaintImage = new ComplaintImage
         {
-            ComplaintImageId = Guid.NewGuid(),
             ComplaintId = complaintId,
             Image = imagePath,
             CreatedAt = DateTime.UtcNow

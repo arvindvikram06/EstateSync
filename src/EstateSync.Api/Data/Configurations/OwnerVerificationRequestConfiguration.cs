@@ -13,7 +13,6 @@ public class OwnerVerificationRequestConfiguration : IEntityTypeConfiguration<Ow
 
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(50);
         builder.Property(x => x.ReviewRemarks).HasMaxLength(1000);
-        builder.Property(x => x.PanOrTaxId).HasMaxLength(50);
 
         builder.HasOne(x => x.User)
             .WithMany(u => u.OwnerVerificationRequests)

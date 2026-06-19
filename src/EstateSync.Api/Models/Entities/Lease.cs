@@ -46,6 +46,8 @@ public class Lease : BaseEntity
     public string? CancellationReason { get; set; }
     public DateTime? CancelledAt { get; set; }
 
+    public bool IsRenewalRequested { get; set; }
+
     public ICollection<LeaseDocument> LeaseDocuments { get; set; } = new List<LeaseDocument>();
     public ICollection<LeaseBill> LeaseBills { get; set; } = new List<LeaseBill>();
     public ICollection<RentIncreaseProposal> RentIncreaseProposals { get; set; } = new List<RentIncreaseProposal>();

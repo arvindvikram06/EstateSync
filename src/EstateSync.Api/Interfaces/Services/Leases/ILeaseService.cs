@@ -15,4 +15,6 @@ public interface ILeaseService
     Task<PagedResponse<LeaseResponse>> GetTenantLeasesAsync(Guid tenantId, int page, int limit, CancellationToken ct);
     Task<PagedResponse<LeaseResponse>> GetOwnerLeasesAsync(Guid ownerId, int page, int limit, CancellationToken ct);
     Task<PagedResponse<LeaseResponse>> GetAllLeasesAsync(int page, int limit, CancellationToken ct);
+    Task RequestRenewalAsync(Guid leaseId, Guid tenantId, CancellationToken ct);
+    Task RejectRenewalAsync(Guid leaseId, Guid ownerId, CancellationToken ct);
 }

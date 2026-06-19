@@ -110,4 +110,21 @@ public class LeasesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("{id:guid}/request-renewal")]
+    [Authorize(Roles = "Tenant")]
+    public async Task<ActionResult<ApiResponse<object>>> RequestRenewal(Guid id, CancellationToken ct)
+    {
+        var tenantId = User.GetUserId();
+        await _leaseService.RequestRenewalAsync(id, tenantId, ct);
+        return Ok(new ApiResponse<object> { Message = "Renewal requested successfully." });
+    }
+
+    [HttpPost("{id:guid}/reject-renewal")]
+    [Authorize(Roles = "Owner")]
+    public async Task<ActionResult<ApiResponse<object>>> RejectRenewal(Guid id, CancellationToken ct)
+    {
+        var ownerId = User.GetUserId();
+        await _leaseService.RejectRenewalAsync(id, ownerId, ct);
+        return Ok(new ApiResponse<object> { Message = "Renewal rejected successfully." });
+    }
 }

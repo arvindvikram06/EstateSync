@@ -277,11 +277,39 @@ public class LeaseServiceTests
         };
 
         _applicationRepoMock.Setup(x => x.GetWithDetailsByIdAsync(applicationId)).ReturnsAsync(app);
-        _leaseRepoMock.Setup(x => x.GetActiveLeaseByPropertyIdAsync(propertyId)).ReturnsAsync(new Lease());
+        _leaseRepoMock.Setup(x => x.GetActiveLeaseByPropertyIdAsync(propertyId)).ReturnsAsync(new Lease { EndDate = DateTime.Today.AddYears(2) });
 
         // Act & Assert
         Func<Task> act = async () => await _service.CreateLeaseAsync(request, ownerId, CancellationToken.None);
-        await act.Should().ThrowAsync<ConflictException>().WithMessage("An active lease already exists for this property.");
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("The new lease must start after the current active lease ends.");
+    }
+
+    [Test]
+    public async Task CreateLeaseAsync_ShouldThrowConflictException_WhenLeaseForApplicationAlreadyExists()
+    {
+        // Arrange
+        var applicationId = Guid.NewGuid();
+        var propertyId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+
+        var app = CreateTestApplication(applicationId, propertyId, Guid.NewGuid(), ownerId, ApplicationStatus.Approved);
+
+        var request = new CreateLeaseRequest
+        {
+            ApplicationId = applicationId,
+            StartDate = DateTime.Today.AddDays(1),
+            EndDate = DateTime.Today.AddYears(1),
+            MonthlyRent = 2000,
+            SecurityDeposit = 4000,
+            PaymentFrequency = PaymentFrequency.Monthly
+        };
+
+        _applicationRepoMock.Setup(x => x.GetWithDetailsByIdAsync(applicationId)).ReturnsAsync(app);
+        _leaseRepoMock.Setup(x => x.GetByApplicationIdAsync(applicationId)).ReturnsAsync(new Lease { Status = LeaseStatus.PendingApproval });
+
+        // Act & Assert
+        Func<Task> act = async () => await _service.CreateLeaseAsync(request, ownerId, CancellationToken.None);
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("A lease for this rental application is already pending approval.");
     }
 
     [Test]

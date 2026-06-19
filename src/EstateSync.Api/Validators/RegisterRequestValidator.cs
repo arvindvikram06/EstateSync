@@ -9,6 +9,7 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
     {
         RuleFor(x => x.FullName)
             .NotEmpty().WithMessage("Full name is required")
+            .MinimumLength(3).WithMessage("Full name must be at least 3 characters long")
             .MaximumLength(250).WithMessage("Full name must not exceed 250 characters");
 
         RuleFor(x => x.Email)

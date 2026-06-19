@@ -13,3 +13,7 @@
 
 # Other ignored files
 sharedpai.txt
+
+**/CLAUDE.md
+
+**/.claude

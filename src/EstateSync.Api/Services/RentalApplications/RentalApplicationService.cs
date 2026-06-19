@@ -19,6 +19,7 @@ public class RentalApplicationService : IRentalApplicationService
     private readonly IRentalApplicationRepository _rentalAppRepo;
     private readonly IPropertyRepository _propertyRepo;
     private readonly IUserRepository _userRepo;
+    private readonly ILeaseRepository _leaseRepo;
     private readonly INotificationRepository _notificationRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly RentalApplicationMapper _mapper;
@@ -28,6 +29,7 @@ public class RentalApplicationService : IRentalApplicationService
         IRentalApplicationRepository rentalAppRepo,
         IPropertyRepository propertyRepo,
         IUserRepository userRepo,
+        ILeaseRepository leaseRepo,
         INotificationRepository notificationRepo,
         IUnitOfWork unitOfWork,
         RentalApplicationMapper mapper,
@@ -36,6 +38,7 @@ public class RentalApplicationService : IRentalApplicationService
         _rentalAppRepo = rentalAppRepo ?? throw new ArgumentNullException(nameof(rentalAppRepo));
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
+        _leaseRepo = leaseRepo ?? throw new ArgumentNullException(nameof(leaseRepo));
         _notificationRepo = notificationRepo ?? throw new ArgumentNullException(nameof(notificationRepo));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
@@ -57,7 +60,7 @@ public class RentalApplicationService : IRentalApplicationService
             throw new NotFoundException("Property", propertyId);
         }
 
-        await ValidateCreateApplicationAsync(propertyId, tenant, property, tenantId);
+        await ValidateCreateApplicationAsync(propertyId, tenant, property, tenantId, request.ExpectedMoveInDate);
 
         var application = CreateApplicationEntity(propertyId, tenantId, request);
         await _rentalAppRepo.AddAsync(application);
@@ -196,21 +199,33 @@ public class RentalApplicationService : IRentalApplicationService
         return _mapper.MapToResponse(application);
     }
 
-    private async Task ValidateCreateApplicationAsync(Guid propertyId, User tenant, Property property, Guid tenantId)
+    private async Task ValidateCreateApplicationAsync(Guid propertyId, User tenant, Property property, Guid tenantId, DateOnly moveInDate)
     {
         if (!tenant.IsIdentityVerified)
         {
             throw new ForbiddenException("You must verify your identity before applying for a rental property.");
         }
 
-        if (property.Status != PropertyStatus.Active)
+        if (property.Status != PropertyStatus.Active && property.Status != PropertyStatus.AvailableSoon)
         {
-            throw new BadRequestException("You can only apply to Active properties.");
+            throw new BadRequestException("You can only apply to properties that are Active or Available Soon.");
         }
 
         if (property.OwnerId == tenantId)
         {
             throw new BadRequestException("You cannot apply to your own property.");
+        }
+
+        var propertyActiveLease = await _leaseRepo.GetActiveLeaseByPropertyIdAsync(propertyId);
+        if (propertyActiveLease != null && moveInDate <= DateOnly.FromDateTime(propertyActiveLease.EndDate))
+        {
+            throw new ConflictException("The move-in date must be after the current active lease ends.");
+        }
+
+        var tenantActiveLease = await _leaseRepo.GetActiveLeaseByTenantIdAsync(tenantId);
+        if (tenantActiveLease != null && moveInDate <= DateOnly.FromDateTime(tenantActiveLease.EndDate))
+        {
+            throw new ConflictException("You currently have an active lease. Your move-in date must be after your current lease ends.");
         }
 
         var alreadyApplied = await _rentalAppRepo.HasTenantAppliedAsync(propertyId, tenantId);

@@ -339,6 +339,9 @@ namespace EstateSync.Api.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<bool>("IsRenewalRequested")
+                        .HasColumnType("boolean");
+
                     b.Property<decimal>("MonthlyRent")
                         .HasColumnType("numeric");
 

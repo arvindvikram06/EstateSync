@@ -53,7 +53,16 @@ public class UserRepository : BaseRepository<User>, IUserRepository
         return await _dbSet
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
-            .Include(u => u.OwnerProfile)
             .FirstOrDefaultAsync(u => u.UserId == userId);
+    }
+
+    public async Task<bool> IsAadhaarInUseAsync(string aadhaarNumber, Guid? excludeUserId = null)
+    {
+        return await _dbSet.AnyAsync(u => u.AadhaarNumber == aadhaarNumber && u.UserId != excludeUserId);
+    }
+
+    public async Task<bool> IsPanInUseAsync(string panNumber, Guid? excludeUserId = null)
+    {
+        return await _dbSet.AnyAsync(u => u.PanNumber == panNumber && u.UserId != excludeUserId);
     }
 }

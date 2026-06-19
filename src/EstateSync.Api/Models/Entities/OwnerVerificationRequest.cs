@@ -14,7 +14,6 @@ public class OwnerVerificationRequest : BaseEntity
     public User? ReviewedBy { get; set; }
     public string? ReviewRemarks { get; set; }
 
-    public string? PanOrTaxId { get; set; }
 
     public ICollection<OwnerVerificationDocument> OwnerVerificationDocuments { get; set; } = new List<OwnerVerificationDocument>();
 }

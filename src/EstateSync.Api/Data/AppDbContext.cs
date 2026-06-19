@@ -36,7 +36,6 @@ public partial class AppDbContext : DbContext
     public DbSet<SavedProperty> SavedProperties => Set<SavedProperty>();
     public DbSet<PropertyDocument> PropertyDocuments => Set<PropertyDocument>();
     public DbSet<LeaseDocument> LeaseDocuments => Set<LeaseDocument>();
-    public DbSet<OwnerProfile> OwnerProfiles => Set<OwnerProfile>();
     public DbSet<RentalApplication> RentalApplications => Set<RentalApplication>();
     public DbSet<Lease> Leases => Set<Lease>();
     public DbSet<LeaseBill> LeaseBills => Set<LeaseBill>();
@@ -80,8 +79,6 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<PropertyImage>().HasQueryFilter(x => x.Property != null && x.Property.DeletedAt == null);
         modelBuilder.Entity<SavedProperty>().HasQueryFilter(x => x.Property != null && x.Property.DeletedAt == null);
         modelBuilder.Entity<PropertyDocument>().HasQueryFilter(x => x.Document != null && x.Document.DeletedAt == null);
-
-        modelBuilder.Entity<OwnerProfile>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<LeaseDocument>().HasQueryFilter(x => x.Document != null && x.Document.DeletedAt == null);
 
         modelBuilder.Entity<ComplaintImage>().HasQueryFilter(x => x.Complaint != null && x.Complaint.DeletedAt == null);

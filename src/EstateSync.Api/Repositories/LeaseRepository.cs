@@ -15,6 +15,21 @@ public class LeaseRepository : BaseRepository<Lease>, ILeaseRepository
     {
     }
 
+    public async Task<Lease?> GetActiveLeaseByTenantIdAsync(Guid tenantId)
+    {
+        return await _dbSet
+            .Include(l => l.Property)
+            .FirstOrDefaultAsync(l => l.TenantId == tenantId && l.Status == LeaseStatus.Active);
+    }
+
+    public async Task<IEnumerable<Lease>> GetActiveLeasesEndingBeforeAsync(DateTime targetDate)
+    {
+        return await _dbSet
+            .Include(l => l.Property)
+            .Where(l => l.Status == LeaseStatus.Active && l.EndDate <= targetDate && l.Property != null && l.Property.Status == PropertyStatus.Leased)
+            .ToListAsync();
+    }
+
     public async Task<Lease?> GetWithDetailsByIdAsync(Guid id)
     {
         return await _dbSet
@@ -30,7 +45,13 @@ public class LeaseRepository : BaseRepository<Lease>, ILeaseRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(l => l.PropertyId == propertyId && l.Status == LeaseStatus.Active);
     }
-
+    public async Task<Lease?> GetByApplicationIdAsync(Guid applicationId)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .OrderByDescending(l => l.CreatedAt)
+            .FirstOrDefaultAsync(l => l.ApplicationId == applicationId);
+    }
 
     public async Task<(IEnumerable<Lease> Items, int Total)> GetByTenantIdPagedAsync(Guid tenantId, int page, int limit)
     {

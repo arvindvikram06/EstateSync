@@ -96,7 +96,6 @@ public class OwnerVerificationServiceTests
 
         var requestDto = new SubmitOwnerVerificationRequest
         {
-            PanOrTaxId = "ABCDE1234F"
         };
 
         // Act
@@ -136,7 +135,6 @@ public class OwnerVerificationServiceTests
 
         var requestDto = new SubmitOwnerVerificationRequest
         {
-            PanOrTaxId = "ABCDE1234F"
         };
 
         // Act

@@ -23,6 +23,7 @@ public class RentalApplicationServiceTests
     private Mock<IUserRepository> _userRepoMock;
     private Mock<INotificationRepository> _notificationRepoMock;
     private Mock<IUnitOfWork> _unitOfWorkMock;
+    private Mock<ILeaseRepository> _leaseRepoMock;
     private Mock<ILogger<RentalApplicationService>> _loggerMock;
     private RentalApplicationMapper _mapper;
     private RentalApplicationService _service;
@@ -35,6 +36,7 @@ public class RentalApplicationServiceTests
         _userRepoMock = new Mock<IUserRepository>();
         _notificationRepoMock = new Mock<INotificationRepository>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _leaseRepoMock = new Mock<ILeaseRepository>();
         _loggerMock = new Mock<ILogger<RentalApplicationService>>();
         _mapper = new RentalApplicationMapper();
 
@@ -42,6 +44,7 @@ public class RentalApplicationServiceTests
             _rentalAppRepoMock.Object,
             _propertyRepoMock.Object,
             _userRepoMock.Object,
+            _leaseRepoMock.Object,
             _notificationRepoMock.Object,
             _unitOfWorkMock.Object,
             _mapper,
@@ -192,7 +195,7 @@ public class RentalApplicationServiceTests
 
         // Act & Assert
         Func<Task> act = async () => await _service.CreateApplicationAsync(propertyId, request, tenantId, CancellationToken.None);
-        await act.Should().ThrowAsync<BadRequestException>().WithMessage("You can only apply to Active properties.");
+        await act.Should().ThrowAsync<BadRequestException>().WithMessage("You can only apply to properties that are Active or Available Soon.");
     }
 
     [Test]

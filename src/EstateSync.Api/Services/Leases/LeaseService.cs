@@ -59,11 +59,29 @@ public class LeaseService : ILeaseService
 
         ValidateCreateLeaseRequest(application, ownerId);
 
+        var existingLease = await _leaseRepo.GetByApplicationIdAsync(request.ApplicationId);
+        if (existingLease != null && existingLease.Status == LeaseStatus.PendingApproval)
+        {
+            throw new ConflictException("A lease for this rental application is already pending approval.");
+        }
+
         var property = application.Property!;
         var activeLease = await _leaseRepo.GetActiveLeaseByPropertyIdAsync(property.PropertyId);
         if (activeLease != null)
         {
-            throw new ConflictException("An active lease already exists for this property.");
+            if (request.StartDate <= activeLease.EndDate)
+            {
+                throw new ConflictException("The new lease must start after the current active lease ends.");
+            }
+        }
+
+        var tenantActiveLease = await _leaseRepo.GetActiveLeaseByTenantIdAsync(application.TenantId);
+        if (tenantActiveLease != null)
+        {
+            if (request.StartDate <= tenantActiveLease.EndDate)
+            {
+                throw new ConflictException("Tenant currently has an active lease. The new lease must start after their current lease ends.");
+            }
         }
 
         var unsignedAgreementUrl = await ProcessUnsignedAgreementAsync(property.PropertyId, request.UnsignedAgreement, ct);
@@ -397,5 +415,53 @@ public class LeaseService : ILeaseService
                 await _notificationRepo.AddAsync(notification);
             }
         }
+    }
+
+    public async Task RequestRenewalAsync(Guid leaseId, Guid tenantId, CancellationToken ct)
+    {
+        var lease = await _leaseRepo.GetWithDetailsByIdAsync(leaseId);
+        if (lease == null) throw new NotFoundException("Lease", leaseId);
+        if (lease.TenantId != tenantId) throw new ForbiddenException("You are not authorized to renew this lease.");
+        if (lease.Status != LeaseStatus.Active) throw new BadRequestException("Only active leases can be renewed.");
+
+        lease.IsRenewalRequested = true;
+
+        var notification = new Notification
+        {
+            NotificationId = Guid.NewGuid(),
+            UserId = lease.Property!.OwnerId,
+            Type = NotificationType.General,
+            Title = "Lease Renewal Requested",
+            Message = $"Your tenant has requested to renew the lease for '{lease.Property.Title}'.",
+            EntityId = lease.LeaseId.ToString(),
+            EntityType = "Lease",
+            CreatedAt = DateTime.UtcNow
+        };
+        await _notificationRepo.AddAsync(notification);
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task RejectRenewalAsync(Guid leaseId, Guid ownerId, CancellationToken ct)
+    {
+        var lease = await _leaseRepo.GetWithDetailsByIdAsync(leaseId);
+        if (lease == null) throw new NotFoundException("Lease", leaseId);
+        if (lease.Property?.OwnerId != ownerId) throw new ForbiddenException("You do not own this property.");
+        if (!lease.IsRenewalRequested) throw new BadRequestException("Renewal has not been requested.");
+
+        lease.IsRenewalRequested = false;
+
+        var notification = new Notification
+        {
+            NotificationId = Guid.NewGuid(),
+            UserId = lease.TenantId,
+            Type = NotificationType.General,
+            Title = "Lease Renewal Rejected",
+            Message = $"Your request to renew the lease for '{lease.Property!.Title}' was rejected.",
+            EntityId = lease.LeaseId.ToString(),
+            EntityType = "Lease",
+            CreatedAt = DateTime.UtcNow
+        };
+        await _notificationRepo.AddAsync(notification);
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 }

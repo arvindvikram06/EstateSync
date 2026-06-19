@@ -7,7 +7,6 @@ using FluentValidation.AspNetCore;
 using EstateSync.Api.Data;
 using EstateSync.Api.Repositories.Interfaces;
 using EstateSync.Api.Repositories;
-using EstateSync.Api.Models;
 using EstateSync.Api.Middleware;
 using EstateSync.Api.Services.Properties;
 using EstateSync.Api.Services.Auth;
@@ -23,6 +22,18 @@ using EstateSync.Api.Interfaces.Services.IdentityVerification;
 using EstateSync.Api.Services.IdentityVerification;
 using EstateSync.Api.Interfaces.Services.RentalApplications;
 using EstateSync.Api.Services.RentalApplications;
+using EstateSync.Api.Interfaces.Services.TenantVerification;
+using EstateSync.Api.Services.TenantVerification;
+using EstateSync.Api.Interfaces.Services.Leases;
+using EstateSync.Api.Services.Leases;
+using EstateSync.Api.Interfaces.Services.AuditLogs;
+using EstateSync.Api.Services.AuditLogs;
+using EstateSync.Api.Interfaces.Services.Payments;
+using EstateSync.Api.Services.Payments;
+using EstateSync.Api.Interfaces.Services.Complaints;
+using EstateSync.Api.Services.Complaints;
+using EstateSync.Api.Services.Background;
+using EstateSync.Api.Extensions;
 using EstateSync.Api.Validators;
 using Serilog;
 using System.Diagnostics;
@@ -140,53 +151,31 @@ builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<IOwnerVerificationService, OwnerVerificationService>();
 builder.Services.AddScoped<IIdentityVerificationService, IdentityVerificationService>();
 builder.Services.AddScoped<IRentalApplicationService, RentalApplicationService>();
-builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.TenantVerification.ITenantVerificationService, EstateSync.Api.Services.TenantVerification.TenantVerificationService>();
-builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.Leases.ILeaseService, EstateSync.Api.Services.Leases.LeaseService>();
-builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.AuditLogs.IAuditLogService, EstateSync.Api.Services.AuditLogs.AuditLogService>();
-builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.Payments.IPaymentService, EstateSync.Api.Services.Payments.PaymentService>();
-builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.Complaints.IComplaintService, EstateSync.Api.Services.Complaints.ComplaintService>();
+builder.Services.AddScoped<ITenantVerificationService, TenantVerificationService>();
+builder.Services.AddScoped<ILeaseService, LeaseService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IComplaintService, ComplaintService>();
 
 // Register Auth Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 
-// Configure HS256 JWT Authentication
-var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "SuperSecretKeyForEstateSyncApp12345678901234567890!";
-var validationKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtSecret));
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "EstateSyncApi",
-        ValidateAudience = true,
-        ValidAudience = builder.Configuration["Jwt:Audience"] ?? "EstateSyncClient",
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = validationKey,
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-    };
-
-});
+// Configure JWT Authentication via Extension Method
+builder.Services.AddCustomAuthentication(builder.Configuration);
 
 builder.Services.AddAuthorization();
 
 // Turn off background service for now
-// builder.Services.AddHostedService<EstateSync.Api.Services.Background.LeaseBillScheduler>();
+// builder.Services.AddHostedService<LeaseBillScheduler>();
+builder.Services.AddHostedService<PropertyStatusUpdateScheduler>();
 
 var app = builder.Build();
 
 // Configure Stripe Global API Key
 Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
-// Database migrations or seeding can go here if needed.
 
 // Configure the HTTP request pipeline.
 app.UseSerilogRequestLogging();

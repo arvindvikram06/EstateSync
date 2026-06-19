@@ -31,7 +31,6 @@ public class User : BaseEntity
     public Guid? DeletedById { get; set; }
     public User? DeletedBy { get; set; }
 
-    public OwnerProfile? OwnerProfile { get; set; }
 
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
