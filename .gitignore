@@ -11,9 +11,20 @@
 *.coverage
 **/coveragereport/
 
-# Other ignored files
-sharedpai.txt
 
 **/CLAUDE.md
 
 **/.claude
+
+# Ignore frontend directory
+frontend/
+
+# Ignore API file uploads
+**/uploads/
+backend/EstateSync.Api/uploads/
+
+# Ignore coverage reports (in case existing wildcards missed them)
+**/coverage/
+**/TestResults/
+*.opencover.xml
+coverage.cobertura.xml

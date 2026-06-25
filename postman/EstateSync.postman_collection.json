@@ -1,0 +1,1706 @@
+{
+  "info": {
+    "name": "EstateSync API",
+    "_postman_id": "estatesync-api-collection-v2",
+    "description": "EstateSync real-estate platform. Run folders in order: 00 System → 01 Auth → 02 KYC → 03 Admin KYC → 04 Admin Staff → 05 Become Owner → 06 Stripe → 07 Properties → 08 Admin Properties → 09 Tenant Financial Profile → 10 Admin Financial Profile → 11 Rental Applications → 12 Leases → 13 Payments → 14 Complaints → 15 Audit Logs. All tokens and IDs are captured automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "host",        "value": "localhost",            "type": "string" },
+    { "key": "port",        "value": "5000",                 "type": "string" },
+    { "key": "basePath",    "value": "api/v1",               "type": "string" },
+    { "key": "adminToken",  "value": "",                     "type": "string" },
+    { "key": "ownerToken",  "value": "",                     "type": "string" },
+    { "key": "tenantToken", "value": "",                     "type": "string" },
+    { "key": "locationId",  "value": "",                     "type": "string" },
+    { "key": "kycId",       "value": "",                     "type": "string" },
+    { "key": "ovId",        "value": "",                     "type": "string" },
+    { "key": "profileId",   "value": "",                     "type": "string" },
+    { "key": "propertyId",  "value": "",                     "type": "string" },
+    { "key": "appId",       "value": "",                     "type": "string" },
+    { "key": "leaseId",     "value": "",                     "type": "string" },
+    { "key": "billId",      "value": "",                     "type": "string" },
+    { "key": "complaintId", "value": "",                     "type": "string" },
+    { "key": "verifierId",  "value": "",                     "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "00 - System",
+      "item": [
+        {
+          "name": "Reset and Seed DB",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "var res = pm.response.json();",
+              "if (res.locationId) { pm.collectionVariables.set('locationId', res.locationId); console.log('locationId', res.locationId); }",
+              "pm.test('Seeded OK', () => pm.response.to.have.status(200));"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/system/reset-and-seed",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "system", "reset-and-seed"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "01 - Auth",
+      "item": [
+        {
+          "name": "Register New Tenant",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Registered or conflict', () => pm.expect(pm.response.code).to.be.oneOf([200,201,409]));"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Ravi Tenant\",\n  \"email\": \"ravi@test.com\",\n  \"phoneNumber\": \"9876543210\",\n  \"password\": \"Password123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/auth/register",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login as Admin",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "var res = pm.response.json();",
+              "pm.collectionVariables.set('adminToken', res.data.accessToken);",
+              "pm.test('Admin login OK', () => pm.response.to.have.status(200));",
+              "console.log('adminToken saved');"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@estatesync.com\",\n  \"password\": \"Password123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/auth/login",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login as Owner",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "var res = pm.response.json();",
+              "pm.collectionVariables.set('ownerToken', res.data.accessToken);",
+              "pm.test('Owner login OK', () => pm.response.to.have.status(200));",
+              "console.log('ownerToken saved');"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@estatesync.com\",\n  \"password\": \"Password123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/auth/login",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login as Tenant",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "var res = pm.response.json();",
+              "pm.collectionVariables.set('tenantToken', res.data.accessToken);",
+              "pm.test('Tenant login OK', () => pm.response.to.have.status(200));",
+              "console.log('tenantToken saved');"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ravi@test.com\",\n  \"password\": \"Password123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/auth/login",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/auth/refresh-token",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "auth", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "[Edge] Wrong Password → 401",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Expect 401', () => pm.response.to.have.status(401));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@estatesync.com\",\n  \"password\": \"WrongPassword!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/auth/login",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "[Edge] Duplicate Email → 409",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Expect 409', () => pm.response.to.have.status(409));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Ravi Again\",\n  \"email\": \"ravi@test.com\",\n  \"phoneNumber\": \"9876543211\",\n  \"password\": \"Password123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/auth/register",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "auth", "register"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "02 - KYC Flow (Tenant)",
+      "item": [
+        {
+          "name": "Create KYC Draft",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var res = pm.response.json();",
+            "if (res.data && res.data.kycVerificationId) { pm.collectionVariables.set('kycId', res.data.kycVerificationId); console.log('kycId', res.data.kycVerificationId); }",
+            "pm.test('Draft created', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/kyc/draft",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "kyc", "draft"]
+            }
+          }
+        },
+        {
+          "name": "Upload Aadhaar Front (PDF)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Attach any PDF" },
+                { "key": "documentType", "value": "AadhaarFront", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/kyc/{{kycId}}/documents",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "kyc", "{{kycId}}", "documents"]
+            }
+          }
+        },
+        {
+          "name": "Upload Aadhaar Back (PDF)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Attach any PDF" },
+                { "key": "documentType", "value": "AadhaarBack", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/kyc/{{kycId}}/documents",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "kyc", "{{kycId}}", "documents"]
+            }
+          }
+        },
+        {
+          "name": "Upload PAN Card (PDF)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Attach any PDF" },
+                { "key": "documentType", "value": "PanCard", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/kyc/{{kycId}}/documents",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "kyc", "{{kycId}}", "documents"]
+            }
+          }
+        },
+        {
+          "name": "Upload Address Proof (PDF)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Attach any PDF" },
+                { "key": "documentType", "value": "AddressProof", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/kyc/{{kycId}}/documents",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "kyc", "{{kycId}}", "documents"]
+            }
+          }
+        },
+        {
+          "name": "Submit KYC",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('KYC submitted', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aadhaarNumber\": \"234567890123\",\n  \"panNumber\": \"ABCDE1234F\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/kyc/{{kycId}}/submit",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "kyc", "{{kycId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Get My KYC Requests",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/kyc/me",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "kyc", "me"]
+            }
+          }
+        },
+        {
+          "name": "[Edge] Upload JPEG not PDF → 400",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Expect 400', () => pm.response.to.have.status(400));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Attach a JPEG or PNG" },
+                { "key": "documentType", "value": "AadhaarFront", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/kyc/{{kycId}}/documents",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "kyc", "{{kycId}}", "documents"]
+            }
+          }
+        },
+        {
+          "name": "[Edge] Submit Already-Pending KYC → 409",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Expect 409', () => pm.response.to.have.status(409));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aadhaarNumber\": \"234567890123\",\n  \"panNumber\": \"ABCDE1234F\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/kyc/{{kycId}}/submit",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "kyc", "{{kycId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "[Edge] No Auth Token → 401",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Expect 401', () => pm.response.to.have.status(401));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/kyc/draft",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "kyc", "draft"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "03 - Admin — KYC Review",
+      "item": [
+        {
+          "name": "List KYC Requests (Pending)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var res = pm.response.json();",
+            "if (res.data && res.data.length > 0) { pm.collectionVariables.set('kycId', res.data[0].kycVerificationId); console.log('kycId updated', res.data[0].kycVerificationId); }",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/kyc-requests?status=Pending&page=1&limit=10",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "kyc-requests"],
+              "query": [
+                { "key": "status", "value": "Pending" },
+                { "key": "page",   "value": "1" },
+                { "key": "limit",  "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve KYC",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('KYC approved', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Documents verified, all clear.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/kyc-requests/{{kycId}}/review",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "kyc-requests", "{{kycId}}", "review"]
+            }
+          }
+        },
+        {
+          "name": "Reject KYC",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Rejected\",\n  \"remarks\": \"PAN name mismatch with Aadhaar.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/kyc-requests/{{kycId}}/review",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "kyc-requests", "{{kycId}}", "review"]
+            }
+          }
+        },
+        {
+          "name": "[Edge] Review Already-Approved KYC → 409",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Expect 409', () => pm.response.to.have.status(409));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Already approved.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/kyc-requests/{{kycId}}/review",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "kyc-requests", "{{kycId}}", "review"]
+            }
+          }
+        },
+        {
+          "name": "[Edge] Invalid Status Value → 400",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Expect 400', () => pm.response.to.have.status(400));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Draft\",\n  \"remarks\": \"Bad value.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/kyc-requests/{{kycId}}/review",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "kyc-requests", "{{kycId}}", "review"]
+            }
+          }
+        },
+        {
+          "name": "[Edge] Tenant Hits Admin Route → 403",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Expect 403', () => pm.response.to.have.status(403));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/kyc-requests?page=1&limit=10",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "kyc-requests"],
+              "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "04 - Admin — Staff Management",
+      "item": [
+        {
+          "name": "Create Verifier Staff Account",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var res = pm.response.json();",
+            "if (res.data && res.data.userId) { pm.collectionVariables.set('verifierId', res.data.userId); console.log('verifierId', res.data.userId); }",
+            "pm.test('Staff created', () => pm.response.to.have.status(201));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Priya Verifier\",\n  \"email\": \"priya@estatesync.com\",\n  \"phoneNumber\": \"9000000001\",\n  \"password\": \"Verifier@123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/staff",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "staff"]
+            }
+          }
+        },
+        {
+          "name": "Deactivate Verifier",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Deactivated', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/staff/{{verifierId}}/deactivate",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "staff", "{{verifierId}}", "deactivate"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "05 - Become Owner (Tenant → Owner Upgrade)",
+      "item": [
+        {
+          "name": "Become Owner (KYC-verified tenant only)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Owner role assigned or already owner', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/users/me/become-owner",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "users", "me", "become-owner"]
+            }
+          }
+        },
+        {
+          "name": "[Edge] Become Owner Without KYC → 403",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Expect 403 - KYC not done', () => pm.response.to.have.status(403));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/users/me/become-owner",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "users", "me", "become-owner"]
+            }
+          }
+        },
+        {
+          "name": "[Edge] Become Owner Twice → 200 Idempotent",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Expect 200 idempotent', () => pm.response.to.have.status(200));",
+            "var res = pm.response.json();",
+            "pm.test('Already owner message', () => pm.expect(res.message).to.include('already'));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/users/me/become-owner",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "users", "me", "become-owner"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "06 - Stripe Onboarding (Owner)",
+      "item": [
+        {
+          "name": "Owner Onboard (Stripe Connect)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Stripe URL returned', () => pm.response.to.have.status(200));",
+            "var res = pm.response.json();",
+            "console.log('Open this URL in browser:', res.data && res.data.url ? res.data.url : JSON.stringify(res.data));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/payments/owner-onboard",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "payments", "owner-onboard"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "07 - Properties",
+      "item": [
+        {
+          "name": "Create Property",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var res = pm.response.json();",
+            "if (res.data && res.data.propertyId) { pm.collectionVariables.set('propertyId', res.data.propertyId); console.log('propertyId', res.data.propertyId); }",
+            "pm.test('Property created', () => pm.response.to.have.status(201));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Spacious 2BHK in Bangalore\",\n  \"description\": \"Well-maintained flat near metro station, fully furnished.\",\n  \"propertyType\": \"Apartment\",\n  \"addressLine\": \"123 MG Road, Indiranagar, Bangalore\",\n  \"locationId\": \"{{locationId}}\",\n  \"landArea\": 1200,\n  \"buildupArea\": 950,\n  \"monthlyRent\": 25000,\n  \"securityDeposit\": 75000,\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"requiresVerifiedIncome\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/properties",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "properties"]
+            }
+          }
+        },
+        {
+          "name": "Browse Properties (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/properties?page=1&limit=10",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "properties"],
+              "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }]
+            }
+          }
+        },
+        {
+          "name": "Get Property Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/properties/{{propertyId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "properties", "{{propertyId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get My Properties (Owner)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/properties/me",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "properties", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update Property",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Spacious 2BHK in Bangalore - Updated\",\n  \"description\": \"Updated description with new amenities included.\",\n  \"propertyType\": \"Apartment\",\n  \"addressLine\": \"123 MG Road, Indiranagar, Bangalore\",\n  \"locationId\": \"{{locationId}}\",\n  \"landArea\": 1200,\n  \"buildupArea\": 950,\n  \"monthlyRent\": 27000,\n  \"securityDeposit\": 81000,\n  \"bedrooms\": 2,\n  \"bathrooms\": 2,\n  \"requiresVerifiedIncome\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/properties/{{propertyId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "properties", "{{propertyId}}"]
+            }
+          }
+        },
+        {
+          "name": "Add Amenities",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amenities\": [\"WiFi\", \"Parking\", \"Gym\", \"Swimming Pool\", \"Power Backup\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/properties/{{propertyId}}/amenities",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "properties", "{{propertyId}}", "amenities"]
+            }
+          }
+        },
+        {
+          "name": "Update Amenities",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amenities\": [\"WiFi\", \"Parking\", \"Power Backup\", \"Security Guard\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/properties/{{propertyId}}/amenities",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "properties", "{{propertyId}}", "amenities"]
+            }
+          }
+        },
+        {
+          "name": "Upload Property Image",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "file", "type": "file", "src": "", "description": "Attach image JPG/PNG" }]
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/properties/{{propertyId}}/images",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "properties", "{{propertyId}}", "images"]
+            }
+          }
+        },
+        {
+          "name": "Submit Property for Approval",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Submitted for approval', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/properties/{{propertyId}}/submit",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "properties", "{{propertyId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "[Edge] Unknown Property → 404",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Expect 404', () => pm.response.to.have.status(404));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/properties/00000000-0000-0000-0000-000000000000",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "properties", "00000000-0000-0000-0000-000000000000"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "08 - Admin — Properties",
+      "item": [
+        {
+          "name": "List Properties Pending Approval",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var res = pm.response.json();",
+            "if (res.data && res.data.length > 0) { pm.collectionVariables.set('propertyId', res.data[0].propertyId); console.log('propertyId updated from pending list'); }",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/properties/pending-approval?page=1&limit=10",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "properties", "pending-approval"],
+              "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }]
+            }
+          }
+        },
+        {
+          "name": "Approve Property",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Property approved', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": true,\n  \"remarks\": \"Property verified, listing approved.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/properties/{{propertyId}}/approval",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "properties", "{{propertyId}}", "approval"]
+            }
+          }
+        },
+        {
+          "name": "Reject Property",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": false,\n  \"remarks\": \"Images are low quality. Please resubmit with clearer photos.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/properties/{{propertyId}}/approval",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "properties", "{{propertyId}}", "approval"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "09 - Tenant Financial Profile (Optional)",
+      "item": [
+        {
+          "name": "Create Financial Profile Draft",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var res = pm.response.json();",
+            "if (res.data && res.data.profileId) { pm.collectionVariables.set('profileId', res.data.profileId); console.log('profileId', res.data.profileId); }",
+            "pm.test('Draft created', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/tenants/me/financial-profile/draft",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "tenants", "me", "financial-profile", "draft"]
+            }
+          }
+        },
+        {
+          "name": "Upload Salary Slip (PDF)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Attach PDF salary slip" },
+                { "key": "documentType", "value": "SalarySlip", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/tenants/me/financial-profile/{{profileId}}/documents",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "tenants", "me", "financial-profile", "{{profileId}}", "documents"]
+            }
+          }
+        },
+        {
+          "name": "Upload Employment Letter (PDF)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Attach PDF employment letter" },
+                { "key": "documentType", "value": "EmploymentLetter", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/tenants/me/financial-profile/{{profileId}}/documents",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "tenants", "me", "financial-profile", "{{profileId}}", "documents"]
+            }
+          }
+        },
+        {
+          "name": "Upload Bank Statement (PDF)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Attach PDF bank statement" },
+                { "key": "documentType", "value": "BankStatement", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/tenants/me/financial-profile/{{profileId}}/documents",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "tenants", "me", "financial-profile", "{{profileId}}", "documents"]
+            }
+          }
+        },
+        {
+          "name": "Submit Financial Profile",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Profile submitted', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employmentType\": \"Salaried\",\n  \"employerName\": \"Infosys Ltd\",\n  \"declaredMonthlyIncome\": 80000\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/tenants/me/financial-profile/{{profileId}}/submit",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "tenants", "me", "financial-profile", "{{profileId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Get My Financial Profiles",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/tenants/me/financial-profile",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "tenants", "me", "financial-profile"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "10 - Admin — Financial Profiles",
+      "item": [
+        {
+          "name": "List Financial Profiles (Pending)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var res = pm.response.json();",
+            "if (res.data && res.data.length > 0) { pm.collectionVariables.set('profileId', res.data[0].profileId); console.log('profileId updated', res.data[0].profileId); }",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/financial-profiles?status=Pending&page=1&limit=10",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "financial-profiles"],
+              "query": [
+                { "key": "status", "value": "Pending" },
+                { "key": "page",   "value": "1" },
+                { "key": "limit",  "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Financial Profile",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Profile approved', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\",\n  \"remarks\": \"Income and employment documents verified.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/financial-profiles/{{profileId}}/review",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "financial-profiles", "{{profileId}}", "review"]
+            }
+          }
+        },
+        {
+          "name": "Reject Financial Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Rejected\",\n  \"remarks\": \"Salary slip is older than 3 months. Please resubmit.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/admin/financial-profiles/{{profileId}}/review",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "admin", "financial-profiles", "{{profileId}}", "review"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "11 - Rental Applications",
+      "item": [
+        {
+          "name": "Apply for Property (Tenant)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var res = pm.response.json();",
+            "if (res.data && res.data.applicationId) { pm.collectionVariables.set('appId', res.data.applicationId); console.log('appId', res.data.applicationId); }",
+            "pm.test('Application submitted', () => pm.response.to.have.status(201));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"I am a working professional at Infosys looking for a long-term stay near the office.\",\n  \"expectedMoveInDate\": \"2026-08-01\",\n  \"durationMonths\": 12,\n  \"commuteDistance\": 3.5\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/rental-applications/properties/{{propertyId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "rental-applications", "properties", "{{propertyId}}"]
+            }
+          }
+        },
+        {
+          "name": "Owner Approves Application",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Application approved', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": true,\n  \"remarks\": \"Tenant profile looks good. Moving forward with lease.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/rental-applications/{{appId}}/review",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "rental-applications", "{{appId}}", "review"]
+            }
+          }
+        },
+        {
+          "name": "Owner Rejects Application",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approve\": false,\n  \"remarks\": \"Already found another tenant.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/rental-applications/{{appId}}/review",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "rental-applications", "{{appId}}", "review"]
+            }
+          }
+        },
+        {
+          "name": "Get Owner Applications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/rental-applications/owner?page=1&limit=10",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "rental-applications", "owner"],
+              "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }]
+            }
+          }
+        },
+        {
+          "name": "Get Applications for Property",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/rental-applications/properties/{{propertyId}}?page=1&limit=10",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "rental-applications", "properties", "{{propertyId}}"],
+              "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant Applications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/rental-applications/tenant?page=1&limit=10",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "rental-applications", "tenant"],
+              "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }]
+            }
+          }
+        },
+        {
+          "name": "Get Application by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/rental-applications/{{appId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "rental-applications", "{{appId}}"]
+            }
+          }
+        },
+        {
+          "name": "[Edge] Apply Twice to Same Property → 409",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Expect 409', () => pm.response.to.have.status(409));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Applying again to same property.\",\n  \"expectedMoveInDate\": \"2026-09-01\",\n  \"durationMonths\": 6,\n  \"commuteDistance\": 3.5\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/rental-applications/properties/{{propertyId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "rental-applications", "properties", "{{propertyId}}"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "12 - Leases",
+      "item": [
+        {
+          "name": "Create Lease (Owner)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var res = pm.response.json();",
+            "if (res.data && res.data.leaseId) { pm.collectionVariables.set('leaseId', res.data.leaseId); console.log('leaseId', res.data.leaseId); }",
+            "pm.test('Lease created', () => pm.response.to.have.status(201));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicationId\": \"{{appId}}\",\n  \"startDate\": \"2026-08-01\",\n  \"endDate\": \"2027-07-31\",\n  \"monthlyRent\": 25000,\n  \"securityDeposit\": 75000\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/leases",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "leases"]
+            }
+          }
+        },
+        {
+          "name": "Owner Signs Lease",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Owner signed', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/leases/{{leaseId}}/sign",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "leases", "{{leaseId}}", "sign"]
+            }
+          }
+        },
+        {
+          "name": "Tenant Signs Lease",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Tenant signed - lease now Active', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/leases/{{leaseId}}/sign",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "leases", "{{leaseId}}", "sign"]
+            }
+          }
+        },
+        {
+          "name": "Get Lease by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/leases/{{leaseId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "leases", "{{leaseId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Tenant Leases",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/leases/tenant",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "leases", "tenant"]
+            }
+          }
+        },
+        {
+          "name": "Get Owner Leases",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ownerToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/leases/owner",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "leases", "owner"]
+            }
+          }
+        },
+        {
+          "name": "Get All Leases (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/leases?page=1&limit=10",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "leases"],
+              "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }]
+            }
+          }
+        },
+        {
+          "name": "Tenant Requests Renewal",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/leases/{{leaseId}}/request-renewal",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "leases", "{{leaseId}}", "request-renewal"]
+            }
+          }
+        },
+        {
+          "name": "Owner Rejects Renewal",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ownerToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"remarks\": \"Not renewing. Property will be repurposed.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/leases/{{leaseId}}/reject-renewal",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "leases", "{{leaseId}}", "reject-renewal"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "13 - Payments",
+      "item": [
+        {
+          "name": "Get My Lease Bills (Tenant)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var res = pm.response.json();",
+            "if (res.data && res.data.length > 0) { pm.collectionVariables.set('billId', res.data[0].leaseBillId); console.log('billId', res.data[0].leaseBillId); }",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/payments/tenant/bills",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "payments", "tenant", "bills"]
+            }
+          }
+        },
+        {
+          "name": "Create Stripe Checkout Session",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Checkout URL returned', () => pm.response.to.have.status(200));",
+            "var res = pm.response.json();",
+            "console.log('Open in browser:', res.data && res.data.url ? res.data.url : JSON.stringify(res.data));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/payments/checkout/{{billId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "payments", "checkout", "{{billId}}"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "14 - Complaints",
+      "item": [
+        {
+          "name": "Create Complaint (Tenant)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "var res = pm.response.json();",
+            "if (res.data && res.data.complaintId) { pm.collectionVariables.set('complaintId', res.data.complaintId); console.log('complaintId', res.data.complaintId); }",
+            "pm.test('Complaint created', () => pm.response.to.have.status(201));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"propertyId\": \"{{propertyId}}\",\n  \"title\": \"Leaking tap in bathroom\",\n  \"description\": \"The tap in the master bathroom has been leaking for 3 days. Water damage is visible on the floor tiles.\",\n  \"complaintType\": \"Maintenance\",\n  \"priority\": \"Medium\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/complaints",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "complaints"]
+            }
+          }
+        },
+        {
+          "name": "Upload Complaint Image",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "file", "type": "file", "src": "", "description": "Attach image of issue" }]
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/complaints/{{complaintId}}/images",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "complaints", "{{complaintId}}", "images"]
+            }
+          }
+        },
+        {
+          "name": "Update Status → InProgress",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"InProgress\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/complaints/{{complaintId}}/status",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "complaints", "{{complaintId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Update Status → Resolved",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tenantToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Resolved\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/complaints/{{complaintId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "complaints", "{{complaintId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Get Complaint by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/complaints/{{complaintId}}",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "complaints", "{{complaintId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get My Complaints",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tenantToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/complaints",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "complaints"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "15 - Audit Logs (Admin)",
+      "item": [
+        {
+          "name": "Get Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": {
+              "raw": "http://{{host}}:{{port}}/{{basePath}}/auditlogs?page=1&limit=20",
+              "protocol": "http",
+              "host": ["{{host}}"],
+              "port": "{{port}}",
+              "path": ["{{basePath}}", "auditlogs"],
+              "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }]
+            }
+          }
+        }
+      ]
+    }
+
+  ]
+}
