@@ -1,0 +1,11 @@
+/* color-mix() cannot be expressed as a Tailwind utility — kept here only */
+button.dash-nav-btn.dash-nav-item--active {
+  background: color-mix(in srgb, var(--mat-sys-primary) 10%, white);
+  color: var(--mat-sys-primary);
+  font-weight: 600;
+  border-right-color: var(--mat-sys-primary);
+}
+
+button.dash-nav-btn.dash-nav-item--active mat-icon.dash-nav-icon {
+  color: var(--mat-sys-primary);
+}

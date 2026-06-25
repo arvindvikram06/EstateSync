@@ -1,0 +1,9 @@
+<div role="alert" class="flex items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-sm mb-4" [ngClass]="{
+    'bg-red-50   text-red-700':    type() === 'error',
+    'bg-amber-50 text-amber-700':  type() === 'warning',
+    'bg-green-50 text-green-700':  type() === 'success',
+    'bg-blue-50  text-blue-700':   type() === 'info'
+  }">
+  <mat-icon class="!text-[20px] !w-5 !h-5 shrink-0">{{ icon }}</mat-icon>
+  <span>{{ message() }}</span>
+</div>

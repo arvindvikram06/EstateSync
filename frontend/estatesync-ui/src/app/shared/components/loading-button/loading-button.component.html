@@ -1,0 +1,23 @@
+<ng-template #btnContent>
+  <span class="flex items-center justify-center gap-2 w-full h-full">
+    @if (loading()) { <mat-spinner diameter="18" class="shrink-0 [&_circle]:!stroke-white" style="--mdc-circular-progress-active-indicator-color: white;"></mat-spinner> }
+    <ng-content></ng-content>
+  </span>
+</ng-template>
+
+@if (variant() === 'raised') {
+<button mat-raised-button [type]="type()" [disabled]="loading() || disabled()"
+  class="!w-full !h-12 !font-semibold !bg-brand hover:!bg-brand-dark !text-white transition-colors duration-200">
+  <ng-container *ngTemplateOutlet="btnContent"></ng-container>
+</button>
+} @else if (variant() === 'stroked') {
+<button mat-stroked-button [type]="type()" [disabled]="loading() || disabled()"
+  class="!w-full !h-12 !font-semibold !text-brand !border-brand hover:!bg-brand/5 transition-colors duration-200">
+  <ng-container *ngTemplateOutlet="btnContent"></ng-container>
+</button>
+} @else {
+<button mat-flat-button [type]="type()" [disabled]="loading() || disabled()"
+  class="!w-full !h-12 !font-semibold !bg-brand hover:!bg-brand-dark !text-white transition-colors duration-200">
+  <ng-container *ngTemplateOutlet="btnContent"></ng-container>
+</button>
+}

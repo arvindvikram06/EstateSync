@@ -1,0 +1,27 @@
+mat-toolbar.es-navbar {
+  background-color: white;
+  color: var(--es-text);
+  height: 64px;
+  padding: 0 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Kill any Material focus-indicator pseudo-element shadow on the avatar pill */
+button[matMenuTriggerFor] {
+  box-shadow: none !important;
+  outline: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+button[matMenuTriggerFor]::before,
+button[matMenuTriggerFor]::after,
+button[matMenuTriggerFor] .mat-ripple,
+button[matMenuTriggerFor] .mat-mdc-focus-indicator {
+  display: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
