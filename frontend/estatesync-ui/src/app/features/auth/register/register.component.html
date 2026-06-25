@@ -1,0 +1,135 @@
+<div class="flex min-h-screen">
+
+  <!-- ── Left hero ─────────────────────────────────────────── -->
+  <div class="flex-1 relative overflow-hidden hidden md:flex items-center justify-center p-14
+              bg-gradient-to-br from-brand via-brand-dark to-[#8B003A] text-white">
+    <div class="absolute -top-32 -right-32 w-[480px] h-[480px] rounded-full bg-white/[0.07] pointer-events-none"></div>
+    <div class="absolute -bottom-24 -left-20 w-[360px] h-[360px] rounded-full bg-white/[0.05] pointer-events-none"></div>
+
+    <div class="relative z-10 max-w-md">
+      <mat-icon class="!text-[56px] !w-14 !h-14 mb-7 block">home_work</mat-icon>
+      <h1 class="text-[38px] font-bold leading-[1.15] tracking-tight mb-4 text-white">
+        Find your perfect home
+      </h1>
+      <p class="text-base leading-relaxed opacity-85 mb-11">
+        Join thousands of tenants who found their dream home through EstateSync.
+      </p>
+      <!-- Stats -->
+      <div class="flex pt-8 border-t border-white/20">
+        <div class="flex-1 text-center px-2">
+          <div class="text-[30px] font-bold tracking-tight">2,400+</div>
+          <div class="text-[12px] opacity-75 uppercase tracking-[0.4px] mt-1">Verified Listings</div>
+        </div>
+        <div class="flex-1 text-center px-2 border-x border-white/20">
+          <div class="text-[30px] font-bold tracking-tight">98%</div>
+          <div class="text-[12px] opacity-75 uppercase tracking-[0.4px] mt-1">Satisfaction Rate</div>
+        </div>
+        <div class="flex-1 text-center px-2">
+          <div class="text-[30px] font-bold tracking-tight">48 hrs</div>
+          <div class="text-[12px] opacity-75 uppercase tracking-[0.4px] mt-1">KYC Approval</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right form ─────────────────────────────────────────── -->
+  <div class="w-full md:w-[540px] shrink-0 bg-white flex items-start justify-center px-10 py-12 overflow-y-auto">
+    <div class="w-full max-w-[420px] pt-3">
+
+      <div class="flex items-center gap-1.5 mb-7">
+        <mat-icon class="!text-brand !text-[22px]">home_work</mat-icon>
+        <span class="text-[18px] font-bold text-brand tracking-tight">EstateSync</span>
+      </div>
+
+      <h2 class="text-[28px] font-bold tracking-tight text-es-text mb-1.5">Create your account</h2>
+      <p class="text-sm text-es-muted mb-7">
+        Already a member? <a routerLink="/auth/login" class="text-brand font-semibold no-underline hover:underline">Sign in</a>
+      </p>
+
+      @if (errorMessage()) {
+        <app-alert-banner [message]="errorMessage()!" />
+      }
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate class="flex flex-col gap-1">
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Full name</mat-label>
+          <mat-icon matPrefix>person</mat-icon>
+          <input matInput type="text" formControlName="fullName" placeholder="Arvind Vikram" autocomplete="name" />
+          @if (fullNameControl.hasError('required') && fullNameControl.touched) {
+            <mat-error>Full name is required</mat-error>
+          } @else if (fullNameControl.hasError('minlength') && fullNameControl.touched) {
+            <mat-error>Name must be at least 2 characters</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Email address</mat-label>
+          <mat-icon matPrefix>email</mat-icon>
+          <input matInput type="email" formControlName="email" placeholder="you@example.com" autocomplete="email" (input)="onEmailInput($event)" />
+          @if (emailControl.hasError('required') && emailControl.touched) {
+            <mat-error>Email is required</mat-error>
+          } @else if (emailControl.hasError('email') && emailControl.touched) {
+            <mat-error>Enter a valid email address</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Phone number</mat-label>
+          <mat-icon matPrefix>phone</mat-icon>
+          <input matInput type="tel" formControlName="phoneNumber" placeholder="+91 98765 43210" autocomplete="tel" />
+          @if (phoneControl.hasError('required') && phoneControl.touched) {
+            <mat-error>Phone number is required</mat-error>
+          } @else if (phoneControl.hasError('pattern') && phoneControl.touched) {
+            <mat-error>Enter a valid phone number (min 10 digits)</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Password</mat-label>
+          <mat-icon matPrefix>lock</mat-icon>
+          <input matInput [type]="passwordVisible() ? 'text' : 'password'"
+            formControlName="password" placeholder="••••••••" autocomplete="new-password" />
+          <button mat-icon-button matSuffix type="button" (click)="togglePasswordVisibility()">
+            <mat-icon>{{ passwordVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (passwordControl.hasError('required') && passwordControl.touched) {
+            <mat-error>Password is required</mat-error>
+          } @else if (passwordControl.hasError('minlength') && passwordControl.touched) {
+            <mat-error>Password must be at least 8 characters</mat-error>
+          } @else if (passwordControl.hasError('pattern') && passwordControl.touched) {
+            <mat-error>Must include uppercase, number, and special character (!&#64;#$%^&*)</mat-error>
+          }
+        </mat-form-field>
+
+        @if (passwordControl.value) {
+          <div class="flex items-center gap-2.5 -mt-1 mb-2">
+            <div class="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-200"
+                [style.width.%]="passwordStrength * 25"
+                [class]="passwordStrength === 1 ? 'bg-red-500' : passwordStrength === 2 ? 'bg-amber-500' : passwordStrength === 3 ? 'bg-blue-500' : 'bg-green-500'">
+              </div>
+            </div>
+            <span class="text-xs text-es-muted font-medium w-11">{{ strengthLabel }}</span>
+          </div>
+        }
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Confirm password</mat-label>
+          <mat-icon matPrefix>check_circle_outline</mat-icon>
+          <input matInput [type]="passwordVisible() ? 'text' : 'password'"
+            formControlName="confirmPassword" placeholder="••••••••" autocomplete="new-password" />
+          @if (confirmControl.hasError('required') && confirmControl.touched) {
+            <mat-error>Please confirm your password</mat-error>
+          } @else if (passwordsDoNotMatch) {
+            <mat-error>Passwords do not match</mat-error>
+          }
+        </mat-form-field>
+
+        <app-loading-button type="submit" [loading]="isLoading()">Create account</app-loading-button>
+
+      </form>
+    </div>
+  </div>
+
+</div>

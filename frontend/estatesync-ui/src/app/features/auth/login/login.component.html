@@ -1,0 +1,101 @@
+<div class="flex min-h-screen">
+
+  <!-- ── Left hero ─────────────────────────────────────────── -->
+  <div class="flex-1 relative overflow-hidden hidden md:flex items-center justify-center p-14
+              bg-gradient-to-br from-brand via-brand-dark to-[#8B003A] text-white">
+    <!-- Decorative circles -->
+    <div class="absolute -top-32 -right-32 w-[480px] h-[480px] rounded-full bg-white/[0.07] pointer-events-none"></div>
+    <div class="absolute -bottom-24 -left-20 w-[360px] h-[360px] rounded-full bg-white/[0.05] pointer-events-none">
+    </div>
+
+    <div class="relative z-10 max-w-md">
+      <mat-icon class="!text-[56px] !w-14 !h-14 mb-7 block">home_work</mat-icon>
+      <h1 class="text-[38px] font-bold leading-[1.15] tracking-tight mb-4 text-white">
+        Welcome back to EstateSync
+      </h1>
+      <p class="text-base leading-relaxed opacity-85 mb-11">
+        Manage your properties, leases and payments — all in one beautiful place.
+      </p>
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center gap-3 text-[15px] font-medium">
+          <mat-icon class="!text-[20px] !w-5 !h-5 opacity-90">verified</mat-icon>KYC-verified listings
+        </div>
+        <div class="flex items-center gap-3 text-[15px] font-medium">
+          <mat-icon class="!text-[20px] !w-5 !h-5 opacity-90">description</mat-icon>Digital lease e-signing
+        </div>
+        <div class="flex items-center gap-3 text-[15px] font-medium">
+          <mat-icon class="!text-[20px] !w-5 !h-5 opacity-90">payment</mat-icon>Secure online payments
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right form ─────────────────────────────────────────── -->
+  <div class="w-full md:w-[520px] shrink-0 bg-white flex items-center justify-center px-10 py-12 overflow-y-auto">
+    <div class="w-full max-w-[400px]">
+
+      <div class="flex items-center gap-1.5 mb-8">
+        <mat-icon class="!text-brand !text-[22px]">home_work</mat-icon>
+        <span class="text-[18px] font-bold text-brand tracking-tight">EstateSync</span>
+      </div>
+
+      <h2 class="text-[28px] font-bold tracking-tight text-es-text mb-1.5">Sign in</h2>
+      <p class="text-sm text-es-muted mb-7">
+        New to EstateSync? <a routerLink="/auth/register"
+          class="text-brand font-semibold no-underline hover:underline">Create an account</a>
+      </p>
+
+      @if (errorMessage()) {
+      <app-alert-banner [message]="errorMessage()!" />
+      }
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate class="flex flex-col gap-1">
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Email address</mat-label>
+          <mat-icon matPrefix>email</mat-icon>
+          <input matInput type="email" formControlName="email" placeholder="you@example.com" autocomplete="email" (input)="onEmailInput($event)" />
+          @if (emailControl.hasError('required') && emailControl.touched) {
+          <mat-error>Email is required</mat-error>
+          } @else if (emailControl.hasError('email') && emailControl.touched) {
+          <mat-error>Enter a valid email address</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Password</mat-label>
+          <mat-icon matPrefix>lock</mat-icon>
+          <input matInput [type]="passwordVisible() ? 'text' : 'password'" formControlName="password"
+            placeholder="••••••••" autocomplete="current-password" />
+          <button mat-icon-button matSuffix type="button" (click)="togglePasswordVisibility()">
+            <mat-icon>{{ passwordVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (passwordControl.hasError('required') && passwordControl.touched) {
+          <mat-error>Password is required</mat-error>
+          } @else if (passwordControl.hasError('minlength') && passwordControl.touched) {
+          <mat-error>Password must be at least 8 characters</mat-error>
+          }
+          <mat-hint align="end">
+            <a routerLink="/auth/forgot-password" class="text-brand text-xs no-underline">Forgot password?</a>
+          </mat-hint>
+        </mat-form-field>
+
+        <app-loading-button type="submit" [loading]="isLoading()">Sign in</app-loading-button>
+
+      </form>
+
+      <!-- Demo box -->
+      <div class="mt-6 p-4 bg-es-bg rounded-xl border border-[#EBEBEB] text-[13px]">
+        <div class="text-[11px] font-bold uppercase tracking-[0.8px] text-gray-400 mb-2.5">Demo accounts</div>
+        <div class="text-[#555] mb-1"><span
+            class="font-semibold text-brand mr-1.5">Tenant</span>tenant&#64;estatesync.com · Password123!</div>
+        <div class="text-[#555] mb-1"><span class="font-semibold text-brand mr-1.5">Owner</span>owner&#64;estatesync.com
+          · Password123!</div>
+        <div class="text-[#555]"><span class="font-semibold text-brand mr-1.5">Admin</span>admin&#64;estatesync.com ·
+          Password123!</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

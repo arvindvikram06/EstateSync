@@ -1,0 +1,107 @@
+/* ── Tailwind ────────────────────────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Reset ───────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  font-family: 'Inter', Roboto, system-ui, sans-serif;
+}
+
+/* ── Brand tokens ────────────────────────────────────────────── */
+:root {
+  --es-brand: #FF385C;
+  --es-brand-dark: #D4145A;
+  --es-bg: #F7F7F7;
+  --es-surface: #FFFFFF;
+  --es-border: #DDDDDD;
+  --es-text: #222222;
+  --es-text-secondary: #717171;
+  --es-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.08);
+  --es-shadow-md: 0 6px 24px rgba(0, 0, 0, 0.13);
+  --es-shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.16);
+  --es-radius: 16px;
+  --es-radius-sm: 8px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Inter', Roboto, system-ui, sans-serif;
+  color: #222222;
+}
+
+/* ── Status badge colors ─────────────────────────────────────── */
+.es-badge--approved {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.es-badge--active {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.es-badge--pending {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.es-badge--partial {
+  background: #DBEAFE;
+  color: #1D4ED8;
+}
+
+.es-badge--draft {
+  background: #F3F4F6;
+  color: #6B7280;
+}
+
+.es-badge--rejected {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.es-badge--failed {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.es-badge--closed {
+  background: #F3F4F6;
+  color: #6B7280;
+}
+
+.es-badge--open {
+  background: #DBEAFE;
+  color: #1D4ED8;
+}
+
+.es-badge--inprogress {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.es-badge--resolved {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.es-badge--default {
+  background: #F3F4F6;
+  color: #6B7280;
+}

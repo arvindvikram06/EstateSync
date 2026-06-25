@@ -16,8 +16,8 @@
 
 **/.claude
 
-# Ignore frontend directory
-frontend/
+# Frontend is tracked
+# frontend/
 
 # Ignore API file uploads
 **/uploads/
