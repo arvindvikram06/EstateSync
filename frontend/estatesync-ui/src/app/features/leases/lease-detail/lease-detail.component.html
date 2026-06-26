@@ -1,0 +1,126 @@
+@if (loading()) {
+  <div class="flex items-center justify-center min-h-[60vh]">
+    <mat-spinner diameter="48" />
+  </div>
+} @else if (error()) {
+  <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+    <mat-icon class="!text-[48px] !w-[48px] !h-[48px] text-es-muted">error_outline</mat-icon>
+    <p class="text-es-muted">{{ error() }}</p>
+    <button mat-stroked-button routerLink="/dashboard">Back to dashboard</button>
+  </div>
+} @else if (lease(); as l) {
+  <div class="max-w-3xl mx-auto py-10 px-6">
+
+    <!-- Top row -->
+    <div class="flex items-center justify-between mb-6">
+      <button mat-stroked-button class="!rounded-full" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon> Dashboard
+      </button>
+      <app-status-badge [status]="l.status" />
+    </div>
+
+    <!-- Title -->
+    <h1 class="text-2xl font-bold text-es-text mb-1">{{ l.propertyTitle }}</h1>
+    <p class="text-sm text-es-muted mb-6">{{ l.propertyAddress }}</p>
+
+    <!-- Details card -->
+    <div class="detail-card">
+      <div class="detail-grid">
+        <div class="detail-row">
+          <span class="detail-label">Tenant</span>
+          <span class="detail-value">{{ l.tenantName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Owner</span>
+          <span class="detail-value">{{ l.ownerName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Start date</span>
+          <span class="detail-value">{{ formatDate(l.startDate) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">End date</span>
+          <span class="detail-value">{{ formatDate(l.endDate) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Monthly rent</span>
+          <span class="detail-value">{{ formatCurrency(l.monthlyRent) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Security deposit</span>
+          <span class="detail-value">{{ formatCurrency(l.securityDeposit) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Payment frequency</span>
+          <span class="detail-value">{{ l.paymentFrequency }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Lock-in period</span>
+          <span class="detail-value">{{ l.lockInPeriodMonths }} months</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Late penalty</span>
+          <span class="detail-value">{{ l.penaltyPercentage }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signing status -->
+    <div class="mt-8">
+      <h3 class="text-base font-semibold text-es-text mb-4">Signing status</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="sign-status-card">
+          <div class="flex items-center gap-2 mb-1">
+            <mat-icon class="!text-[20px] !w-[20px] !h-[20px]"
+              [style.color]="l.ownerSignedAt ? '#059669' : '#AAAAAA'">
+              {{ l.ownerSignedAt ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            <span class="text-sm font-semibold text-es-text">Owner</span>
+          </div>
+          <p class="text-xs text-es-muted">
+            {{ l.ownerSignedAt ? 'Signed ' + formatDate(l.ownerSignedAt) : 'Pending' }}
+          </p>
+        </div>
+        <div class="sign-status-card">
+          <div class="flex items-center gap-2 mb-1">
+            <mat-icon class="!text-[20px] !w-[20px] !h-[20px]"
+              [style.color]="l.tenantSignedAt ? '#059669' : '#AAAAAA'">
+              {{ l.tenantSignedAt ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            <span class="text-sm font-semibold text-es-text">Tenant</span>
+          </div>
+          <p class="text-xs text-es-muted">
+            {{ l.tenantSignedAt ? 'Signed ' + formatDate(l.tenantSignedAt) : 'Pending' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Documents -->
+    @if (l.agreementPdfUrl || l.signedPdfUrl) {
+      <div class="mt-6 flex gap-3">
+        @if (l.agreementPdfUrl) {
+          <a [href]="l.agreementPdfUrl" target="_blank" mat-stroked-button class="!rounded-full">
+            <mat-icon>description</mat-icon> View agreement
+          </a>
+        }
+        @if (l.status === 'Active' && l.signedPdfUrl) {
+          <a [href]="l.signedPdfUrl" target="_blank" mat-flat-button color="primary" class="!rounded-full">
+            <mat-icon>download</mat-icon> Download signed copy
+          </a>
+        }
+      </div>
+    }
+
+    <!-- Sign CTA -->
+    @if (canSign) {
+      <div class="mt-8">
+        <a [routerLink]="['/leases', l.leaseId, 'sign']" mat-flat-button color="primary"
+          class="!rounded-full !h-12 !px-8 !text-[15px] !font-bold">
+          Sign lease agreement →
+        </a>
+      </div>
+    }
+
+  </div>
+}

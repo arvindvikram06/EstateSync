@@ -1,0 +1,40 @@
+<a class="no-underline block group" [routerLink]="['/properties', property().propertyId]">
+  <mat-card
+    class="overflow-hidden rounded-card border-0 shadow-card group-hover:shadow-card-hover group-hover:-translate-y-1 transition-all duration-200 bg-white cursor-pointer p-0">
+
+    <!-- Image -->
+    <div class="relative overflow-hidden aspect-[3/2] bg-gray-100 rounded-t-card">
+      @if (property().primaryImage) {
+      <img class="w-full h-full object-cover block group-hover:scale-[1.03] transition-transform duration-300"
+        [src]="propertyService.imageUrl(property().primaryImage)" [alt]="property().title" loading="lazy" />
+      } @else {
+      <div class="w-full h-full flex items-center justify-center" [style.background]="gradient()">
+        <mat-icon class="!text-[52px] !w-[52px] !h-[52px] text-white/70">
+          {{ property().propertyType === 'Villa' ? 'villa' : 'home_work' }}
+        </mat-icon>
+      </div>
+      }
+      <!-- Type pill -->
+      <span
+        class="absolute top-3 left-3 px-2.5 py-1 bg-white/95 text-es-text text-[11px] font-semibold rounded-full shadow-sm">
+        {{ property().propertyType === 'Villa' ? 'Villa' : 'House' }}
+      </span>
+    </div>
+
+    <!-- Body -->
+    <mat-card-content class="px-4 pt-3.5 pb-4">
+      <div class="font-semibold text-sm text-es-text truncate">{{ property().title }}</div>
+      <div class="text-[13px] text-es-muted mt-0.5 truncate flex items-center gap-0.5">
+        <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">location_on</mat-icon>
+        {{ property().addressLine }}
+      </div>
+      <div class="text-[13px] text-es-muted mt-0.5">{{ property().bedrooms }} bed · {{ property().bathrooms }} bath
+      </div>
+      <div class="mt-2.5 pt-2.5 border-t border-gray-100">
+        <span class="font-bold text-base text-es-text">{{ formatRent(property().monthlyRent) }}</span>
+        <span class="text-[13px] text-es-muted"> / month</span>
+      </div>
+    </mat-card-content>
+
+  </mat-card>
+</a>

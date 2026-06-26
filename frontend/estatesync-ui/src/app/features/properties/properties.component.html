@@ -1,0 +1,82 @@
+<!-- Progress bar while loading -->
+@if (isLoading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+<!-- Filter chips bar -->
+<section class="sticky top-16 z-10 bg-white border-b border-[#EBEBEB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] py-3">
+  <div class="max-w-[1240px] mx-auto px-6 flex items-center flex-wrap gap-4">
+
+    <div class="flex items-center gap-2">
+      <span class="text-[12px] font-semibold text-es-muted uppercase tracking-[0.4px]">Type</span>
+      <mat-chip-listbox [value]="typeFilter()" (change)="setType($event.value ?? '')">
+        @for (opt of typeOptions; track opt.value) {
+          <mat-chip-option [value]="opt.value">{{ opt.label }}</mat-chip-option>
+        }
+      </mat-chip-listbox>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <span class="text-[12px] font-semibold text-es-muted uppercase tracking-[0.4px]">Bedrooms</span>
+      <mat-chip-listbox [value]="bedroomsFilter()" (change)="setBedrooms($event.value ?? '')">
+        @for (opt of bedroomsOptions; track opt.value) {
+          <mat-chip-option [value]="opt.value">{{ opt.label }}</mat-chip-option>
+        }
+      </mat-chip-listbox>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <span class="text-[12px] font-semibold text-es-muted uppercase tracking-[0.4px]">Rent</span>
+      <mat-chip-listbox [value]="rentFilter()" (change)="setRent($event.value ?? '')">
+        @for (opt of rentOptions; track opt.value) {
+          <mat-chip-option [value]="opt.value">{{ opt.label }}</mat-chip-option>
+        }
+      </mat-chip-listbox>
+    </div>
+
+    @if (hasActiveFilters()) {
+      <button mat-button color="primary" (click)="clearFilters()">
+        <mat-icon>close</mat-icon> Clear filters
+      </button>
+    }
+  </div>
+</section>
+
+<!-- Listings -->
+<main class="py-7 pb-20">
+  <div class="max-w-[1240px] mx-auto px-6">
+
+    @if (!isLoading() && total() > 0) {
+      <p class="text-sm font-medium text-es-muted mb-5">
+        {{ total() }} propert{{ total() === 1 ? 'y' : 'ies' }} found
+      </p>
+    }
+
+    @if (!isLoading() && properties().length === 0) {
+      <app-empty-state icon="search_off" title="No properties found" subtitle="Try adjusting your filters">
+        <button mat-stroked-button (click)="clearFilters()">Clear filters</button>
+      </app-empty-state>
+    } @else {
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-7">
+        @for (property of properties(); track property.propertyId) {
+          <app-property-card [property]="property" />
+        }
+        @if (isLoading()) {
+          @for (_ of [1,2,3,4,5,6]; track $index) {
+            <div class="rounded-card aspect-[3/2] bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-pulse shadow-card"></div>
+          }
+        }
+      </div>
+
+      @if (total() > limit) {
+        <mat-paginator class="mt-10 bg-transparent"
+          [length]="total()"
+          [pageSize]="limit"
+          [pageIndex]="page() - 1"
+          [hidePageSize]="true"
+          (page)="onPageChange($event)" />
+      }
+    }
+
+  </div>
+</main>

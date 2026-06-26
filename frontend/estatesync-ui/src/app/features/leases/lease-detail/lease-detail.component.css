@@ -1,0 +1,39 @@
+.detail-card {
+  background: white;
+  border: 1px solid #EBEBEB;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.detail-label {
+  font-size: 11px;
+  color: #717171;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #222;
+}
+
+.sign-status-card {
+  background: white;
+  border: 1px solid #EBEBEB;
+  border-radius: 12px;
+  padding: 16px;
+}

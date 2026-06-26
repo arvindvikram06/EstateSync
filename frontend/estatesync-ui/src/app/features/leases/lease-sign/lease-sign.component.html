@@ -1,0 +1,89 @@
+@if (loading()) {
+  <div class="flex items-center justify-center min-h-[60vh]">
+    <mat-spinner diameter="48" />
+  </div>
+} @else if (error() && !lease()) {
+  <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+    <mat-icon class="!text-[48px] !w-[48px] !h-[48px] text-es-muted">error_outline</mat-icon>
+    <p class="text-es-muted">{{ error() }}</p>
+    <button mat-stroked-button routerLink="/dashboard">Back to dashboard</button>
+  </div>
+} @else if (lease(); as l) {
+  <div class="max-w-2xl mx-auto py-10 px-6">
+
+    <!-- Back -->
+    <button mat-stroked-button class="!rounded-full mb-6" [routerLink]="['/leases', l.leaseId]">
+      <mat-icon>arrow_back</mat-icon> Back
+    </button>
+
+    <h1 class="text-2xl font-bold text-es-text mb-1">Sign Lease Agreement</h1>
+    <p class="text-sm text-es-muted mb-6">{{ l.propertyTitle }}</p>
+
+    <!-- Lease summary -->
+    <div class="summary-box mb-6">
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <div class="text-es-muted text-xs">Tenant</div>
+          <div class="font-semibold text-es-text">{{ l.tenantName }}</div>
+        </div>
+        <div>
+          <div class="text-es-muted text-xs">Owner</div>
+          <div class="font-semibold text-es-text">{{ l.ownerName }}</div>
+        </div>
+        <div>
+          <div class="text-es-muted text-xs">Monthly rent</div>
+          <div class="font-semibold text-es-text">{{ formatCurrency(l.monthlyRent) }}</div>
+        </div>
+        <div>
+          <div class="text-es-muted text-xs">Term</div>
+          <div class="font-semibold text-es-text">{{ formatDate(l.startDate) }} → {{ formatDate(l.endDate) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-6">
+
+      <!-- Name field -->
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Full name as on ID</mat-label>
+        <mat-icon matPrefix>person</mat-icon>
+        <input matInput formControlName="signatureText" placeholder="Type your full legal name" />
+        @if (form.controls.signatureText.invalid && form.controls.signatureText.touched) {
+          <mat-error>Enter your full legal name</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Signature canvas -->
+      <div>
+        <div class="text-sm font-semibold text-es-text mb-2">Draw Your Signature</div>
+        <div class="canvas-wrapper">
+          <canvas #signatureCanvas class="w-full h-full touch-none"></canvas>
+        </div>
+        <button type="button" mat-stroked-button class="!rounded-full !text-xs mt-2" (click)="clearPad()">
+          <mat-icon class="!text-[14px]">refresh</mat-icon> Clear
+        </button>
+      </div>
+
+      <!-- Consent text -->
+      <p class="text-xs text-es-muted leading-relaxed">
+        By clicking "Sign and Submit", you agree that this electronic signature is the legal equivalent of
+        your manual/handwritten signature on this lease agreement.
+      </p>
+
+      @if (error()) {
+        <p class="text-sm text-red-600">{{ error() }}</p>
+      }
+
+      <app-loading-button
+        [loading]="submitting()"
+        [disabled]="!canSubmit"
+        type="submit"
+        color="primary"
+        variant="flat"
+        class="w-full !h-12 !rounded-full !text-[15px] !font-bold">
+        Sign and Submit
+      </app-loading-button>
+
+    </form>
+  </div>
+}
