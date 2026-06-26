@@ -1,0 +1,191 @@
+<h2 style="font-size:24px;font-weight:700;color:#222;margin-bottom:4px">Welcome back, {{ firstName }}</h2>
+<p style="font-size:14px;color:#717171;margin-bottom:28px">Here's a summary of your account activity.</p>
+
+<!-- KYC Banner -->
+@if (!kycLoading()) {
+  @if (kycStatus === null || kycStatus === 'Draft') {
+    <div class="kyc-banner kyc-banner--action" style="margin-bottom:28px">
+      <mat-icon class="!text-[24px] !w-[24px] !h-[24px]" style="color:var(--mat-sys-primary)">verified_user</mat-icon>
+      <div class="flex-1">
+        <div style="font-size:13px;font-weight:600;color:var(--mat-sys-primary)">Complete Verifications</div>
+        <div style="font-size:12px;color:var(--mat-sys-primary);opacity:0.8;margin-top:2px">Verify your identity and financials to apply for rentals</div>
+      </div>
+      <button mat-flat-button color="primary" class="!rounded-full !text-xs !h-8" (click)="goToKyc()">
+        {{ kycStatus === 'Draft' ? 'Continue' : 'Start Verifications' }}
+      </button>
+    </div>
+  } @else if (kycStatus === 'Pending') {
+    <div class="kyc-banner kyc-banner--pending" style="margin-bottom:28px">
+      <mat-icon class="!text-[24px] !w-[24px] !h-[24px]" style="color:#B45309">pending</mat-icon>
+      <div class="flex-1">
+        <div style="font-size:13px;font-weight:600;color:#B45309">Verification Under Review</div>
+        <div style="font-size:12px;color:#B45309;opacity:0.8;margin-top:2px">Our team will review within 24–48 hours</div>
+      </div>
+    </div>
+  } @else if (kycStatus === 'Approved') {
+    <div class="kyc-banner kyc-banner--approved" style="margin-bottom:28px">
+      <mat-icon class="!text-[24px] !w-[24px] !h-[24px]" style="color:#059669">verified</mat-icon>
+      <div class="flex-1">
+        <div style="font-size:13px;font-weight:600;color:#059669">Identity Verified</div>
+        <div style="font-size:12px;color:#059669;opacity:0.8;margin-top:2px">You can apply for properties and list as owner</div>
+      </div>
+    </div>
+  } @else if (kycStatus === 'Rejected') {
+    <div class="kyc-banner kyc-banner--rejected" style="margin-bottom:28px">
+      <mat-icon class="!text-[24px] !w-[24px] !h-[24px]" style="color:#DC2626">cancel</mat-icon>
+      <div class="flex-1">
+        <div style="font-size:13px;font-weight:600;color:#DC2626">Verification Rejected</div>
+        <div style="font-size:12px;color:#DC2626;opacity:0.8;margin-top:2px">{{ latestKyc()?.reviewRemarks || 'Please re-apply with correct documents' }}</div>
+      </div>
+      <button mat-flat-button style="background:#DC2626;color:white" class="!rounded-full !text-xs !h-8" (click)="goToKyc()">
+        Restart Verifications
+      </button>
+    </div>
+  }
+}
+
+<!-- Financial Profile Banner (shown once KYC approved) -->
+@if (kycStatus === 'Approved' && !kycLoading()) {
+  @if (finStore.step() === 'loading' || finStore.step() === 'intro' || finStore.step() === 'documents' || finStore.step() === 'details') {
+    <div class="kyc-banner kyc-banner--action" style="margin-bottom:28px">
+      <mat-icon class="!text-[24px] !w-[24px] !h-[24px]" style="color:var(--mat-sys-primary)">account_balance_wallet</mat-icon>
+      <div class="flex-1">
+        <div style="font-size:13px;font-weight:600;color:var(--mat-sys-primary)">Complete Financial Verification</div>
+        <div style="font-size:12px;color:var(--mat-sys-primary);opacity:0.8;margin-top:2px">Upload income documents to unlock property applications</div>
+      </div>
+      <button mat-flat-button color="primary" class="!rounded-full !text-xs !h-8" (click)="goToKyc()">
+        {{ finStore.step() === 'documents' || finStore.step() === 'details' ? 'Continue' : 'Start' }}
+      </button>
+    </div>
+  } @else if (finStore.step() === 'pending' || finStore.step() === 'done') {
+    <div class="kyc-banner kyc-banner--pending" style="margin-bottom:28px">
+      <mat-icon class="!text-[24px] !w-[24px] !h-[24px]" style="color:#B45309">hourglass_top</mat-icon>
+      <div class="flex-1">
+        <div style="font-size:13px;font-weight:600;color:#B45309">Financial Profile Under Review</div>
+        <div style="font-size:12px;color:#B45309;opacity:0.8;margin-top:2px">Our team will verify your income documents within 24–48 hours</div>
+      </div>
+    </div>
+  } @else if (finStore.step() === 'approved') {
+    <div class="kyc-banner kyc-banner--approved" style="margin-bottom:28px">
+      <mat-icon class="!text-[24px] !w-[24px] !h-[24px]" style="color:#059669">verified</mat-icon>
+      <div class="flex-1">
+        <div style="font-size:13px;font-weight:600;color:#059669">Financial Profile Verified</div>
+        <div style="font-size:12px;color:#059669;opacity:0.8;margin-top:2px">Your income has been verified — you're fully ready to apply!</div>
+      </div>
+    </div>
+  } @else if (finStore.step() === 'rejected') {
+    <div class="kyc-banner kyc-banner--rejected" style="margin-bottom:28px">
+      <mat-icon class="!text-[24px] !w-[24px] !h-[24px]" style="color:#DC2626">cancel</mat-icon>
+      <div class="flex-1">
+        <div style="font-size:13px;font-weight:600;color:#DC2626">Financial Profile Rejected</div>
+        <div style="font-size:12px;color:#DC2626;opacity:0.8;margin-top:2px">Please re-submit with correct income documents</div>
+      </div>
+      <button mat-flat-button style="background:#DC2626;color:white" class="!rounded-full !text-xs !h-8" (click)="goToKyc()">Retry</button>
+    </div>
+  }
+}
+
+<!-- Stat Cards -->
+@if (statsLoading()) {
+  <div class="flex items-center gap-3 py-6 text-sm text-es-muted">
+    <mat-spinner diameter="24" /><span>Loading…</span>
+  </div>
+} @else {
+  <div class="stat-grid">
+    <div class="stat-card" (click)="tabSwitch.emit('applications')" style="cursor:pointer">
+      <div class="stat-icon" style="background:rgba(103,80,164,0.08)">
+        <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#6750A4">description</mat-icon>
+      </div>
+      <div>
+        <div class="stat-value">{{ stats().applications }}</div>
+        <div class="stat-label">Applications</div>
+      </div>
+    </div>
+
+    <div class="stat-card" (click)="tabSwitch.emit('leases')" style="cursor:pointer">
+      <div class="stat-icon" style="background:rgba(5,150,105,0.08)">
+        <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#059669">article</mat-icon>
+      </div>
+      <div>
+        <div class="stat-value">{{ stats().activeLeases }}</div>
+        <div class="stat-label">Active leases</div>
+      </div>
+    </div>
+
+    <div class="stat-card" (click)="tabSwitch.emit('bills')" style="cursor:pointer">
+      <div class="stat-icon" style="background:rgba(217,119,6,0.08)">
+        <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#D97706">receipt_long</mat-icon>
+      </div>
+      <div>
+        <div class="stat-value">{{ stats().pendingBills }}</div>
+        <div class="stat-label">Pending bills</div>
+      </div>
+    </div>
+
+    <div class="stat-card" (click)="tabSwitch.emit('complaints')" style="cursor:pointer">
+      <div class="stat-icon" style="background:rgba(220,38,38,0.08)">
+        <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#DC2626">report_problem</mat-icon>
+      </div>
+      <div>
+        <div class="stat-value">{{ stats().openComplaints }}</div>
+        <div class="stat-label">Open complaints</div>
+      </div>
+    </div>
+  </div>
+}
+
+<style>
+.kyc-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 12px;
+}
+.kyc-banner--action  { background: #EDE9F8; }
+.kyc-banner--pending { background: #FFFBEB; }
+.kyc-banner--approved{ background: #F0FDF4; }
+.kyc-banner--rejected{ background: #FEF2F2; }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #EBEBEB;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: box-shadow 0.15s;
+}
+
+.stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #222;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #717171;
+  margin-top: 1px;
+}
+</style>

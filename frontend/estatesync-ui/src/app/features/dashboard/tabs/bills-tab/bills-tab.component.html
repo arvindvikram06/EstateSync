@@ -1,0 +1,77 @@
+<h2 style="font-size:20px;font-weight:700;color:#222;margin-bottom:20px">Bills & payments</h2>
+
+@if (loading()) {
+  <div class="flex items-center gap-3 py-8 text-sm text-es-muted">
+    <mat-spinner diameter="24" /><span>Loading…</span>
+  </div>
+} @else if (bills().length === 0) {
+  <app-empty-state icon="receipt_long" title="No bills"
+    subtitle="Your rent and payment bills will appear here." />
+} @else {
+  <div class="flex flex-col gap-3">
+    @for (bill of bills(); track bill.leaseBillId) {
+      <div class="bill-card">
+        <!-- Icon -->
+        <div class="bill-icon" [class.bill-icon--paid]="bill.status === 'Paid'"
+          [class.bill-icon--pending]="bill.status !== 'Paid'">
+          <mat-icon class="!text-[20px] !w-[20px] !h-[20px]"
+            [style.color]="bill.status === 'Paid' ? '#059669' : '#D97706'">
+            receipt
+          </mat-icon>
+        </div>
+
+        <!-- Info -->
+        <div class="flex-1 min-w-0">
+          <div style="font-size:14px;font-weight:600;color:#222">
+            {{ bill.billType }} — {{ bill.propertyTitle }}
+          </div>
+          <div style="font-size:12px;color:#717171;margin-top:2px">
+            Due: {{ formatDate(bill.dueDate) }}
+          </div>
+        </div>
+
+        <!-- Right -->
+        <div class="flex flex-col items-end gap-2 shrink-0">
+          <span style="font-size:16px;font-weight:700;color:#222">{{ formatCurrency(bill.pendingAmount) }}</span>
+          <app-status-badge [status]="bill.status" />
+          @if (bill.status === 'Pending') {
+            <app-loading-button
+              [loading]="payingId() === bill.leaseBillId"
+              [disabled]="payingId() !== null"
+              color="primary"
+              variant="flat"
+              (click)="pay(bill)"
+              style="--mdc-filled-button-container-height:32px;font-size:12px;border-radius:20px">
+              Pay now
+            </app-loading-button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}
+
+<style>
+.bill-card {
+  background: white;
+  border: 1px solid #EBEBEB;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.bill-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bill-icon--paid    { background: #D1FAE5; }
+.bill-icon--pending { background: #FEF3C7; }
+</style>

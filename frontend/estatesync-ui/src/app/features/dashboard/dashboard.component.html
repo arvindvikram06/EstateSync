@@ -1,0 +1,35 @@
+<app-dashboard-layout
+  [title]="'My Account'"
+  [subtitle]="sidebarSubtitle"
+  [navItems]="navItems()"
+  [activeTab]="activeTab()"
+  (tabChange)="setTab($event)">
+
+  @if (activeTab() === 'overview') {
+    <app-overview-tab
+      [latestKyc]="latestKyc()"
+      [kycLoading]="kycIsLoading"
+      (tabSwitch)="setTab($event)" />
+  }
+
+  @if (activeTab() === 'applications') {
+    <app-applications-tab />
+  }
+
+  @if (activeTab() === 'leases') {
+    <app-leases-tab />
+  }
+
+  @if (activeTab() === 'bills') {
+    <app-bills-tab (pendingCountChange)="updateBillsBadge($event)" />
+  }
+
+  @if (activeTab() === 'complaints') {
+    <app-complaints-tab />
+  }
+
+  @if (activeTab() === 'verifications') {
+    <app-verifications-tab />
+  }
+
+</app-dashboard-layout>

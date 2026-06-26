@@ -1,0 +1,104 @@
+<h2 style="font-size:20px;font-weight:700;color:#222;margin-bottom:20px">My leases</h2>
+
+@if (loading()) {
+  <div class="flex items-center gap-3 py-8 text-sm text-es-muted">
+    <mat-spinner diameter="24" /><span>Loading…</span>
+  </div>
+} @else if (leases().length === 0) {
+  <app-empty-state icon="article" title="No leases"
+    subtitle="Your lease agreements will appear here." />
+} @else {
+  <div class="flex flex-col gap-4">
+    @for (lease of leases(); track lease.leaseId) {
+      <div class="lease-card">
+
+        <!-- Header -->
+        <div class="lease-card__header">
+          <div>
+            <div style="font-size:16px;font-weight:700;color:#222">{{ lease.propertyTitle }}</div>
+            <div style="font-size:12px;color:#717171;margin-top:4px">
+              {{ formatDate(lease.startDate) }} → {{ formatDate(lease.endDate) }}
+            </div>
+          </div>
+          <app-status-badge [status]="lease.status" />
+        </div>
+
+        <!-- Stats -->
+        <div class="lease-card__stats">
+          <div class="lease-stat">
+            <div class="lease-stat__label">Monthly rent</div>
+            <div class="lease-stat__value">{{ formatCurrency(lease.monthlyRent) }}</div>
+          </div>
+          <div class="lease-stat">
+            <div class="lease-stat__label">Tenant signed</div>
+            <div class="lease-stat__value">{{ lease.tenantSignedAt ? formatDate(lease.tenantSignedAt) : '—' }}</div>
+          </div>
+          <div class="lease-stat">
+            <div class="lease-stat__label">Owner signed</div>
+            <div class="lease-stat__value">{{ lease.ownerSignedAt ? formatDate(lease.ownerSignedAt) : '—' }}</div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="lease-card__actions">
+          @if (lease.agreementPdfUrl) {
+            <a [href]="lease.agreementPdfUrl" target="_blank" mat-stroked-button class="!rounded-full !text-xs">
+              <mat-icon class="!text-[14px]">download</mat-icon> Agreement
+            </a>
+          }
+          @if (canSign(lease)) {
+            <a [routerLink]="['/leases', lease.leaseId, 'sign']" mat-flat-button color="primary" class="!rounded-full !text-xs">
+              Sign now
+            </a>
+          }
+          <a [routerLink]="['/leases', lease.leaseId]" mat-stroked-button class="!rounded-full !text-xs">
+            View
+          </a>
+        </div>
+
+      </div>
+    }
+  </div>
+}
+
+<style>
+.lease-card {
+  border: 1px solid #EBEBEB;
+  border-radius: 14px;
+  overflow: hidden;
+  background: white;
+}
+
+.lease-card__header {
+  padding: 18px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #EBEBEB;
+}
+
+.lease-card__stats {
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.lease-stat__label {
+  font-size: 11px;
+  color: #717171;
+}
+
+.lease-stat__value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #222;
+  margin-top: 2px;
+}
+
+.lease-card__actions {
+  padding: 0 20px 16px;
+  display: flex;
+  gap: 8px;
+}
+</style>

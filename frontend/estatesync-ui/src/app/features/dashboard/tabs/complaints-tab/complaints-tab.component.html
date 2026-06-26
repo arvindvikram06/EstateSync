@@ -1,0 +1,65 @@
+<div class="flex justify-between items-center mb-5">
+  <h2 style="font-size:20px;font-weight:700;color:#222">Complaints</h2>
+  <button mat-flat-button color="primary" class="!rounded-full"
+    style="padding:9px 20px;font-size:13px"
+    [disabled]="!activePropertyId()"
+    (click)="raiseComplaint()">
+    <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mr-1">add</mat-icon>
+    Raise complaint
+  </button>
+</div>
+
+@if (!activePropertyId() && !loading()) {
+  <div class="flex items-center gap-2 px-4 py-3 mb-4 rounded-xl text-sm text-es-muted"
+    style="background:#F9FAFB;border:1px solid #EBEBEB">
+    <mat-icon class="!text-[16px]">info</mat-icon>
+    You need an active lease to raise complaints.
+  </div>
+}
+
+@if (loading()) {
+  <div class="flex items-center gap-3 py-8 text-sm text-es-muted">
+    <mat-spinner diameter="24" /><span>Loading…</span>
+  </div>
+} @else if (complaints().length === 0) {
+  <app-empty-state icon="report" title="No complaints"
+    subtitle="Raise a complaint if you face issues with your property." />
+} @else {
+  <div class="flex flex-col gap-3">
+    @for (c of complaints(); track c.complaintId) {
+      <div class="complaint-card">
+        <div class="flex justify-between gap-3">
+          <div class="flex-1 min-w-0">
+            <div style="font-size:14px;font-weight:600;color:#222">{{ c.title }}</div>
+            <div style="font-size:12px;color:#717171;margin-top:3px" class="line-clamp-2">{{ c.description }}</div>
+          </div>
+          <div class="flex flex-col items-end gap-1.5 shrink-0">
+            <app-status-badge [status]="c.status" />
+            <app-status-badge [status]="c.priority" />
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mt-3">
+          <span class="complaint-type-chip">{{ c.type }}</span>
+          <span style="font-size:11px;color:#AAAAAA">{{ formatDate(c.createdAt) }}</span>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+<style>
+.complaint-card {
+  background: white;
+  border: 1px solid #EBEBEB;
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.complaint-type-chip {
+  background: #F3F4F6;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: #444;
+}
+</style>
