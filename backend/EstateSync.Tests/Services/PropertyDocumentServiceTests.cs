@@ -76,16 +76,16 @@ public class PropertyDocumentServiceTests
             .ReturnsAsync("/uploads/properties/deed.pdf");
 
         // Act
-        var result = await _propertyDocumentService.UploadDocumentAsync(propertyId, fileMock.Object, DocumentType.OwnerShipProof, ownerId, CancellationToken.None);
+        var result = await _propertyDocumentService.UploadDocumentAsync(propertyId, fileMock.Object, DocumentType.OwnershipCertificate, ownerId, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
-        result.DocumentType.Should().Be("OwnerShipProof");
+        result.DocumentType.Should().Be("OwnershipCertificate");
         result.DocumentUrl.Should().Be("/uploads/properties/deed.pdf");
         
         property.PropertyDocuments.Should().HaveCount(1);
         property.PropertyDocuments.First().Document.Should().NotBeNull();
-        property.PropertyDocuments.First().Document!.DocumentType.Should().Be(DocumentType.OwnerShipProof);
+        property.PropertyDocuments.First().Document!.DocumentType.Should().Be(DocumentType.OwnershipCertificate);
 
         _documentRepoMock.Verify(x => x.AddAsync(It.IsAny<Document>()), Times.Once);
         // _propertyRepoMock.Verify(x => x.UpdateAsync(property), Times.Once);
@@ -102,7 +102,7 @@ public class PropertyDocumentServiceTests
         var existingDoc = new Document
         {
             DocumentId = Guid.NewGuid(),
-            DocumentType = DocumentType.OwnerShipProof,
+            DocumentType = DocumentType.OwnershipCertificate,
             DocumentUrl = "/uploads/properties/old.pdf",
             OriginalFileName = "old.pdf",
             MimeType = "application/pdf",
@@ -139,7 +139,7 @@ public class PropertyDocumentServiceTests
             .ReturnsAsync("/uploads/properties/new.pdf");
 
         // Act
-        var result = await _propertyDocumentService.UploadDocumentAsync(propertyId, fileMock.Object, DocumentType.OwnerShipProof, ownerId, CancellationToken.None);
+        var result = await _propertyDocumentService.UploadDocumentAsync(propertyId, fileMock.Object, DocumentType.OwnershipCertificate, ownerId, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -174,7 +174,7 @@ public class PropertyDocumentServiceTests
         _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(propertyId)).ReturnsAsync(property);
 
         // Act
-        Func<Task> act = async () => await _propertyDocumentService.UploadDocumentAsync(propertyId, fileMock.Object, DocumentType.OwnerShipProof, nonOwnerId, CancellationToken.None);
+        Func<Task> act = async () => await _propertyDocumentService.UploadDocumentAsync(propertyId, fileMock.Object, DocumentType.OwnershipCertificate, nonOwnerId, CancellationToken.None);
 
         // Assert
         act.Should().ThrowAsync<ForbiddenException>();
@@ -191,7 +191,7 @@ public class PropertyDocumentServiceTests
         var doc = new Document
         {
             DocumentId = documentId,
-            DocumentType = DocumentType.OwnerShipProof,
+            DocumentType = DocumentType.OwnershipCertificate,
             DocumentUrl = "/uploads/properties/deed.pdf",
             OriginalFileName = "deed.pdf",
             MimeType = "application/pdf"
@@ -234,7 +234,7 @@ public class PropertyDocumentServiceTests
         var doc = new Document
         {
             DocumentId = documentId,
-            DocumentType = DocumentType.OwnerShipProof,
+            DocumentType = DocumentType.OwnershipCertificate,
             DocumentUrl = "/uploads/properties/deed.pdf",
             OriginalFileName = "deed.pdf",
             MimeType = "application/pdf"

@@ -3,57 +3,97 @@
   <mat-progress-bar mode="indeterminate" />
 }
 
-<!-- Filter chips bar -->
-<section class="sticky top-16 z-10 bg-white border-b border-[#EBEBEB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] py-3">
-  <div class="max-w-[1240px] mx-auto px-6 flex items-center flex-wrap gap-4">
+<!-- Filter bar -->
+<section class="sticky top-16 z-10 bg-white border-b border-[#EBEBEB] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+  <div class="max-w-[1240px] mx-auto px-6 py-3 flex items-center flex-wrap gap-x-6 gap-y-2">
 
-    <div class="flex items-center gap-2">
-      <span class="text-[12px] font-semibold text-es-muted uppercase tracking-[0.4px]">Type</span>
-      <mat-chip-listbox [value]="typeFilter()" (change)="setType($event.value ?? '')">
+    <!-- Active location chip -->
+    @if (stateFilter()) {
+      <div class="flex items-center gap-1.5 pl-3 pr-1.5 py-[5px] rounded-full text-[12px] font-semibold"
+           style="background:color-mix(in srgb,var(--mat-sys-primary) 10%,white);color:var(--mat-sys-primary);border:1px solid color-mix(in srgb,var(--mat-sys-primary) 25%,white)">
+        <mat-icon style="font-size:13px;width:13px;height:13px">location_on</mat-icon>
+        {{ stateFilter() }}
+        <button type="button" (click)="clearState()"
+          class="flex items-center justify-center w-[18px] h-[18px] rounded-full ml-0.5 border-none cursor-pointer"
+          style="background:color-mix(in srgb,var(--mat-sys-primary) 20%,white)">
+          <mat-icon style="font-size:11px;width:11px;height:11px;color:var(--mat-sys-primary)">close</mat-icon>
+        </button>
+      </div>
+    }
+
+    <!-- Divider if location chip visible -->
+    @if (stateFilter()) {
+      <div class="h-5 w-px bg-[#EBEBEB]"></div>
+    }
+
+    <!-- Type filter -->
+    <div class="flex items-center gap-1.5">
+      <span class="text-[11px] font-semibold text-es-muted uppercase tracking-[0.4px] shrink-0">Type</span>
+      <div class="flex gap-1">
         @for (opt of typeOptions; track opt.value) {
-          <mat-chip-option [value]="opt.value">{{ opt.label }}</mat-chip-option>
+          <button type="button" class="filter-pill" [class.filter-pill--active]="typeFilter() === opt.value"
+            (click)="setType(opt.value)">{{ opt.label }}</button>
         }
-      </mat-chip-listbox>
+      </div>
     </div>
 
-    <div class="flex items-center gap-2">
-      <span class="text-[12px] font-semibold text-es-muted uppercase tracking-[0.4px]">Bedrooms</span>
-      <mat-chip-listbox [value]="bedroomsFilter()" (change)="setBedrooms($event.value ?? '')">
+    <div class="h-5 w-px bg-[#EBEBEB]"></div>
+
+    <!-- Bedrooms filter -->
+    <div class="flex items-center gap-1.5">
+      <span class="text-[11px] font-semibold text-es-muted uppercase tracking-[0.4px] shrink-0">Beds</span>
+      <div class="flex gap-1">
         @for (opt of bedroomsOptions; track opt.value) {
-          <mat-chip-option [value]="opt.value">{{ opt.label }}</mat-chip-option>
+          <button type="button" class="filter-pill" [class.filter-pill--active]="bedroomsFilter() === opt.value"
+            (click)="setBedrooms(opt.value)">{{ opt.label }}</button>
         }
-      </mat-chip-listbox>
+      </div>
     </div>
 
-    <div class="flex items-center gap-2">
-      <span class="text-[12px] font-semibold text-es-muted uppercase tracking-[0.4px]">Rent</span>
-      <mat-chip-listbox [value]="rentFilter()" (change)="setRent($event.value ?? '')">
+    <div class="h-5 w-px bg-[#EBEBEB]"></div>
+
+    <!-- Rent filter -->
+    <div class="flex items-center gap-1.5">
+      <span class="text-[11px] font-semibold text-es-muted uppercase tracking-[0.4px] shrink-0">Rent</span>
+      <div class="flex gap-1">
         @for (opt of rentOptions; track opt.value) {
-          <mat-chip-option [value]="opt.value">{{ opt.label }}</mat-chip-option>
+          <button type="button" class="filter-pill" [class.filter-pill--active]="rentFilter() === opt.value"
+            (click)="setRent(opt.value)">{{ opt.label }}</button>
         }
-      </mat-chip-listbox>
+      </div>
     </div>
 
+    <!-- Clear all -->
     @if (hasActiveFilters()) {
-      <button mat-button color="primary" (click)="clearFilters()">
-        <mat-icon>close</mat-icon> Clear filters
+      <div class="h-5 w-px bg-[#EBEBEB]"></div>
+      <button type="button" (click)="clearFilters()"
+        class="flex items-center gap-1 text-[12px] font-semibold cursor-pointer border-none bg-transparent"
+        style="color:var(--mat-sys-primary)">
+        <mat-icon style="font-size:14px;width:14px;height:14px">close</mat-icon>
+        Clear all
       </button>
     }
+
   </div>
 </section>
 
 <!-- Listings -->
-<main class="py-7 pb-20">
+<main class="py-8 pb-20">
   <div class="max-w-[1240px] mx-auto px-6">
 
-    @if (!isLoading() && total() > 0) {
-      <p class="text-sm font-medium text-es-muted mb-5">
-        {{ total() }} propert{{ total() === 1 ? 'y' : 'ies' }} found
-      </p>
-    }
+    <!-- Results header -->
+    <div class="mb-6">
+      <h1 class="text-[22px] font-bold text-es-text tracking-tight leading-snug">
+        @if (stateFilter()) { Properties in {{ stateFilter() }} }
+        @else { All Properties }
+      </h1>
+      @if (!isLoading() && total() > 0) {
+        <p class="text-sm text-es-muted mt-0.5">{{ total() }} result{{ total() === 1 ? '' : 's' }} found</p>
+      }
+    </div>
 
     @if (!isLoading() && properties().length === 0) {
-      <app-empty-state icon="search_off" title="No properties found" subtitle="Try adjusting your filters">
+      <app-empty-state icon="search_off" title="No properties found" subtitle="Try adjusting your filters or search a different location">
         <button mat-stroked-button (click)="clearFilters()">Clear filters</button>
       </app-empty-state>
     } @else {

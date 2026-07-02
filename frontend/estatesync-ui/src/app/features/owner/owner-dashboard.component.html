@@ -1,49 +1,27 @@
-<div class="p-10 bg-es-bg min-h-screen">
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold tracking-tight text-es-text">Owner Dashboard</h1>
-    <p class="text-sm text-es-muted mt-1">Manage your properties, leases and payments</p>
-  </div>
+<app-dashboard-layout
+  [title]="'Owner Dashboard'"
+  [subtitle]="''"
+  [navItems]="navItems()"
+  [activeTab]="activeTab()"
+  (tabChange)="setTab($event)">
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl">
+  @if (activeTab() === 'overview') {
+    <app-owner-overview-tab (tabSwitch)="setTab($event)" />
+  }
+  @if (activeTab() === 'properties') {
+    <app-owner-properties-tab />
+  }
+  @if (activeTab() === 'applications') {
+    <app-owner-applications-tab (pendingCountChange)="updateApplicationsBadge($event)" />
+  }
+  @if (activeTab() === 'leases') {
+    <app-owner-leases-tab />
+  }
+  @if (activeTab() === 'complaints') {
+    <app-owner-complaints-tab />
+  }
+  @if (activeTab() === 'earnings') {
+    <app-owner-earnings-tab />
+  }
 
-    <a routerLink="/properties/me" class="no-underline group">
-      <mat-card
-        class="rounded-card border border-[#EBEBEB] shadow-card group-hover:shadow-card-hover group-hover:-translate-y-1 transition-all duration-200 bg-white cursor-pointer">
-        <mat-card-header>
-          <div mat-card-avatar class="flex items-center justify-center w-10 h-10 rounded-full bg-red-50">
-            <mat-icon class="!text-brand">home</mat-icon>
-          </div>
-          <mat-card-title>My Properties</mat-card-title>
-          <mat-card-subtitle>View and manage your listings</mat-card-subtitle>
-        </mat-card-header>
-      </mat-card>
-    </a>
-
-    <a routerLink="/leases/owner" class="no-underline group">
-      <mat-card
-        class="rounded-card border border-[#EBEBEB] shadow-card group-hover:shadow-card-hover group-hover:-translate-y-1 transition-all duration-200 bg-white cursor-pointer">
-        <mat-card-header>
-          <div mat-card-avatar class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50">
-            <mat-icon class="!text-blue-600">article</mat-icon>
-          </div>
-          <mat-card-title>Leases</mat-card-title>
-          <mat-card-subtitle>Active and pending lease agreements</mat-card-subtitle>
-        </mat-card-header>
-      </mat-card>
-    </a>
-
-    <a routerLink="/RentalApplications/owner" class="no-underline group">
-      <mat-card
-        class="rounded-card border border-[#EBEBEB] shadow-card group-hover:shadow-card-hover group-hover:-translate-y-1 transition-all duration-200 bg-white cursor-pointer">
-        <mat-card-header>
-          <div mat-card-avatar class="flex items-center justify-center w-10 h-10 rounded-full bg-green-50">
-            <mat-icon class="!text-green-600">group</mat-icon>
-          </div>
-          <mat-card-title>Applications</mat-card-title>
-          <mat-card-subtitle>Review tenant rental applications</mat-card-subtitle>
-        </mat-card-header>
-      </mat-card>
-    </a>
-
-  </div>
-</div>
+</app-dashboard-layout>

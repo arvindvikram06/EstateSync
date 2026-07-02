@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using EstateSync.Api.Models;
 
@@ -8,4 +10,6 @@ public interface IStripeConnectedAccountRepository : IRepository<StripeConnected
 {
     Task<StripeConnectedAccount?> GetByOwnerIdAsync(Guid ownerId);
     Task<StripeConnectedAccount?> GetByStripeAccountIdAsync(string stripeAccountId);
+    Task<(IEnumerable<StripeConnectedAccount> Items, int Total)> GetPagedWithOwnerAsync(
+        int page, int limit, CancellationToken ct = default);
 }

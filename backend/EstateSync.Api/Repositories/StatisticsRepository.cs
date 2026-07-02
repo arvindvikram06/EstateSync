@@ -1,0 +1,124 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using EstateSync.Api.Data;
+using EstateSync.Api.DTOs.Admin;
+using EstateSync.Api.Repositories.Interfaces;
+using EstateSync.Api.Models;
+
+namespace EstateSync.Api.Repositories;
+
+public class StatisticsRepository : IStatisticsRepository
+{
+    private readonly AppDbContext _db;
+
+    public StatisticsRepository(AppDbContext db) => _db = db;
+
+    public Task<int> GetTotalUsersAsync(CancellationToken ct = default)
+        => _db.Users.CountAsync(ct);
+
+    public Task<int> GetUserCountByRoleAsync(string roleName, CancellationToken ct = default)
+        => _db.UserRoles
+            .Include(ur => ur.Role)
+            .CountAsync(ur => ur.Role != null && ur.Role.Name == roleName && ur.User!.DeletedAt == null, ct);
+
+    public Task<int> GetPendingKycCountAsync(CancellationToken ct = default)
+        => _db.KycVerifications.CountAsync(k => k.Status == ApprovalStatus.Pending, ct);
+
+    public Task<int> GetPendingFinancialProfileCountAsync(CancellationToken ct = default)
+        => _db.TenantFinancialProfiles.CountAsync(f => f.Status == ApprovalStatus.Pending, ct);
+
+    public Task<int> GetPendingPropertyApprovalCountAsync(CancellationToken ct = default)
+        => _db.Properties.CountAsync(p => p.Status == PropertyStatus.PendingApproval, ct);
+
+    public Task<int> GetPendingLeaseApprovalCountAsync(CancellationToken ct = default)
+        => _db.Leases.CountAsync(l => l.Status == LeaseStatus.PendingAdminApproval, ct);
+
+    public Task<int> GetOpenComplaintsCountAsync(CancellationToken ct = default)
+        => _db.Complaints.CountAsync(c => c.Status == ComplaintStatus.Open, ct);
+
+    public Task<int> GetActiveLeasesCountAsync(CancellationToken ct = default)
+        => _db.Leases.CountAsync(l => l.Status == LeaseStatus.Active, ct);
+
+    public async Task<(decimal TotalRevenue, decimal TotalPlatformFees)> GetRevenueThisMonthAsync(CancellationToken ct = default)
+    {
+        var start = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        var result = await _db.Payments
+            .Where(p => p.PaymentStatus == PaymentStatus.Paid && p.PaidDate >= start)
+            .GroupBy(_ => 1)
+            .Select(g => new { Revenue = g.Sum(p => p.Amount), Fees = g.Sum(p => p.PlatformFee) })
+            .FirstOrDefaultAsync(ct);
+        return result == null ? (0, 0) : (result.Revenue, result.Fees);
+    }
+
+    public async Task<Dictionary<string, int>> GetPropertyStatusBreakdownAsync(CancellationToken ct = default)
+    {
+        return await _db.Properties
+            .GroupBy(p => p.Status)
+            .Select(g => new { Status = g.Key.ToString(), Count = g.Count() })
+            .ToDictionaryAsync(x => x.Status, x => x.Count, ct);
+    }
+
+    public async Task<Dictionary<string, int>> GetLeaseStatusBreakdownAsync(CancellationToken ct = default)
+    {
+        return await _db.Leases
+            .GroupBy(l => l.Status)
+            .Select(g => new { Status = g.Key.ToString(), Count = g.Count() })
+            .ToDictionaryAsync(x => x.Status, x => x.Count, ct);
+    }
+
+    public async Task<Dictionary<string, int>> GetComplaintStatusBreakdownAsync(CancellationToken ct = default)
+    {
+        return await _db.Complaints
+            .GroupBy(c => c.Status)
+            .Select(g => new { Status = g.Key.ToString(), Count = g.Count() })
+            .ToDictionaryAsync(x => x.Status, x => x.Count, ct);
+    }
+
+    public async Task<Dictionary<string, int>> GetKycStatusBreakdownAsync(CancellationToken ct = default)
+    {
+        return await _db.KycVerifications
+            .GroupBy(k => k.Status)
+            .Select(g => new { Status = g.Key.ToString(), Count = g.Count() })
+            .ToDictionaryAsync(x => x.Status, x => x.Count, ct);
+    }
+
+    public async Task<List<TimeSeriesPoint>> GetNewUsersTimeSeriesAsync(int days, CancellationToken ct = default)
+    {
+        var from = DateTime.UtcNow.Date.AddDays(-days + 1);
+        var raw = await _db.Users
+            .Where(u => u.CreatedAt >= from)
+            .GroupBy(u => u.CreatedAt.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        return Enumerable.Range(0, days)
+            .Select(i => from.AddDays(i))
+            .Select(d => new TimeSeriesPoint(
+                d.ToString("yyyy-MM-dd"),
+                raw.FirstOrDefault(r => r.Date == d)?.Count ?? 0))
+            .ToList();
+    }
+
+    public async Task<List<TimeSeriesPoint>> GetPaymentsTimeSeriesAsync(int days, CancellationToken ct = default)
+    {
+        var from = DateTime.UtcNow.Date.AddDays(-days + 1);
+        var raw = await _db.Payments
+            .Where(p => p.PaymentStatus == PaymentStatus.Paid && p.PaidDate >= from)
+            .GroupBy(p => p.PaidDate.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count(), Amount = g.Sum(p => p.Amount) })
+            .ToListAsync(ct);
+
+        return Enumerable.Range(0, days)
+            .Select(i => from.AddDays(i))
+            .Select(d =>
+            {
+                var match = raw.FirstOrDefault(r => r.Date == d);
+                return new TimeSeriesPoint(d.ToString("yyyy-MM-dd"), match?.Count ?? 0, match?.Amount ?? 0);
+            })
+            .ToList();
+    }
+}

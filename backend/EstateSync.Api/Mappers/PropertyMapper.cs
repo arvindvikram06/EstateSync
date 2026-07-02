@@ -17,11 +17,15 @@ public class PropertyMapper
             MonthlyRent = s.MonthlyRent,
             Bedrooms = s.Bedrooms,
             Bathrooms = s.Bathrooms,
-            State = s.Location != null ? s.Location.StateName : string.Empty,
+            State = s.State,
+            City = s.City,
             AddressLine = s.AddressLine,
             PrimaryImage = s.PropertyImages.FirstOrDefault(i => i.IsPrimary)?.Image,
             PropertyType = s.PropertyType.ToString(),
-            Status = s.Status.ToString()
+            Status = s.Status.ToString(),
+            OwnerName = s.Owner?.FullName ?? string.Empty,
+            OwnerEmail = s.Owner?.Email ?? string.Empty,
+            CreatedAt = s.CreatedAt,
         };
     }
 
@@ -46,11 +50,9 @@ public class PropertyMapper
             Title = s.Title,
             Description = s.Description,
             PropertyType = s.PropertyType.ToString(),
-            LocationId = s.LocationId,
-            State = s.Location != null ? s.Location.StateName : string.Empty,
-            District = s.Location != null ? s.Location.District : string.Empty,
-            Pincode = s.Location != null ? s.Location.Pincode : string.Empty,
-            Country = s.Location != null ? s.Location.Country : string.Empty,
+            State = s.State,
+            City = s.City,
+            Pincode = s.Pincode,
             AddressLine = s.AddressLine,
             Latitude = s.Latitude,
             Longitude = s.Longitude,
@@ -74,7 +76,9 @@ public class PropertyMapper
             Title = request.Title,
             Description = request.Description,
             PropertyType = request.PropertyType,
-            LocationId = request.LocationId,
+            State = request.State,
+            City = request.City,
+            Pincode = request.Pincode,
             AddressLine = request.AddressLine,
             Latitude = request.Latitude,
             Longitude = request.Longitude,
@@ -93,7 +97,9 @@ public class PropertyMapper
         entity.Title = request.Title;
         entity.Description = request.Description;
         entity.PropertyType = request.PropertyType;
-        entity.LocationId = request.LocationId;
+        entity.State = request.State;
+        entity.City = request.City;
+        entity.Pincode = request.Pincode;
         entity.AddressLine = request.AddressLine;
         entity.Latitude = request.Latitude;
         entity.Longitude = request.Longitude;

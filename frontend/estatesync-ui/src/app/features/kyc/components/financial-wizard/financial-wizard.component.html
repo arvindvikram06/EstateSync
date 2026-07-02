@@ -73,18 +73,31 @@
             </div>
             <div>
               <h2 class="kyc-card__title">Upload Financial Documents</h2>
-              <p class="kyc-card__subtitle">Salary Slips, Bank Statements, or Tax Returns</p>
+              <p class="kyc-card__subtitle">Documents required depend on your employment type</p>
             </div>
           </div>
+          <mat-form-field appearance="outline" class="full-width" style="margin-bottom: 8px;">
+            <mat-label>Employment Type</mat-label>
+            <mat-icon matPrefix>work</mat-icon>
+            <mat-select [formControl]="finDetailsForm.controls.employmentType">
+              <mat-option value="Salaried">Salaried</mat-option>
+              <mat-option value="SelfEmployed">Self Employed</mat-option>
+              <mat-option value="BusinessOwner">Business Owner</mat-option>
+              <mat-option value="Student">Student</mat-option>
+              <mat-option value="Other">Other</mat-option>
+            </mat-select>
+          </mat-form-field>
           <div class="doc-progress-wrap">
             <div class="doc-progress-bar">
-              <div class="doc-progress-fill" [style.width.%]="uploadedFinDocCount * 50"></div>
+              <div class="doc-progress-fill"
+                [style.width.%]="requiredDocSlots().length ? (uploadedFinDocCount() / requiredDocSlots().length * 100) : 0">
+              </div>
             </div>
-            <span class="doc-progress-label">{{ uploadedFinDocCount }}/2 uploaded</span>
+            <span class="doc-progress-label">{{ uploadedFinDocCount() }}/{{ requiredDocSlots().length }} uploaded</span>
           </div>
           <div class="doc-grid">
-            @for (slot of FIN_DOC_SLOTS; track slot.type) {
-              <input type="file" [id]="'file-' + slot.type" [accept]="slot.accept"
+            @for (slot of requiredDocSlots(); track slot.type) {
+              <input #fileInput type="file" [id]="'file-' + slot.type" [accept]="slot.accept"
                 style="display:none" (change)="onFinFileSelected($event, slot.type)" />
               <div class="doc-slot" [class.doc-slot--done]="finStore.uploadedDocs()[slot.type]">
                 <div class="doc-slot__icon">
@@ -110,7 +123,7 @@
                   } @else if (finStore.uploadedDocs()[slot.type]) {
                     <label [for]="'file-' + slot.type" class="doc-slot__replace">Replace</label>
                   } @else {
-                    <button mat-stroked-button type="button" (click)="triggerFileInput(slot.type)">
+                    <button mat-stroked-button type="button" (click)="fileInput.click()">
                       <mat-icon>cloud_upload</mat-icon> Upload
                     </button>
                   }
@@ -121,7 +134,7 @@
         </div>
         <div class="kyc-card__actions">
           <button mat-flat-button color="primary" class="kyc-cta-btn"
-            [disabled]="!allFinDocsUploaded" (click)="proceedToFinDetails()">
+            [disabled]="!allFinDocsUploaded()" (click)="proceedToFinDetails()">
             Continue to details
             <mat-icon iconPositionEnd>chevron_right</mat-icon>
           </button>
@@ -144,21 +157,13 @@
           </div>
           <form [formGroup]="finDetailsForm" (ngSubmit)="submitFin()" novalidate class="kyc-form">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Employment Type</mat-label>
-              <mat-select formControlName="employmentType">
-                <mat-option value="Salaried">Salaried</mat-option>
-                <mat-option value="SelfEmployed">Self Employed</mat-option>
-                <mat-option value="BusinessOwner">Business Owner</mat-option>
-                <mat-option value="Student">Student</mat-option>
-                <mat-option value="Other">Other</mat-option>
-              </mat-select>
-            </mat-form-field>
-            <mat-form-field appearance="outline" class="full-width">
               <mat-label>Employer Name / Business Name</mat-label>
+              <mat-icon matPrefix>business</mat-icon>
               <input matInput formControlName="employerName" placeholder="Tech Corp Inc." />
             </mat-form-field>
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Monthly Income (₹)</mat-label>
+              <mat-icon matPrefix>currency_rupee</mat-icon>
               <input matInput type="number" formControlName="declaredMonthlyIncome" placeholder="50000" />
             </mat-form-field>
           </form>

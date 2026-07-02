@@ -1,0 +1,40 @@
+<div class="notif-panel">
+  <!-- Header -->
+  <div class="notif-panel__header">
+    <span class="notif-panel__title">Notifications</span>
+    @if (hasUnread()) {
+      <button mat-button class="notif-panel__mark-read" (click)="onMarkAllRead()">
+        Mark all as read
+      </button>
+    }
+  </div>
+
+  <!-- Notification list -->
+  @if (notifications().length > 0) {
+    <ul class="notif-panel__list">
+      @for (n of notifications(); track n.notificationId) {
+        <li class="notif-item" [class.notif-item--read]="n.isRead" (click)="onClickNotification(n, $event)">
+          @if (!n.isRead) {
+            <span class="notif-item__dot"></span>
+          }
+          <div class="notif-item__icon-wrap" [class.notif-item__icon-wrap--read]="n.isRead">
+            <mat-icon class="notif-item__icon">{{ iconFor(n.type) }}</mat-icon>
+          </div>
+          <div class="notif-item__body">
+            <p class="notif-item__title">{{ n.title }}</p>
+            <p class="notif-item__msg">{{ n.message }}</p>
+            <p class="notif-item__time">{{ timeAgo(n.createdAt) }}</p>
+          </div>
+          <mat-icon class="notif-item__chevron">chevron_right</mat-icon>
+        </li>
+      }
+    </ul>
+  } @else {
+    <!-- Empty state -->
+    <div class="notif-panel__empty">
+      <mat-icon class="notif-panel__empty-icon">notifications_none</mat-icon>
+      <p class="notif-panel__empty-text">You're all caught up</p>
+      <p class="notif-panel__empty-sub">No new notifications right now</p>
+    </div>
+  }
+</div>

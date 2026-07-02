@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using EstateSync.Api.Common;
 using EstateSync.Api.DTOs.Complaints;
 using EstateSync.Api.Exceptions;
 using EstateSync.Api.Interfaces.Services.Complaints;
+using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Interfaces.Services.Storage;
 using EstateSync.Api.Mappers;
 using EstateSync.Api.Models;
@@ -20,7 +22,7 @@ public class ComplaintService : IComplaintService
     private readonly ILeaseRepository _leaseRepo;
     private readonly IUserRepository _userRepo;
     private readonly IFileStorageService _storageService;
-    private readonly INotificationRepository _notificationRepo;
+    private readonly INotificationSender _notificationSender;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ComplaintMapper _mapper;
 
@@ -29,7 +31,7 @@ public class ComplaintService : IComplaintService
         ILeaseRepository leaseRepo,
         IUserRepository userRepo,
         IFileStorageService storageService,
-        INotificationRepository notificationRepo,
+        INotificationSender notificationSender,
         IUnitOfWork unitOfWork,
         ComplaintMapper mapper)
     {
@@ -37,7 +39,7 @@ public class ComplaintService : IComplaintService
         _leaseRepo = leaseRepo ?? throw new ArgumentNullException(nameof(leaseRepo));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
         _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
-        _notificationRepo = notificationRepo ?? throw new ArgumentNullException(nameof(notificationRepo));
+        _notificationSender = notificationSender ?? throw new ArgumentNullException(nameof(notificationSender));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
@@ -72,7 +74,7 @@ public class ComplaintService : IComplaintService
 
         if (lease.Property != null)
         {
-            await _notificationRepo.AddAsync(new Notification
+            await _notificationSender.SendAsync(new Notification
             {
                 NotificationId = Guid.NewGuid(),
                 UserId = lease.Property.OwnerId,
@@ -144,7 +146,7 @@ public class ComplaintService : IComplaintService
                 ? "Complaint Resolved"
                 : "Complaint Status Updated";
 
-            await _notificationRepo.AddAsync(new Notification
+            await _notificationSender.SendAsync(new Notification
             {
                 NotificationId = Guid.NewGuid(),
                 UserId = tenantId.Value,
@@ -252,5 +254,16 @@ public class ComplaintService : IComplaintService
         await _unitOfWork.SaveChangesAsync(ct);
 
         return _mapper.MapToResponse(complaint);
+    }
+
+    public async Task<PagedResponse<ComplaintResponse>> GetPagedForAdminAsync(
+        string? status, string? priority, int page, int limit, CancellationToken ct = default)
+    {
+        var (items, total) = await _complaintRepo.GetPagedForAdminAsync(status, priority, page, limit, ct);
+        return new PagedResponse<ComplaintResponse>
+        {
+            Data = items.Select(_mapper.MapToResponse).ToList(),
+            Total = total, Page = page, Limit = limit
+        };
     }
 }

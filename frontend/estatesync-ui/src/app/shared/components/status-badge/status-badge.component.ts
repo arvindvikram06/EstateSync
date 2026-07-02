@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
 import { MatChipsModule } from '@angular/material/chips';
 
 const STATUS_CLASS: Record<string, string> = {
@@ -42,8 +42,8 @@ const STATUS_CLASS: Record<string, string> = {
 export class StatusBadgeComponent {
   readonly status = input.required<string>();
 
-  get badgeClass(): string {
+  readonly badgeClass = computed(() => {
     const key = (this.status() ?? '').toLowerCase().replace(/\s+/g, '');
     return STATUS_CLASS[key] ?? 'es-badge--default';
-  }
+  });
 }

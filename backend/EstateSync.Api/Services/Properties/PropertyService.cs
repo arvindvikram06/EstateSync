@@ -17,7 +17,6 @@ namespace EstateSync.Api.Services.Properties;
 public class PropertyService : IPropertyService
 {
     private readonly IPropertyRepository _propertyRepo;
-    private readonly IRepository<Location> _locationRepo;
     private readonly IUserRepository _userRepo;
     private readonly ILeaseRepository _leaseRepo;
     private readonly IUnitOfWork _unitOfWork;
@@ -26,7 +25,6 @@ public class PropertyService : IPropertyService
 
     public PropertyService(
         IPropertyRepository propertyRepo,
-        IRepository<Location> locationRepo,
         IUserRepository userRepo,
         ILeaseRepository leaseRepo,
         IUnitOfWork unitOfWork,
@@ -34,7 +32,6 @@ public class PropertyService : IPropertyService
         ILogger<PropertyService> logger)
     {
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
-        _locationRepo = locationRepo ?? throw new ArgumentNullException(nameof(locationRepo));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
         _leaseRepo = leaseRepo ?? throw new ArgumentNullException(nameof(leaseRepo));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
@@ -92,12 +89,6 @@ public class PropertyService : IPropertyService
             throw new ForbiddenException("Owner must be verified before listing a property.");
         }
 
-        var location = await _locationRepo.GetByIdAsync(request.LocationId);
-        if (location == null)
-        {
-            throw new NotFoundException("Location", request.LocationId);
-        }
-
         var property = _mapper.MapCreateRequestToEntity(request);
         property.OwnerId = ownerId;
         property.Status = PropertyStatus.Draft;
@@ -128,12 +119,6 @@ public class PropertyService : IPropertyService
         if (property.OwnerId != ownerId)
         {
             throw new ForbiddenException("You do not own this property.");
-        }
-
-        var location = await _locationRepo.GetByIdAsync(request.LocationId);
-        if (location == null)
-        {
-            throw new NotFoundException("Location", request.LocationId);
         }
 
         _mapper.MapUpdateRequestToEntity(request, property);

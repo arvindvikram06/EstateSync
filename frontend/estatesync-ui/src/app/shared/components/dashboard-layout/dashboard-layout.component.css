@@ -1,4 +1,67 @@
-/* color-mix() cannot be expressed as a Tailwind utility — kept here only */
+/* ── Sidebar — mobile: fixed overlay ─────────────────────────── */
+/* top/height are set via [style] bindings in the template so they
+   respect topOffset (64 for user dashboards, 0 for staff dashboards) */
+.sidebar-panel {
+  position: fixed;
+  top: 64px;   /* default — overridden by [style.top.px]="topOffset" */
+  left: 0;
+  height: calc(100vh - 64px);   /* overridden by [style.height] binding */
+  width: 240px;
+  background: white;
+  border-right: 1px solid #EBEBEB;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 40;
+  transform: translateX(-100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-panel--open {
+  transform: translateX(0);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+}
+
+/* ── Sidebar — desktop: in-flow, width transition ─────────────── */
+@media (min-width: 768px) {
+  .sidebar-panel {
+    position: sticky;
+    top: 64px;   /* overridden by [style.top.px] binding */
+    height: calc(100vh - 64px);   /* overridden by [style.height] binding */
+    width: 0;
+    overflow: hidden;
+    flex-shrink: 0;
+    transform: none;
+    box-shadow: none;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+  }
+
+  .sidebar-panel--open {
+    width: 240px;
+    overflow-y: auto;
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+/* ── Backdrop (mobile only — hidden via md:hidden in template) ── */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  top: 64px;   /* overridden by [style.top.px] binding */
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 39;
+  animation: backdrop-in 0.2s ease;
+}
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Nav item active state ───────────────────────────────────── */
 button.dash-nav-btn.dash-nav-item--active {
   background: color-mix(in srgb, var(--mat-sys-primary) 10%, white);
   color: var(--mat-sys-primary);

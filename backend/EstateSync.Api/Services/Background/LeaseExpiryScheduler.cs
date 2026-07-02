@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
 
@@ -46,7 +47,7 @@ public class LeaseExpiryScheduler : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         var leaseRepo = scope.ServiceProvider.GetRequiredService<ILeaseRepository>();
-        var notificationRepo = scope.ServiceProvider.GetRequiredService<INotificationRepository>();
+        var notificationSender = scope.ServiceProvider.GetRequiredService<INotificationSender>();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
         var expiredLeases = await leaseRepo.GetActiveLeasesPastEndDateAsync(DateTime.UtcNow);
@@ -67,7 +68,7 @@ public class LeaseExpiryScheduler : BackgroundService
             _logger.LogInformation("LeaseExpiryScheduler: Expired Lease {LeaseId} for Property {PropertyId}",
                 lease.LeaseId, lease.PropertyId);
 
-            await notificationRepo.AddAsync(new Notification
+            await notificationSender.SendAsync(new Notification
             {
                 NotificationId = Guid.NewGuid(),
                 UserId = lease.TenantId,
@@ -82,7 +83,7 @@ public class LeaseExpiryScheduler : BackgroundService
 
             if (lease.Property != null)
             {
-                await notificationRepo.AddAsync(new Notification
+                await notificationSender.SendAsync(new Notification
                 {
                     NotificationId = Guid.NewGuid(),
                     UserId = lease.Property.OwnerId,
@@ -97,7 +98,7 @@ public class LeaseExpiryScheduler : BackgroundService
 
                 if (!lease.IsDepositForfeited)
                 {
-                    await notificationRepo.AddAsync(new Notification
+                    await notificationSender.SendAsync(new Notification
                     {
                         NotificationId = Guid.NewGuid(),
                         UserId = lease.Property.OwnerId,

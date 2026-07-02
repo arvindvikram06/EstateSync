@@ -1,4 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import {
+  Component, ChangeDetectionStrategy, inject, computed,
+  signal, HostListener,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -11,10 +14,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { SignalRService } from '../../../core/services/signalr.service';
+import { NotificationPanelComponent } from '../notification-panel/notification-panel.component';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
+  host: { 'style': 'position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: block;' },
   imports: [
     RouterLink,
     MatToolbarModule,
@@ -24,6 +31,7 @@ import { AuthService } from '../../../core/services/auth.service';
     MatInputModule,
     MatFormFieldModule,
     MatDividerModule,
+    NotificationPanelComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './navbar.component.html',
@@ -31,7 +39,12 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class NavbarComponent {
   readonly authService = inject(AuthService);
+  readonly notificationService = inject(NotificationService);
+  // Injecting SignalRService triggers its constructor effect, which auto-connects on login
+  private readonly _signalR = inject(SignalRService);
   private readonly router = inject(Router);
+
+  readonly panelOpen = signal(false);
 
   readonly isSearchVisible = toSignal(
     this.router.events.pipe(
@@ -44,14 +57,29 @@ export class NavbarComponent {
     { initialValue: this.router.url.split('?')[0] === '/' || this.router.url.split('?')[0] === '/properties' }
   );
 
-  get user() { return this.authService.currentUser(); }
-  get initials() {
-    const n = this.user?.fullName ?? '';
+  readonly user     = this.authService.currentUser;
+  readonly isOwner  = this.authService.isOwner;
+  readonly initials = computed(() => {
+    const n = this.authService.currentUser()?.fullName ?? '';
     return n.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+  });
+  readonly isKycApproved = computed(() => this.authService.currentUser()?.isKycVerified ?? false);
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    if (this.panelOpen()) {
+      this.panelOpen.set(false);
+    }
   }
-  get isOwner() { return this.authService.isOwner(); }
-  get isAdmin() { return this.authService.isAdmin(); }
-  get isKycApproved() { return this.user?.isKycVerified ?? false; }
+
+  togglePanel(event: MouseEvent): void {
+    event.stopPropagation();
+    this.panelOpen.update(v => !v);
+  }
+
+  onMarkAllRead(): void {
+    this.notificationService.markAllRead().subscribe();
+  }
 
   doSearch(value: string): void {
     const q = value.trim();

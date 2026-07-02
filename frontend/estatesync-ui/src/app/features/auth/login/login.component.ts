@@ -11,6 +11,8 @@ import { MatCardModule } from '@angular/material/card';
 import { AlertBannerComponent } from '../../../shared/components/alert-banner/alert-banner.component';
 import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
 import { AuthService } from '../../../core/services/auth.service';
+import { TokenService } from '../../../core/services/token.service';
+import { getRoleHome } from '../../../core/guards/role-home.util';
 
 @Component({
   selector: 'app-login',
@@ -26,9 +28,10 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
-  private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly authService  = inject(AuthService);
+  private readonly tokenService = inject(TokenService);
+  private readonly router       = inject(Router);
+  private readonly destroyRef   = inject(DestroyRef);
 
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -77,7 +80,13 @@ export class LoginComponent {
     ).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.router.navigate(['/dashboard']);
+        const roles = this.tokenService.decodeRoles();
+        if (roles.includes('Admin') || roles.includes('Verifier')) {
+          this.authService.logout();
+          this.errorMessage.set('Staff accounts must sign in through the staff portal.');
+          return;
+        }
+        this.router.navigateByUrl(getRoleHome(roles));
       },
       error: (err: HttpErrorResponse) => {
         this.isLoading.set(false);

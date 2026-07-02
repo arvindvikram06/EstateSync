@@ -8,6 +8,7 @@ using EstateSync.Api.DTOs.RentalApplications;
 using EstateSync.Api.Exceptions;
 using EstateSync.Api.Interfaces.Services.RentalApplications;
 using EstateSync.Api.Interfaces.Services.Auth;
+using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Mappers;
 using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
@@ -20,7 +21,7 @@ public class RentalApplicationService : IRentalApplicationService
     private readonly IPropertyRepository _propertyRepo;
     private readonly IUserRepository _userRepo;
     private readonly ILeaseRepository _leaseRepo;
-    private readonly INotificationRepository _notificationRepo;
+    private readonly INotificationSender _notificationSender;
     private readonly IUnitOfWork _unitOfWork;
     private readonly RentalApplicationMapper _mapper;
     private readonly ILogger<RentalApplicationService> _logger;
@@ -30,7 +31,7 @@ public class RentalApplicationService : IRentalApplicationService
         IPropertyRepository propertyRepo,
         IUserRepository userRepo,
         ILeaseRepository leaseRepo,
-        INotificationRepository notificationRepo,
+        INotificationSender notificationSender,
         IUnitOfWork unitOfWork,
         RentalApplicationMapper mapper,
         ILogger<RentalApplicationService> logger)
@@ -39,7 +40,7 @@ public class RentalApplicationService : IRentalApplicationService
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
         _leaseRepo = leaseRepo ?? throw new ArgumentNullException(nameof(leaseRepo));
-        _notificationRepo = notificationRepo ?? throw new ArgumentNullException(nameof(notificationRepo));
+        _notificationSender = notificationSender ?? throw new ArgumentNullException(nameof(notificationSender));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -282,7 +283,7 @@ public class RentalApplicationService : IRentalApplicationService
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };
-        await _notificationRepo.AddAsync(notification);
+        await _notificationSender.SendAsync(notification);
     }
 
     private void ValidateReviewApplication(RentalApplication application, Guid ownerId)
@@ -316,7 +317,7 @@ public class RentalApplicationService : IRentalApplicationService
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };
-        await _notificationRepo.AddAsync(approveNotification);
+        await _notificationSender.SendAsync(approveNotification);
     }
 
     private async Task ProcessRejectionAsync(RentalApplication application, string remarks)
@@ -338,6 +339,6 @@ public class RentalApplicationService : IRentalApplicationService
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };
-        await _notificationRepo.AddAsync(rejectNotification);
+        await _notificationSender.SendAsync(rejectNotification);
     }
 }

@@ -4,6 +4,7 @@ export interface PropertySummaryResponse {
   monthlyRent: number;
   bedrooms: number;
   bathrooms: number;
+  city: string;
   state: string;
   addressLine: string;
   primaryImage: string | null;
@@ -25,11 +26,9 @@ export interface PropertyDetailResponse {
   title: string;
   description: string;
   propertyType: string;
-  locationId: string;
   state: string;
-  district: string;
+  city: string;
   pincode: string;
-  country: string;
   addressLine: string;
   latitude: number | null;
   longitude: number | null;
@@ -50,4 +49,51 @@ export interface PropertyFilters {
   bedrooms?: number;
   minRent?: number;
   maxRent?: number;
+}
+
+export interface CreatePropertyRequest {
+  title: string;
+  description: string;
+  propertyType: string;
+  state: string;
+  city: string;
+  pincode: string;
+  addressLine: string;
+  monthlyRent: number;
+  securityDeposit: number;
+  bedrooms: number;
+  bathrooms: number;
+  landArea: number;
+  buildupArea: number;
+  latitude: number;
+  longitude: number;
+}
+
+export interface UpdatePropertyRequest {
+  title: string;
+  description: string;
+  propertyType: string;
+  state: string;
+  city: string;
+  pincode: string;
+  addressLine: string;
+  monthlyRent: number;
+  securityDeposit: number;
+  bedrooms: number;
+  bathrooms: number;
+  landArea?: number;
+  buildupArea?: number;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface DocumentResponse {
+  documentId: string;
+  documentType: string;
+  documentUrl: string;
+  originalFileName: string;
+  mimeType: string;
+  fileSize: number;
+  reviewStatus: string;
+  uploadedAt: string;
 }

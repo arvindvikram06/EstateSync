@@ -458,3 +458,65 @@ mat-icon.status-icon--error   { color: #DC2626; }
   margin: 0;
   line-height: 1.5;
 }
+
+/* ── Mobile-first responsive overrides ──────────────────────── */
+@media (max-width: 640px) {
+  .kyc-page {
+    padding: 20px 12px 60px;
+  }
+
+  .kyc-flow {
+    max-width: 100%;
+  }
+
+  div.kyc-card .kyc-card__content {
+    padding: 20px 16px 16px;
+  }
+
+  div.kyc-card .kyc-card__actions {
+    padding: 0 16px 20px;
+  }
+
+  .kyc-features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  div.kyc-card .kyc-card__actions--row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  button.kyc-back-btn,
+  button.kyc-submit-btn {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .kyc-step__label {
+    font-size: 9px;
+    max-width: 56px;
+    text-align: center;
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  .kyc-step__line {
+    min-width: 16px;
+    max-width: 40px;
+  }
+
+  .kyc-card__title {
+    font-size: 17px;
+  }
+
+  .doc-slot {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .doc-slot__action {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
+}

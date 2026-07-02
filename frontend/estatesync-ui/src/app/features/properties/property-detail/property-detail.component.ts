@@ -1,5 +1,6 @@
 import {
-  Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, DestroyRef
+  Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, DestroyRef,
+  ElementRef, ViewChild, effect
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -13,21 +14,9 @@ import { KycService } from '../../../core/services/kyc.service';
 import { PropertyDetailResponse } from '../../../core/models/property.model';
 import { formatCurrency } from '../../../core/utils/format.utils';
 import { ApplyDialogComponent } from './apply-dialog.component';
+import { ImageGalleryDialogComponent } from './image-gallery-dialog.component';
+import * as L from 'leaflet';
 
-const GRADIENTS = [
-  'linear-gradient(135deg, #52B69A 0%, #1A759F 100%)',
-  'linear-gradient(135deg, #E9C46A 0%, #E76F51 100%)',
-  'linear-gradient(135deg, #9B5DE5 0%, #6A0DAD 100%)',
-  'linear-gradient(135deg, #4CC9A0 0%, #2D6A4F 100%)',
-  'linear-gradient(135deg, #E77BA4 0%, #B5446E 100%)',
-  'linear-gradient(135deg, #74B3CE 0%, #1B4F72 100%)',
-];
-
-function hashCode(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) { h = (Math.imul(31, h) + s.charCodeAt(i)) | 0; }
-  return Math.abs(h);
-}
 
 @Component({
   selector: 'app-property-detail',
@@ -43,6 +32,8 @@ function hashCode(s: string): number {
   styleUrl: './property-detail.component.css'
 })
 export class PropertyDetailComponent implements OnInit {
+  @ViewChild('mapEl') mapElRef!: ElementRef<HTMLDivElement>;
+
   private readonly route       = inject(ActivatedRoute);
   private readonly router      = inject(Router);
   private readonly propService = inject(PropertyService);
@@ -59,6 +50,15 @@ export class PropertyDetailComponent implements OnInit {
 
   readonly user       = this.authService.currentUser;
   readonly isLoggedIn = this.authService.isLoggedIn;
+  readonly isOwner    = this.authService.isOwner;
+
+  private map?: L.Map;
+
+  readonly isMyProperty = computed(() => {
+    const p = this.property();
+    const u = this.user();
+    return !!p && !!u && p.ownerId === u.userId;
+  });
 
   readonly ctaState = computed((): 'login' | 'kyc' | 'apply' | 'applied' => {
     if (this.applied()) return 'applied';
@@ -68,6 +68,14 @@ export class PropertyDetailComponent implements OnInit {
   });
 
   readonly formatCurrency = formatCurrency;
+
+  constructor() {
+    effect(() => {
+      if (!this.loading() && this.property()) {
+        queueMicrotask(() => this.initMap());
+      }
+    });
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
@@ -94,11 +102,7 @@ export class PropertyDetailComponent implements OnInit {
     }
   }
 
-  gradient(id: string): string {
-    return GRADIENTS[hashCode(id) % GRADIENTS.length];
-  }
-
-  imageUrl(path: string | null): string {
+imageUrl(path: string | null): string {
     return this.propService.imageUrl(path);
   }
 
@@ -115,9 +119,50 @@ export class PropertyDetailComponent implements OnInit {
         maxWidth: 520,
         borderRadius: '16px',
       } as never);
-      ref.afterClosed().subscribe(result => {
+      ref.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
         if (result === 'applied') this.applied.set(true);
       });
+    }
+  }
+
+  openImageGallery(): void {
+    const p = this.property();
+    if (!p || !p.images || p.images.length === 0) return;
+    
+    this.dialog.open(ImageGalleryDialogComponent, {
+      data: { images: p.images },
+      maxWidth: '100vw',
+      maxHeight: '100vh',
+      height: '100%',
+      width: '100%',
+      panelClass: 'full-screen-modal'
+    } as never);
+  }
+
+  private initMap(): void {
+    if (!this.mapElRef?.nativeElement || this.map) return;
+
+    const p = this.property();
+    if (!p) return;
+
+    const lat = p.latitude ?? 13.0827;
+    const lng = p.longitude ?? 80.2707;
+
+    this.map = L.map(this.mapElRef.nativeElement, { zoomControl: true, scrollWheelZoom: false }).setView(
+      [lat, lng], p.latitude ? 14 : 7
+    );
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(this.map);
+
+    if (p.latitude && p.longitude) {
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="width:18px;height:18px;background:var(--mat-sys-primary);border:2px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>`,
+        iconSize: [18, 18], iconAnchor: [9, 9],
+      });
+      L.marker([lat, lng], { icon }).addTo(this.map);
     }
   }
 }

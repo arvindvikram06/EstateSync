@@ -59,6 +59,7 @@ public class LeaseRepository : BaseRepository<Lease>, ILeaseRepository
         var query = _dbSet
             .AsNoTracking()
             .Include(l => l.Property)
+                .ThenInclude(p => p!.Owner)
             .Include(l => l.Tenant)
             .Where(l => l.TenantId == tenantId);
 
@@ -77,6 +78,7 @@ public class LeaseRepository : BaseRepository<Lease>, ILeaseRepository
         var query = _dbSet
             .AsNoTracking()
             .Include(l => l.Property)
+                .ThenInclude(p => p!.Owner)
             .Include(l => l.Tenant)
             .Where(l => l.Property != null && l.Property.OwnerId == ownerId);
 

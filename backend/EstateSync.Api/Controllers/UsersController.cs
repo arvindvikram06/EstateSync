@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EstateSync.Api.Common;
+using EstateSync.Api.DTOs.Users;
 using EstateSync.Api.Extensions;
 using EstateSync.Api.Interfaces.Services.Users;
 
@@ -18,6 +19,13 @@ public class UsersController : ControllerBase
     public UsersController(IUserService userService)
     {
         _userService = userService;
+    }
+
+    [HttpGet("me/profile")]
+    public async Task<ActionResult<ApiResponse<UserProfileResponse>>> GetProfile(CancellationToken ct)
+    {
+        var profile = await _userService.GetProfileAsync(User.GetUserId(), ct);
+        return Ok(new ApiResponse<UserProfileResponse> { Data = profile });
     }
 
     [HttpPost("me/become-owner")]

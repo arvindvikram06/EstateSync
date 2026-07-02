@@ -313,4 +313,108 @@ public class AuthServiceTests
         activeTokens.ForEach(t => t.RevokedAt.Should().NotBeNull());
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<System.Threading.CancellationToken>()), Times.Once);
     }
+
+    [Test]
+    public async Task RefreshTokenAsync_ShouldReturnSuccessor_WhenRevokedWithinGraceWindow()
+    {
+        // Arrange — a token rotated 5 seconds ago (within the 60s grace window), with a live successor.
+        var oldToken = "just_rotated_token";
+        var userId = Guid.NewGuid();
+        var tokenEntity = new RefreshToken
+        {
+            UserId = userId,
+            Token = oldToken,
+            ExpiresAt = DateTime.UtcNow.AddDays(1),
+            TokenFamily = "family_id",
+            RevokedAt = DateTime.UtcNow.AddSeconds(-5)
+        };
+
+        var successor = new RefreshToken
+        {
+            UserId = userId,
+            Token = "successor_token",
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            TokenFamily = "family_id",
+            RevokedAt = null,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _refreshTokenRepositoryMock.Setup(x => x.GetByTokenAsync(oldToken))
+            .ReturnsAsync(tokenEntity);
+        _refreshTokenRepositoryMock.Setup(x => x.GetActiveTokensInFamilyAsync(tokenEntity.TokenFamily))
+            .ReturnsAsync(new List<RefreshToken> { successor });
+
+        var user = new User
+        {
+            UserId = userId,
+            Email = "user@example.com",
+            FullName = "John Doe",
+            PasswordHash = "hash",
+            PhoneNumber = "1234567890",
+            IsActive = true
+        };
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync(user);
+        _userRepositoryMock.Setup(x => x.GetByEmailWithRolesAsync(user.Email)).ReturnsAsync(user);
+        _tokenServiceMock.Setup(x => x.GenerateAccessToken(user)).Returns("successor_access_token");
+
+        // Act
+        var (response, refreshToken) = await _authService.RefreshTokenAsync(oldToken);
+
+        // Assert — hands back the live successor, no rotation, no family revocation, no save.
+        response.AccessToken.Should().Be("successor_access_token");
+        refreshToken.Should().Be("successor_token");
+        successor.RevokedAt.Should().BeNull();
+        _refreshTokenRepositoryMock.Verify(x => x.AddAsync(It.IsAny<RefreshToken>()), Times.Never);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<System.Threading.CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public async Task LogoutAsync_ShouldRevokeFamily_WhenTokenIsValid()
+    {
+        // Arrange
+        var token = "active_token";
+        var tokenEntity = new RefreshToken
+        {
+            UserId = Guid.NewGuid(),
+            Token = token,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            TokenFamily = "family_id",
+            RevokedAt = null
+        };
+
+        var familyTokens = new List<RefreshToken>
+        {
+            tokenEntity,
+            new() { Token = "sibling_token", TokenFamily = "family_id", RevokedAt = null }
+        };
+
+        _refreshTokenRepositoryMock.Setup(x => x.GetByTokenAsync(token))
+            .ReturnsAsync(tokenEntity);
+        _refreshTokenRepositoryMock.Setup(x => x.GetActiveTokensInFamilyAsync(tokenEntity.TokenFamily))
+            .ReturnsAsync(familyTokens);
+
+        // Act
+        await _authService.LogoutAsync(token);
+
+        // Assert
+        familyTokens.ForEach(t => t.RevokedAt.Should().NotBeNull());
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<System.Threading.CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task LogoutAsync_ShouldBeNoOp_WhenTokenIsNullOrUnknown()
+    {
+        // Arrange — unknown token returns null from the repo.
+        _refreshTokenRepositoryMock.Setup(x => x.GetByTokenAsync(It.IsAny<string>()))
+            .ReturnsAsync((RefreshToken?)null);
+
+        // Act
+        Func<Task> nullCase    = async () => await _authService.LogoutAsync(null);
+        Func<Task> unknownCase = async () => await _authService.LogoutAsync("does_not_exist");
+
+        // Assert — never throws, never saves.
+        await nullCase.Should().NotThrowAsync();
+        await unknownCase.Should().NotThrowAsync();
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<System.Threading.CancellationToken>()), Times.Never);
+    }
 }

@@ -86,9 +86,9 @@ public class PropertyDocumentService : IPropertyDocumentService
             throw new ForbiddenException("You do not own this property.");
         }
 
-        if (documentType != DocumentType.OwnerShipProof)
+        if (documentType != DocumentType.OwnershipCertificate)
         {
-            throw new BadRequestException("Only OwnerShipProof is allowed for properties.");
+            throw new BadRequestException("Only OwnershipCertificate is allowed for properties.");
         }
 
         if (property.Status != PropertyStatus.Draft && property.Status != PropertyStatus.Rejected)

@@ -6,8 +6,8 @@
     <span class="text-brand">EstateSync</span>
   </a>
 
-  <!-- Centred search pill (conditionally visible) -->
-  <div class="flex-1 flex justify-center px-8">
+  <!-- Centred search pill — desktop only -->
+  <div class="hidden md:flex flex-1 justify-center px-8">
     @if (isSearchVisible()) {
       <div class="flex items-center gap-1.5 border border-[#BBBBBB] rounded-[40px] pl-4 pr-2 py-[7px] max-w-[520px] w-full shadow-[0_1px_4px_rgba(0,0,0,0.3)] bg-white transition-[box-shadow,border-color] focus-within:shadow-[0_2px_10px_rgba(0,0,0,0.5)] focus-within:border-[#BBBBBB]">
         <mat-icon class="text-es-muted shrink-0" style="font-size: 18px; width: 18px; height: 18px;">search</mat-icon>
@@ -25,37 +25,63 @@
     }
   </div>
 
+  <!-- Mobile spacer -->
+  <span class="flex-1 md:hidden"></span>
+
   <!-- Right side -->
-  <div class="flex items-center gap-1 shrink-0">
+  <div class="flex items-center gap-2 shrink-0" style="position: relative;">
     @if (authService.isLoggedIn()) {
-      @if (isOwner) {
-        <a mat-button routerLink="/owner/dashboard" style="font-size: 13px; font-weight: 500;">
+
+      <!-- Notification bell -->
+      <div class="navbar-bell" (click)="togglePanel($event)">
+        <mat-icon>notifications</mat-icon>
+        @if (notificationService.unreadCount() > 0) {
+          <span class="navbar-bell__badge">{{ notificationService.unreadCount() }}</span>
+        }
+      </div>
+
+      <!-- Notification panel dropdown -->
+      @if (panelOpen()) {
+        <div class="navbar-notif-overlay" (click)="$event.stopPropagation()">
+          <app-notification-panel
+            [notifications]="notificationService.notifications()"
+            (markAllRead)="onMarkAllRead()" />
+        </div>
+      }
+
+      <!-- Desktop nav links (navbar is only shown to Tenant/Owner) -->
+      @if (isOwner()) {
+        <a mat-button routerLink="/owner/dashboard" class="hidden md:inline-flex" style="font-size: 13px; font-weight: 500;">
           Owner dashboard
         </a>
       }
-      <a mat-button routerLink="/dashboard" style="font-size: 13px; font-weight: 500;">
-        {{ isOwner ? 'Tenant dashboard' : 'Dashboard' }}
+      <a mat-button routerLink="/dashboard" class="hidden md:inline-flex" style="font-size: 13px; font-weight: 500;">
+        {{ isOwner() ? 'Tenant dashboard' : 'Dashboard' }}
       </a>
 
-      <!-- User avatar + dropdown -->
+      <!-- User avatar + dropdown (always visible; contains nav links for mobile) -->
       <div [matMenuTriggerFor]="userMenu"
         class="flex items-center gap-2 border border-[#DDDDDD] rounded-[40px] py-[5px] pl-3 pr-1.5 bg-white cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.4)] transition-shadow ml-1 outline-none focus:outline-none appearance-none">
         <mat-icon style="font-size: 18px; width: 18px; height: 18px; color: #717171;">menu</mat-icon>
-        <span class="w-[30px] h-[30px] rounded-full bg-[var(--mat-sys-primary)] text-white text-xs font-bold flex items-center justify-center shrink-0">{{ initials }}</span>
+        <span class="w-[30px] h-[30px] rounded-full bg-[var(--mat-sys-primary)] text-white text-xs font-bold flex items-center justify-center shrink-0">{{ initials() }}</span>
       </div>
 
       <mat-menu #userMenu="matMenu" xPosition="before">
-        <!-- plain div — no mat-menu-item so Material doesn't force flex-row -->
+        <!-- User info header -->
         <div class="flex flex-col px-4 pt-3 pb-2 border-b border-[#EBEBEB] pointer-events-none select-none">
-          <span class="text-[13px] font-bold text-es-text leading-tight">{{ user?.fullName }}</span>
-          <span class="text-xs text-es-muted mt-0.5">{{ user?.email }}</span>
+          <span class="text-[13px] font-bold text-es-text leading-tight">{{ user()?.fullName }}</span>
+          <span class="text-xs text-es-muted mt-0.5">{{ user()?.email }}</span>
         </div>
 
-        @if (isAdmin) {
-          <a mat-menu-item routerLink="/admin">
-            <mat-icon>admin_panel_settings</mat-icon> Admin panel
+        <!-- Navigation links (navbar is only shown to Tenant/Owner) -->
+        @if (isOwner()) {
+          <a mat-menu-item routerLink="/owner/dashboard">
+            <mat-icon>apartment</mat-icon> Owner dashboard
           </a>
         }
+        <a mat-menu-item routerLink="/dashboard">
+          <mat-icon>dashboard</mat-icon> {{ isOwner() ? 'Tenant dashboard' : 'Dashboard' }}
+        </a>
         <mat-divider />
         <button mat-menu-item (click)="logout()" style="color: #DC2626;">
           <mat-icon style="color: #DC2626;">logout</mat-icon> Sign out
@@ -63,11 +89,25 @@
       </mat-menu>
 
     } @else {
-      <a mat-button routerLink="/auth/login" style="font-size: 13px; font-weight: 500;">Sign in</a>
+      <!-- Desktop: Sign in / Sign up buttons -->
+      <a mat-button routerLink="/auth/login" class="hidden md:inline-flex" style="font-size: 13px; font-weight: 500;">Sign in</a>
       <a mat-stroked-button routerLink="/auth/register"
-        class="ml-1" style="font-size: 13px; font-weight: 500; border-radius: 9999px; padding-left: 20px; padding-right: 20px;">
+        class="hidden md:inline-flex ml-1" style="font-size: 13px; font-weight: 500; border-radius: 9999px; padding-left: 20px; padding-right: 20px;">
         Sign up
       </a>
+
+      <!-- Mobile: hamburger menu -->
+      <button mat-icon-button class="md:hidden" [matMenuTriggerFor]="mobileAuthMenu" aria-label="Open menu">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <mat-menu #mobileAuthMenu="matMenu" xPosition="before">
+        <a mat-menu-item routerLink="/auth/login">
+          <mat-icon>login</mat-icon> Sign in
+        </a>
+        <a mat-menu-item routerLink="/auth/register">
+          <mat-icon>person_add</mat-icon> Sign up
+        </a>
+      </mat-menu>
     }
   </div>
 

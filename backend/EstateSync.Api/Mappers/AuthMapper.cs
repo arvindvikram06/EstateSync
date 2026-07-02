@@ -18,7 +18,9 @@ public class AuthMapper
             Roles = user.UserRoles
                 .Where(ur => ur.Role != null)
                 .Select(ur => ur.Role!.Name)
-                .ToList()
+                .ToList(),
+            IsKycVerified = user.IsKycVerified,
+            IsOwnerVerified = user.IsOwnerVerified
         };
     }
 }

@@ -1,8 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using EstateSync.Api.Common;
 using EstateSync.Api.DTOs.Auth;
 using EstateSync.Api.Interfaces.Services.Auth;
@@ -15,10 +17,12 @@ namespace EstateSync.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IWebHostEnvironment _env;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, IWebHostEnvironment env)
     {
         _authService = authService;
+        _env = env;
     }
 
     // User Registration Endpoint
@@ -61,6 +65,25 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<AuthResponse>.Ok(auth));
     }
 
+    [HttpPost("logout")]
+    public async Task<ActionResult<ApiResponse<object>>> Logout()
+    {
+        var token = Request.Cookies["refreshToken"];
+
+        await _authService.LogoutAsync(token);
+
+        // Delete the cookie using attributes that match how it was set, so the browser removes it.
+        var isProduction = _env.IsProduction();
+        Response.Cookies.Delete("refreshToken", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isProduction,
+            SameSite = isProduction ? SameSiteMode.Strict : SameSiteMode.Lax
+        });
+
+        return Ok(ApiResponse<object>.Ok(new { }, message: "Logged out."));
+    }
+
     // [HttpPost("forgot-password")]
     // public async Task<ActionResult<ApiResponse<object>>> ForgotPassword([FromBody] ForgotPasswordRequest request)
     // {
@@ -77,11 +100,12 @@ public class AuthController : ControllerBase
 
     private void SetRefreshTokenCookie(string token)
     {
+        var isProduction = _env.IsProduction();
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure = isProduction,
+            SameSite = isProduction ? SameSiteMode.Strict : SameSiteMode.Lax,
             Expires = DateTime.UtcNow.AddDays(7)
         };
         Response.Cookies.Append("refreshToken", token, cookieOptions);

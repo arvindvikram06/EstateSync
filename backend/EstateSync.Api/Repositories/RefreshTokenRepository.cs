@@ -27,4 +27,14 @@ public class RefreshTokenRepository : BaseRepository<RefreshToken>, IRefreshToke
             .Where(rt => rt.TokenFamily == tokenFamily && rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow)
             .ToListAsync();
     }
+
+    public async Task<int> DeleteExpiredAndStaleRevokedAsync(DateTime now, TimeSpan revokedRetention)
+    {
+        var revokedCutoff = now - revokedRetention;
+
+        return await _dbSet
+            .Where(rt => rt.ExpiresAt < now ||
+                         (rt.RevokedAt != null && rt.RevokedAt < revokedCutoff))
+            .ExecuteDeleteAsync();
+    }
 }

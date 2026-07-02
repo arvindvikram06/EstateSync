@@ -8,11 +8,9 @@ public record PropertyDetailResponse
     public Guid PropertyId { get; init; }
     public Guid OwnerId { get; init; }
     public required string OwnerName { get; init; }
-    public Guid LocationId { get; init; }
     public required string State { get; init; }
-    public required string District { get; init; }
+    public required string City { get; init; }
     public required string Pincode { get; init; }
-    public required string Country { get; init; }
     public required string Title { get; init; }
     public required string Description { get; init; }
     public required string PropertyType { get; init; }

@@ -14,8 +14,15 @@ public class CreatePropertyRequestValidator : AbstractValidator<CreatePropertyRe
         RuleFor(x => x.Description)
             .NotEmpty().WithMessage("Description is required.");
 
-        RuleFor(x => x.LocationId)
-            .NotEmpty().WithMessage("Location is required.");
+        RuleFor(x => x.State)
+            .NotEmpty().WithMessage("State is required.");
+
+        RuleFor(x => x.City)
+            .NotEmpty().WithMessage("City is required.");
+
+        RuleFor(x => x.Pincode)
+            .NotEmpty().WithMessage("Pincode is required.")
+            .Matches(@"^[1-9][0-9]{5}$").WithMessage("Pincode must be a valid 6-digit Indian pincode.");
 
         RuleFor(x => x.AddressLine)
             .NotEmpty().WithMessage("Address line is required.");

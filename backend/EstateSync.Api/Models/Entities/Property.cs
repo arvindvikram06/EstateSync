@@ -10,8 +10,9 @@ public class Property : BaseEntity
     public Guid OwnerId { get; set; }
     public User? Owner { get; set; }
 
-    public Guid LocationId { get; set; }
-    public Location? Location { get; set; }
+    public string State { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string Pincode { get; set; } = string.Empty;
 
     public required string Title { get; set; }
     public required string Description { get; set; }

@@ -7,8 +7,12 @@ public record LeaseResponse
     public Guid LeaseId { get; init; }
     public Guid PropertyId { get; init; }
     public string? PropertyTitle { get; init; }
+    public string? PropertyAddress { get; init; }
     public Guid TenantId { get; init; }
     public string? TenantName { get; init; }
+    public string? TenantEmail { get; init; }
+    public Guid? OwnerId { get; init; }
+    public string? OwnerName { get; init; }
     public Guid ApplicationId { get; init; }
     public DateTime StartDate { get; init; }
     public DateTime EndDate { get; init; }

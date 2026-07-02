@@ -1,5 +1,5 @@
 import {
-  Component, ChangeDetectionStrategy, inject, signal, OnInit, DestroyRef
+  Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, DestroyRef
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,6 +19,7 @@ type FilterStatus = 'All' | 'Pending' | 'Approved' | 'Rejected' | 'Withdrawn';
   imports: [MatIconModule, MatButtonModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './applications-tab.component.html',
+  styleUrl: './applications-tab.component.css',
 })
 export class ApplicationsTabComponent implements OnInit {
   private readonly svc        = inject(RentalApplicationService);
@@ -32,11 +33,11 @@ export class ApplicationsTabComponent implements OnInit {
 
   readonly formatDate = formatDate;
 
-  get filtered(): RentalApplicationResponse[] {
+  readonly filtered = computed(() => {
     const f = this.activeFilter();
     if (f === 'All') return this.all();
     return this.all().filter(a => a.status === f);
-  }
+  });
 
   ngOnInit(): void {
     this.svc.getMyApplications().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({

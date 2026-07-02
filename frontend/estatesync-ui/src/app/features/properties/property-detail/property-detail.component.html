@@ -9,7 +9,7 @@
     <button mat-stroked-button routerLink="/">Back to listings</button>
   </div>
 } @else if (property(); as p) {
-  <div class="bg-white" style="max-width:1200px;margin:0 auto;padding:24px 24px 60px">
+  <div class="detail-page-wrap bg-white">
 
     <!-- Breadcrumb -->
     <nav class="flex items-center gap-1.5 mb-4 text-[13px] text-es-muted">
@@ -18,7 +18,7 @@
         Home
       </a>
       <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">chevron_right</mat-icon>
-      <span>{{ p.district }}, {{ p.state }}</span>
+      <span>{{ p.city }}, {{ p.state }}</span>
       <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">chevron_right</mat-icon>
       <span class="font-medium text-es-text truncate max-w-[240px]">{{ p.title }}</span>
     </nav>
@@ -41,34 +41,23 @@
       <!-- Main large image -->
       <div class="photo-grid__main">
         @if (p.images[0]) {
-          <img [src]="imageUrl(p.images[0].image)" [alt]="p.title" class="w-full h-full object-cover" />
-        } @else {
-          <div class="w-full h-full flex items-center justify-center" [style.background]="gradient(p.propertyId)">
-            <mat-icon class="!text-[72px] !w-[72px] !h-[72px]" style="color:rgba(255,255,255,0.32)">
-              {{ p.propertyType === 'Villa' ? 'villa' : 'home_work' }}
-            </mat-icon>
-          </div>
+          <img [src]="imageUrl(p.images[0].image)" [alt]="p.title" class="w-full h-full object-cover" decoding="async" />
         }
       </div>
 
-      <!-- 4 smaller thumbnails -->
-      @for (i of [1,2,3,4]; track i) {
+      <!-- Up to 4 thumbnails — only rendered for images that exist -->
+      @for (img of p.images.slice(1, 5); track img.imageId) {
         <div class="photo-grid__thumb">
-          @if (p.images[i]) {
-            <img [src]="imageUrl(p.images[i].image)" [alt]="p.title" class="w-full h-full object-cover" />
-          } @else {
-            <div class="w-full h-full flex items-center justify-center" [style.background]="gradient(p.propertyId + i)">
-              <mat-icon class="!text-[28px] !w-[28px] !h-[28px]" style="color:rgba(255,255,255,0.30)">
-                {{ p.propertyType === 'Villa' ? 'villa' : 'home_work' }}
-              </mat-icon>
-            </div>
-          }
+          <img [src]="imageUrl(img.image)" [alt]="p.title" class="w-full h-full object-cover" loading="lazy" decoding="async" />
         </div>
       }
 
       <!-- Show all photos button -->
-      @if (p.images.length > 5) {
-        <button class="photo-grid__all-btn" style="position:absolute;bottom:16px;right:16px;background:white;border:1.5px solid #222;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+      @if (p.images.length > 0) {
+        <button 
+          (click)="openImageGallery()"
+          class="photo-grid__all-btn" 
+          style="position:absolute;bottom:16px;right:16px;background:white;border:1.5px solid #222;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
           <mat-icon class="!text-[16px]">grid_on</mat-icon>
           Show all {{ p.images.length }} photos
         </button>
@@ -89,7 +78,7 @@
           <p style="font-size:15px;color:#717171">
             {{ p.bedrooms }} bedroom{{ p.bedrooms !== 1 ? 's' : '' }} ·
             {{ p.bathrooms }} bathroom{{ p.bathrooms !== 1 ? 's' : '' }} ·
-            {{ p.district }}
+            {{ p.city }}
           </p>
         </div>
 
@@ -143,12 +132,9 @@
           <h2 style="font-size:18px;font-weight:700;color:#222;margin-bottom:8px">Where you'll be</h2>
           <div class="flex items-center gap-1 mb-4" style="font-size:14px;color:#717171">
             <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">location_on</mat-icon>
-            {{ p.addressLine }} · {{ p.district }}, {{ p.state }}
+            {{ p.addressLine }} · {{ p.city }}, {{ p.state }}
           </div>
-          <div class="map-placeholder">
-            <mat-icon class="!text-[32px] !w-[32px] !h-[32px] text-es-muted">location_on</mat-icon>
-            <span class="text-sm text-es-muted mt-2">Map view</span>
-          </div>
+          <div #mapEl class="map-container" style="height: 350px; width: 100%; border-radius: 12px; z-index: 1;"></div>
         </div>
 
       </div>
@@ -184,39 +170,57 @@
             </div>
             <div class="pricing-detail-cell">
               <span class="pricing-detail-label">Location</span>
-              <span class="pricing-detail-value truncate">{{ p.district }}</span>
+              <span class="pricing-detail-value truncate">{{ p.city }}</span>
             </div>
           </div>
 
-          <!-- CTA context messages -->
-          @if (ctaState() === 'kyc') {
-            <p style="font-size:12px;color:#717171;margin-bottom:10px;text-align:center">
-              Complete identity verification to apply for this property.
-            </p>
-          }
-
-          <button
-            mat-flat-button
-            color="primary"
-            class="w-full !h-12 !text-[15px] !font-bold"
-            style="border-radius:12px"
-            [disabled]="ctaState() === 'applied'"
-            (click)="onCta()">
-            @switch (ctaState()) {
-              @case ('login')   { Sign in to apply }
-              @case ('kyc')     { Complete KYC verification }
-              @case ('apply')   { Apply now }
-              @case ('applied') { Application sent ✓ }
+          @if (isMyProperty()) {
+            <!-- Owner view: edit / manage buttons -->
+            <a mat-flat-button color="primary"
+              class="w-full !h-12 !text-[15px] !font-bold"
+              style="border-radius:12px"
+              [routerLink]="['/properties', property()!.propertyId, 'edit']">
+              <mat-icon class="!text-[18px] mr-1">edit</mat-icon>
+              Edit property
+            </a>
+            <a mat-stroked-button
+              class="w-full !h-10 !text-[13px] !mt-3"
+              style="border-radius:12px"
+              routerLink="/owner/dashboard"
+              [queryParams]="{ tab: 'properties' }">
+              Back to my properties
+            </a>
+          } @else {
+            <!-- Tenant / public view -->
+            @if (ctaState() === 'kyc') {
+              <p style="font-size:12px;color:#717171;margin-bottom:10px;text-align:center">
+                Complete identity verification to apply for this property.
+              </p>
             }
-          </button>
 
-          @if (ctaState() === 'login') {
-            <p style="font-size:12px;color:#717171;margin-top:10px;text-align:center">
-              Don't have an account? <a routerLink="/auth/register" class="text-es-text font-medium hover:underline">Sign up</a>
-            </p>
+            <button
+              mat-flat-button
+              color="primary"
+              class="w-full !h-12 !text-[15px] !font-bold"
+              style="border-radius:12px"
+              [disabled]="ctaState() === 'applied'"
+              (click)="onCta()">
+              @switch (ctaState()) {
+                @case ('login')   { Sign in to apply }
+                @case ('kyc')     { Complete KYC verification }
+                @case ('apply')   { Apply now }
+                @case ('applied') { Application sent ✓ }
+              }
+            </button>
+
+            @if (ctaState() === 'login') {
+              <p style="font-size:12px;color:#717171;margin-top:10px;text-align:center">
+                Don't have an account? <a routerLink="/auth/register" class="text-es-text font-medium hover:underline">Sign up</a>
+              </p>
+            }
+
+            <p style="font-size:12px;color:#AAAAAA;text-align:center;margin-top:14px">You won't be charged yet</p>
           }
-
-          <p style="font-size:12px;color:#AAAAAA;text-align:center;margin-top:14px">You won't be charged yet</p>
         </div>
 
         <!-- Owner verified badge -->

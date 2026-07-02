@@ -1,0 +1,152 @@
+<div class="flex min-h-screen">
+
+  <!-- ── Left panel — internal branding ─────────────────────────────────── -->
+  <div class="flex-1 relative overflow-hidden hidden md:flex items-center justify-center p-14
+              bg-gradient-to-br from-[#1A1235] via-[#2D1B69] to-[#3B0F6F] text-white">
+    <!-- Decorative shapes -->
+    <div class="absolute -top-28 -right-28 w-[420px] h-[420px] rounded-full bg-white/[0.05] pointer-events-none"></div>
+    <div class="absolute -bottom-20 -left-16 w-[320px] h-[320px] rounded-full bg-white/[0.04] pointer-events-none"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/[0.02] pointer-events-none"></div>
+
+    <div class="relative z-10 max-w-sm">
+      <!-- Badge -->
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-8"
+           style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase">
+        <mat-icon style="font-size:14px;width:14px;height:14px">shield</mat-icon>
+        Internal Portal
+      </div>
+
+      <div class="flex items-center gap-2 mb-6">
+        <mat-icon class="!text-[32px] !w-8 !h-8">home_work</mat-icon>
+        <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px">EstateSync</span>
+      </div>
+
+      <h1 style="font-size:34px;font-weight:700;line-height:1.2;letter-spacing:-0.5px;margin-bottom:14px">
+        Staff<br>Operations Portal
+      </h1>
+      <p style="font-size:14px;line-height:1.7;opacity:0.75;margin-bottom:36px">
+        Restricted access for EstateSync administrators and verification team members.
+      </p>
+
+      <div class="flex flex-col gap-4">
+        <div class="flex items-start gap-3">
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <mat-icon style="font-size:17px;width:17px;height:17px">admin_panel_settings</mat-icon>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">Admin</div>
+            <div style="font-size:12px;opacity:0.65">Full platform management and oversight</div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <mat-icon style="font-size:17px;width:17px;height:17px">verified_user</mat-icon>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">Verifier</div>
+            <div style="font-size:12px;opacity:0.65">KYC and financial profile review queue</div>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <mat-icon style="font-size:17px;width:17px;height:17px">task_alt</mat-icon>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">Audit Logged</div>
+            <div style="font-size:12px;opacity:0.65">All actions recorded for compliance</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right panel — login form ─────────────────────────────────────────── -->
+  <div class="w-full md:w-[500px] shrink-0 bg-white flex items-center justify-center px-5 md:px-10 py-10 overflow-y-auto">
+    <div class="w-full max-w-[380px]">
+
+      <!-- Logo -->
+      <div class="flex items-center gap-1.5 mb-8">
+        <mat-icon style="color:var(--mat-sys-primary);font-size:22px;width:22px;height:22px">home_work</mat-icon>
+        <span style="font-size:17px;font-weight:800;color:var(--mat-sys-primary);letter-spacing:-0.3px">EstateSync</span>
+        <span style="font-size:11px;font-weight:700;color:#717171;letter-spacing:0.5px;text-transform:uppercase;margin-left:6px;margin-top:1px">Staff</span>
+      </div>
+
+      <h2 style="font-size:26px;font-weight:700;letter-spacing:-0.5px;color:#222;margin-bottom:4px">Sign in to your work account</h2>
+      <p style="font-size:13px;color:#717171;margin-bottom:20px">
+        For tenant and owner accounts, use the
+        <a routerLink="/auth/login" style="color:var(--mat-sys-primary);font-weight:600;text-decoration:none">main login page</a>.
+      </p>
+
+      <!-- Role selector -->
+      <div class="flex gap-2 mb-5 p-1 rounded-[12px]" style="background:#F3F4F6">
+        <button type="button"
+          class="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-[10px] text-sm font-semibold transition-all cursor-pointer border-none"
+          [style.background]="selectedRole() === 'Admin' ? 'white' : 'transparent'"
+          [style.color]="selectedRole() === 'Admin' ? 'var(--mat-sys-primary)' : '#717171'"
+          [style.boxShadow]="selectedRole() === 'Admin' ? '0 1px 4px rgba(0,0,0,0.12)' : 'none'"
+          (click)="selectRole('Admin')">
+          <mat-icon style="font-size:17px;width:17px;height:17px">admin_panel_settings</mat-icon>
+          Admin
+        </button>
+        <button type="button"
+          class="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-[10px] text-sm font-semibold transition-all cursor-pointer border-none"
+          [style.background]="selectedRole() === 'Verifier' ? 'white' : 'transparent'"
+          [style.color]="selectedRole() === 'Verifier' ? 'var(--mat-sys-primary)' : '#717171'"
+          [style.boxShadow]="selectedRole() === 'Verifier' ? '0 1px 4px rgba(0,0,0,0.12)' : 'none'"
+          (click)="selectRole('Verifier')">
+          <mat-icon style="font-size:17px;width:17px;height:17px">verified_user</mat-icon>
+          Verifier
+        </button>
+      </div>
+
+      @if (errorMessage()) {
+        <app-alert-banner [message]="errorMessage()!" style="display:block;margin-bottom:16px" />
+      }
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate class="flex flex-col gap-1">
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Work email address</mat-label>
+          <mat-icon matPrefix>email</mat-icon>
+          <input matInput type="email" formControlName="email" placeholder="you@estatesync.com"
+                 autocomplete="email" (input)="onEmailInput($event)" />
+          @if (emailControl.hasError('required') && emailControl.touched) {
+            <mat-error>Email is required</mat-error>
+          } @else if (emailControl.hasError('email') && emailControl.touched) {
+            <mat-error>Enter a valid email address</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Password</mat-label>
+          <mat-icon matPrefix>lock</mat-icon>
+          <input matInput [type]="passwordVisible() ? 'text' : 'password'" formControlName="password"
+                 placeholder="••••••••" autocomplete="current-password" />
+          <button mat-icon-button matSuffix type="button" (click)="togglePasswordVisibility()">
+            <mat-icon>{{ passwordVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (passwordControl.hasError('required') && passwordControl.touched) {
+            <mat-error>Password is required</mat-error>
+          } @else if (passwordControl.hasError('minlength') && passwordControl.touched) {
+            <mat-error>Password must be at least 8 characters</mat-error>
+          }
+        </mat-form-field>
+
+        <app-loading-button type="submit" [loading]="isLoading()">
+          Sign in as {{ selectedRole() }}
+        </app-loading-button>
+
+      </form>
+
+      <!-- Security notice -->
+      <div class="mt-6 flex items-start gap-2.5" style="padding:14px 16px;background:#F7F7F7;border-radius:10px;border:1px solid #EBEBEB">
+        <mat-icon style="font-size:16px;width:16px;height:16px;color:#717171;margin-top:1px;flex-shrink:0">info</mat-icon>
+        <p style="font-size:12px;color:#717171;line-height:1.5;margin:0">
+          This portal is restricted to EstateSync staff. All actions are logged for audit and compliance purposes.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>

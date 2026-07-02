@@ -9,10 +9,14 @@ public record PropertySummaryResponse
     public required string Title { get; init; }
     public decimal MonthlyRent { get; init; }
     public required string State { get; init; }
+    public required string City { get; init; }
     public required string? AddressLine { get; init; }
     public string? PrimaryImage { get; init; }
     public string? PropertyType { get; init; }
     public int Bedrooms { get; init; }
     public int Bathrooms { get; init; }
     public string? Status { get; init; }
+    public string OwnerName { get; init; } = string.Empty;
+    public string OwnerEmail { get; init; } = string.Empty;
+    public DateTime CreatedAt { get; init; }
 }

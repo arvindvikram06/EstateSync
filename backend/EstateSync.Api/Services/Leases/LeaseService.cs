@@ -11,6 +11,7 @@ using EstateSync.Api.Common;
 using EstateSync.Api.DTOs.Leases;
 using EstateSync.Api.Exceptions;
 using EstateSync.Api.Interfaces.Services.Leases;
+using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Interfaces.Services.Storage;
 using EstateSync.Api.Mappers;
 using EstateSync.Api.Models;
@@ -24,7 +25,7 @@ public class LeaseService : ILeaseService
     private readonly IRentalApplicationRepository _applicationRepo;
     private readonly IPropertyRepository _propertyRepo;
     private readonly IFileStorageService _fileStorageService;
-    private readonly INotificationRepository _notificationRepo;
+    private readonly INotificationSender _notificationSender;
     private readonly ILeaseBillRepository _leaseBillRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly LeaseMapper _mapper;
@@ -38,7 +39,7 @@ public class LeaseService : ILeaseService
         IRentalApplicationRepository applicationRepo,
         IPropertyRepository propertyRepo,
         IFileStorageService fileStorageService,
-        INotificationRepository notificationRepo,
+        INotificationSender notificationSender,
         ILeaseBillRepository leaseBillRepo,
         IUnitOfWork unitOfWork,
         LeaseMapper mapper,
@@ -51,7 +52,7 @@ public class LeaseService : ILeaseService
         _applicationRepo = applicationRepo ?? throw new ArgumentNullException(nameof(applicationRepo));
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
         _fileStorageService = fileStorageService ?? throw new ArgumentNullException(nameof(fileStorageService));
-        _notificationRepo = notificationRepo ?? throw new ArgumentNullException(nameof(notificationRepo));
+        _notificationSender = notificationSender ?? throw new ArgumentNullException(nameof(notificationSender));
         _leaseBillRepo = leaseBillRepo ?? throw new ArgumentNullException(nameof(leaseBillRepo));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
@@ -70,8 +71,21 @@ public class LeaseService : ILeaseService
         ValidateCreateLeaseRequest(application, ownerId);
 
         var existingLease = await _leaseRepo.GetByApplicationIdAsync(request.ApplicationId);
-        if (existingLease != null && existingLease.Status == LeaseStatus.PendingApproval)
-            throw new ConflictException("A lease for this rental application is already pending approval.");
+        if (existingLease != null &&
+            existingLease.Status != LeaseStatus.Voided &&
+            existingLease.Status != LeaseStatus.Expired &&
+            existingLease.Status != LeaseStatus.Terminated)
+        {
+            var statusLabel = existingLease.Status switch
+            {
+                LeaseStatus.PendingApproval      => "pending signature",
+                LeaseStatus.PartialSigned         => "partially signed",
+                LeaseStatus.PendingAdminApproval  => "awaiting admin approval",
+                LeaseStatus.Active                => "active",
+                _                                 => existingLease.Status.ToString()
+            };
+            throw new ConflictException($"A lease for this application already exists ({statusLabel}). Void or wait for it to complete before creating a new one.");
+        }
 
         var property = application.Property!;
         var activeLease = await _leaseRepo.GetActiveLeaseByPropertyIdAsync(property.PropertyId);
@@ -223,7 +237,7 @@ public class LeaseService : ILeaseService
         lease.CancelledAt = DateTime.UtcNow;
         lease.CancellationReason = reason;
 
-        await _notificationRepo.AddAsync(new Notification
+        await _notificationSender.SendAsync(new Notification
         {
             NotificationId = Guid.NewGuid(),
             UserId = lease.TenantId,
@@ -349,7 +363,7 @@ public class LeaseService : ILeaseService
 
         lease.IsRenewalRequested = true;
 
-        await _notificationRepo.AddAsync(new Notification
+        await _notificationSender.SendAsync(new Notification
         {
             NotificationId = Guid.NewGuid(),
             UserId = lease.Property!.OwnerId,
@@ -373,7 +387,7 @@ public class LeaseService : ILeaseService
 
         lease.IsRenewalRequested = false;
 
-        await _notificationRepo.AddAsync(new Notification
+        await _notificationSender.SendAsync(new Notification
         {
             NotificationId = Guid.NewGuid(),
             UserId = lease.TenantId,
@@ -410,7 +424,7 @@ public class LeaseService : ILeaseService
         if (property.Status == PropertyStatus.Leased || property.Status == PropertyStatus.AvailableSoon)
             property.Status = PropertyStatus.Active;
 
-        await _notificationRepo.AddAsync(new Notification
+        await _notificationSender.SendAsync(new Notification
         {
             NotificationId = Guid.NewGuid(),
             UserId = lease.TenantId,
@@ -423,7 +437,7 @@ public class LeaseService : ILeaseService
             CreatedAt = DateTime.UtcNow
         });
 
-        await _notificationRepo.AddAsync(new Notification
+        await _notificationSender.SendAsync(new Notification
         {
             NotificationId = Guid.NewGuid(),
             UserId = property.OwnerId,
@@ -457,7 +471,7 @@ public class LeaseService : ILeaseService
 
     private async Task CreateLeaseNotificationAsync(Guid tenantId, Guid leaseId, string propertyTitle)
     {
-        await _notificationRepo.AddAsync(new Notification
+        await _notificationSender.SendAsync(new Notification
         {
             NotificationId = Guid.NewGuid(),
             UserId = tenantId,
@@ -473,7 +487,7 @@ public class LeaseService : ILeaseService
 
     private async Task NotifyUserAsync(Guid userId, Guid leaseId, string title, string message, NotificationType type)
     {
-        await _notificationRepo.AddAsync(new Notification
+        await _notificationSender.SendAsync(new Notification
         {
             NotificationId = Guid.NewGuid(),
             UserId = userId,
@@ -492,7 +506,7 @@ public class LeaseService : ILeaseService
         var admins = await _userRepo.GetUsersByRoleAsync("Admin");
         foreach (var admin in admins)
         {
-            await _notificationRepo.AddAsync(new Notification
+            await _notificationSender.SendAsync(new Notification
             {
                 NotificationId = Guid.NewGuid(),
                 UserId = admin.UserId,
@@ -558,7 +572,7 @@ public class LeaseService : ILeaseService
             app.ReviewRemarks = "Property is reserved";
             app.ReviewedAt = DateTime.UtcNow;
 
-            await _notificationRepo.AddAsync(new Notification
+            await _notificationSender.SendAsync(new Notification
             {
                 NotificationId = Guid.NewGuid(),
                 UserId = app.TenantId,

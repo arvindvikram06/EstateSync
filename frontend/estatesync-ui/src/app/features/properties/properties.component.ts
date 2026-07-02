@@ -3,7 +3,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -19,7 +18,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
   imports: [
     PropertyCardComponent,
     EmptyStateComponent,
-    MatChipsModule, MatButtonModule, MatIconModule,
+    MatButtonModule, MatIconModule,
     MatPaginatorModule, MatProgressBarModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -109,6 +108,7 @@ export class PropertiesComponent implements OnInit {
   setType(value: string): void     { this.typeFilter.set(value);     this.page.set(1); this.loadProperties(); }
   setBedrooms(value: string): void { this.bedroomsFilter.set(value); this.page.set(1); this.loadProperties(); }
   setRent(value: string): void     { this.rentFilter.set(value);     this.page.set(1); this.loadProperties(); }
+  clearState(): void               { this.stateFilter.set('');       this.page.set(1); this.loadProperties(); }
 
   clearFilters(): void {
     this.typeFilter.set('');
@@ -120,13 +120,12 @@ export class PropertiesComponent implements OnInit {
   }
 
   loadProperties(): void {
-
     this.loadTrigger$.next();
   }
 
-  get totalPages(): number { return Math.ceil(this.total() / this.limit); }
+  readonly totalPages = computed(() => Math.ceil(this.total() / this.limit));
 
-  nextPage(): void { if (this.page() < this.totalPages) { this.page.update(p => p + 1); this.loadProperties(); } }
+  nextPage(): void { if (this.page() < this.totalPages()) { this.page.update(p => p + 1); this.loadProperties(); } }
   prevPage(): void { if (this.page() > 1)               { this.page.update(p => p - 1); this.loadProperties(); } }
 
   onPageChange(e: PageEvent): void {

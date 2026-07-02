@@ -1,0 +1,209 @@
+import {
+  Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, DestroyRef
+} from '@angular/core';
+import { SlicePipe, TitleCasePipe } from '@angular/common';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { AdminService } from '../../../../core/services/admin.service';
+import {
+  SettlementSummaryResponse, OwnerSettlementResponse,
+  ConnectedAccountResponse, AdminPaymentResponse
+} from '../../../../core/models/admin.model';
+
+@Component({
+  selector: 'app-admin-financial-tab',
+  standalone: true,
+  imports: [
+    SlicePipe, TitleCasePipe, ReactiveFormsModule, MatButtonModule, MatIconModule,
+    MatSelectModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule,
+    MatTabsModule, MatTooltipModule,
+    StatusBadgeComponent, EmptyStateComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './admin-financial-tab.component.html',
+  styleUrl: './admin-financial-tab.component.css',
+})
+export class AdminFinancialTabComponent implements OnInit {
+  private readonly adminService = inject(AdminService);
+  private readonly destroyRef   = inject(DestroyRef);
+
+  // Summary
+  readonly summaryLoading = signal(true);
+  readonly summaryError   = signal(false);
+  readonly summary        = signal<SettlementSummaryResponse | null>(null);
+
+  // Settlements
+  readonly settlementsLoading = signal(true);
+  readonly settlementsError   = signal(false);
+  readonly settlements        = signal<OwnerSettlementResponse[]>([]);
+  readonly settlementTotal    = signal(0);
+  readonly settlementPage     = signal(1);
+  readonly settlementStatus   = new FormControl<string>('');
+  readonly settlementSearch   = new FormControl<string>('');
+  private readonly settlementQ = signal('');
+
+  readonly filteredSettlements = computed(() => {
+    const q = this.settlementQ().trim().toLowerCase();
+    if (!q) return this.settlements();
+    return this.settlements().filter(s =>
+      s.ownerName.toLowerCase().includes(q) || s.ownerEmail.toLowerCase().includes(q)
+    );
+  });
+
+  // Connected accounts
+  readonly accountsLoading  = signal(true);
+  readonly accountsError    = signal(false);
+  readonly accounts         = signal<ConnectedAccountResponse[]>([]);
+  readonly accountTotal     = signal(0);
+  readonly accountPage      = signal(1);
+  readonly accountSearch    = new FormControl<string>('');
+  private readonly accountQ = signal('');
+  readonly syncingId        = signal<string | null>(null);
+
+  readonly filteredAccounts = computed(() => {
+    const q = this.accountQ().trim().toLowerCase();
+    if (!q) return this.accounts();
+    return this.accounts().filter(a =>
+      a.ownerName.toLowerCase().includes(q) || a.ownerEmail.toLowerCase().includes(q) ||
+      a.stripeAccountId.toLowerCase().includes(q)
+    );
+  });
+
+  // Payments
+  readonly paymentsLoading = signal(true);
+  readonly paymentsError   = signal(false);
+  readonly payments        = signal<AdminPaymentResponse[]>([]);
+  readonly paymentTotal    = signal(0);
+  readonly paymentPage     = signal(1);
+  readonly paymentStatus   = new FormControl<string>('');
+  readonly paymentSearch   = new FormControl<string>('');
+  private readonly paymentQ = signal('');
+
+  readonly filteredPayments = computed(() => {
+    const q = this.paymentQ().trim().toLowerCase();
+    if (!q) return this.payments();
+    return this.payments().filter(p =>
+      p.paidByName.toLowerCase().includes(q) || p.paidByEmail.toLowerCase().includes(q) ||
+      p.transactionId.toLowerCase().includes(q)
+    );
+  });
+
+  readonly limit = 20;
+
+  ngOnInit(): void {
+    this.loadSummary();
+    this.loadSettlements();
+    this.loadAccounts();
+    this.loadPayments();
+
+    this.settlementStatus.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.settlementPage.set(1); this.loadSettlements();
+    });
+    this.settlementSearch.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(v => {
+      this.settlementQ.set(v ?? '');
+    });
+    this.accountSearch.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(v => {
+      this.accountQ.set(v ?? '');
+    });
+    this.paymentStatus.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.paymentPage.set(1); this.loadPayments();
+    });
+    this.paymentSearch.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(v => {
+      this.paymentQ.set(v ?? '');
+    });
+  }
+
+  loadSummary(): void {
+    this.summaryLoading.set(true);
+    this.summaryError.set(false);
+    this.adminService.getFinancialSummary().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: res => { this.summary.set(res.data ?? null); this.summaryLoading.set(false); },
+      error: () => { this.summaryLoading.set(false); this.summaryError.set(true); },
+    });
+  }
+
+  loadSettlements(): void {
+    this.settlementsLoading.set(true);
+    this.settlementsError.set(false);
+    const status = this.settlementStatus.value || undefined;
+    this.adminService.getSettlements({ status }, this.settlementPage(), this.limit)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: res => {
+          this.settlements.set((res.data as OwnerSettlementResponse[]) ?? []);
+          this.settlementTotal.set(res.total);
+          this.settlementsLoading.set(false);
+        },
+        error: () => { this.settlementsLoading.set(false); this.settlementsError.set(true); },
+      });
+  }
+
+  loadAccounts(): void {
+    this.accountsLoading.set(true);
+    this.accountsError.set(false);
+    this.adminService.getConnectedAccounts(this.accountPage(), this.limit)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: res => {
+          this.accounts.set((res.data as ConnectedAccountResponse[]) ?? []);
+          this.accountTotal.set(res.total);
+          this.accountsLoading.set(false);
+        },
+        error: () => { this.accountsLoading.set(false); this.accountsError.set(true); },
+      });
+  }
+
+  syncAccount(account: ConnectedAccountResponse): void {
+    this.syncingId.set(account.id);
+    this.adminService.syncConnectedAccount(account.id)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: res => {
+          if (res.data) {
+            this.accounts.update(list =>
+              list.map(a => a.id === account.id ? res.data! : a)
+            );
+          }
+          this.syncingId.set(null);
+        },
+        error: () => this.syncingId.set(null),
+      });
+  }
+
+  loadPayments(): void {
+    this.paymentsLoading.set(true);
+    this.paymentsError.set(false);
+    const status = this.paymentStatus.value || undefined;
+    this.adminService.getPayments({ status }, this.paymentPage(), this.limit)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: res => {
+          this.payments.set((res.data as AdminPaymentResponse[]) ?? []);
+          this.paymentTotal.set(res.total);
+          this.paymentsLoading.set(false);
+        },
+        error: () => { this.paymentsLoading.set(false); this.paymentsError.set(true); },
+      });
+  }
+
+  fmt(v: number): string {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
+  }
+
+  settlementPages = computed(() => Math.ceil(this.settlementTotal() / this.limit));
+  accountPages    = computed(() => Math.ceil(this.accountTotal() / this.limit));
+  paymentPages    = computed(() => Math.ceil(this.paymentTotal() / this.limit));
+
+  prevSettlementPage(): void { if (this.settlementPage() > 1) { this.settlementPage.update(p => p - 1); this.loadSettlements(); } }
+  nextSettlementPage(): void { if (this.settlementPage() < this.settlementPages()) { this.settlementPage.update(p => p + 1); this.loadSettlements(); } }
+  prevAccountPage(): void { if (this.accountPage() > 1) { this.accountPage.update(p => p - 1); this.loadAccounts(); } }
+  nextAccountPage(): void { if (this.accountPage() < this.accountPages()) { this.accountPage.update(p => p + 1); this.loadAccounts(); } }
+  prevPaymentPage(): void { if (this.paymentPage() > 1) { this.paymentPage.update(p => p - 1); this.loadPayments(); } }
+  nextPaymentPage(): void { if (this.paymentPage() < this.paymentPages()) { this.paymentPage.update(p => p + 1); this.loadPayments(); } }
+}

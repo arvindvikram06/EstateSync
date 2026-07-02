@@ -9,3 +9,25 @@ export interface LeaseBillResponse {
   status: 'Pending' | 'Paid' | 'Failed';
   paidAt: string | null;
 }
+
+export interface OwnerSettlementResponse {
+  ownerSettlementId: string;
+  ownerId: string;
+  ownerName: string;
+  ownerEmail: string;
+  stripePayoutId: string;
+  amount: number;
+  currency: string;
+  destinationId: string;
+  arrivalDate: string;
+  status: 'paid' | 'pending' | 'failed';
+  createdAt: string;
+}
+
+export interface OwnerEarningsSummaryResponse {
+  totalPaid: number;
+  totalPending: number;
+  totalPayouts: number;
+  lastPayoutDate: string | null;
+  lastPayoutAmount: number | null;
+}

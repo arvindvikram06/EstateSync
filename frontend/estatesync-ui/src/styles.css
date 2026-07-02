@@ -14,7 +14,7 @@
 
 html,
 body {
-  height: 100%;
+  min-height: 100%;
   -webkit-font-smoothing: antialiased;
   font-family: 'Inter', Roboto, system-ui, sans-serif;
 }
@@ -104,4 +104,27 @@ h6 {
 .es-badge--default {
   background: #F3F4F6;
   color: #6B7280;
+}
+
+/* ── Full screen modal (Image Gallery) ───────────────────────── */
+.full-screen-modal .mdc-dialog__surface,
+.full-screen-modal .mat-mdc-dialog-surface,
+.full-screen-modal .mat-mdc-dialog-container {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+/* ── Notification detail dialog ───────────────────────────────── */
+.notif-dialog-panel .mat-mdc-dialog-surface,
+.notif-dialog-panel .mdc-dialog__surface {
+  border-radius: 20px !important;
+  overflow: hidden;
+}
+/* ── Standard rounded dialog (used by most dialogs in the app) ── */
+.rounded-dialog .mat-mdc-dialog-surface,
+.rounded-dialog .mdc-dialog__surface {
+  border-radius: 20px !important;
+  overflow: hidden;
 }

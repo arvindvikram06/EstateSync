@@ -1,0 +1,124 @@
+<div class="tab-header">
+  <h2 style="font-size:20px;font-weight:700;color:#222">My Properties</h2>
+  <button
+    mat-flat-button color="primary"
+    class="!rounded-full !h-9 !px-5 !text-sm !font-semibold"
+    [disabled]="!isOnboarded()"
+    [matTooltip]="!isOnboarded() ? 'Complete Stripe onboarding first' : ''"
+    (click)="openAddProperty()">
+    <mat-icon class="!text-[18px] !w-[18px] !h-[18px] mr-1">add</mat-icon>
+    Add Property
+  </button>
+</div>
+
+@if (!isOnboarded()) {
+  <div style="margin-bottom:20px">
+    <app-alert-banner
+      message="Connect your Stripe account before listing properties. Complete onboarding from the Overview tab."
+      type="warning" />
+  </div>
+}
+
+<!-- Filter pills -->
+<div class="flex flex-wrap gap-2 mb-5">
+  @for (f of filters; track f) {
+    <button
+      class="filter-pill"
+      [class.filter-pill--active]="activeFilter() === f"
+      (click)="activeFilter.set(f)">
+      {{ f === 'PendingApproval' ? 'Pending' : f }}
+    </button>
+  }
+</div>
+
+@if (loading()) {
+  <div class="flex items-center gap-3 py-8 text-sm text-es-muted">
+    <mat-spinner diameter="24" /><span>Loading…</span>
+  </div>
+} @else if (filtered().length === 0) {
+  <app-empty-state icon="home_work" title="No properties"
+    subtitle="Add your first property to start listing.">
+    @if (isOnboarded()) {
+      <button mat-flat-button color="primary" class="!rounded-full !h-11 !px-8 !font-semibold" (click)="openAddProperty()">
+        Add Property
+      </button>
+    }
+  </app-empty-state>
+} @else {
+  <div class="flex flex-col gap-3">
+    @for (prop of filtered(); track prop.propertyId) {
+      <div class="prop-card">
+        <div class="prop-icon">
+          <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:var(--mat-sys-primary)">home_work</mat-icon>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <div style="font-size:14px;font-weight:600;color:#222" class="truncate">{{ prop.title }}</div>
+          <div style="font-size:12px;color:#717171;margin-top:2px" class="truncate">
+            {{ prop.addressLine }}, {{ prop.state }}
+          </div>
+          <div style="font-size:13px;font-weight:700;color:#222;margin-top:4px">
+            {{ formatCurrency(prop.monthlyRent) }}<span style="font-size:11px;font-weight:400;color:#717171">/mo</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col items-end gap-2 shrink-0">
+          <app-status-badge [status]="prop.status" />
+          <div class="flex gap-2 flex-wrap justify-end">
+            <!-- Edit always available (except Leased/AvailableSoon/PendingApproval which are locked) -->
+            @if (prop.status === 'Draft' || prop.status === 'Rejected') {
+              <a mat-stroked-button class="!rounded-full !h-8 !text-xs !px-3"
+                [routerLink]="['/properties', prop.propertyId, 'edit']">
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] mr-1">edit</mat-icon>
+                Edit
+              </a>
+            }
+
+            <!-- View on Active / Leased / AvailableSoon -->
+            @if (prop.status === 'Active' || prop.status === 'Leased' || prop.status === 'AvailableSoon') {
+              <a mat-stroked-button class="!rounded-full !h-8 !text-xs !px-3"
+                [routerLink]="['/properties', prop.propertyId, 'edit']">
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] mr-1">edit</mat-icon>
+                Edit
+              </a>
+              <a mat-stroked-button class="!rounded-full !h-8 !text-xs !px-3"
+                [routerLink]="['/properties', prop.propertyId]">
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] mr-1">visibility</mat-icon>
+                Preview
+              </a>
+            }
+
+            <!-- Draft-only: Submit for review -->
+            @if (prop.status === 'Draft') {
+              <button mat-flat-button color="primary" class="!rounded-full !h-8 !text-xs !px-3"
+                [disabled]="submittingId() === prop.propertyId"
+                (click)="submitForApproval(prop)">
+                @if (submittingId() === prop.propertyId) {
+                  <mat-spinner diameter="14" style="display:inline-block" />
+                } @else {
+                  Submit for review
+                }
+              </button>
+              <button mat-icon-button class="!text-red-600 !w-8 !h-8"
+                [disabled]="deletingId() === prop.propertyId"
+                (click)="deleteProperty(prop)"
+                matTooltip="Delete">
+                @if (deletingId() === prop.propertyId) {
+                  <mat-spinner diameter="14" />
+                } @else {
+                  <mat-icon class="!text-[18px]">delete_outline</mat-icon>
+                }
+              </button>
+            }
+
+            @if (prop.status === 'PendingApproval') {
+              <span style="font-size:12px;color:#B45309;background:#FEF3C7;padding:4px 10px;border-radius:20px;font-weight:600">
+                Under review
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}

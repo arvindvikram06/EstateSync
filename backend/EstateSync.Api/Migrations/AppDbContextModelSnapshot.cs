@@ -511,42 +511,6 @@ namespace EstateSync.Api.Migrations
                     b.ToTable("LeaseDocuments", (string)null);
                 });
 
-            modelBuilder.Entity("EstateSync.Api.Models.Location", b =>
-                {
-                    b.Property<Guid>("LocationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("District")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<string>("Pincode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("StateName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.HasKey("LocationId")
-                        .HasName("PK_LocationId");
-
-                    b.HasIndex("Pincode");
-
-                    b.HasIndex("StateName");
-
-                    b.ToTable("Locations", (string)null);
-                });
-
             modelBuilder.Entity("EstateSync.Api.Models.Notification", b =>
                 {
                     b.Property<Guid>("NotificationId")
@@ -612,7 +576,7 @@ namespace EstateSync.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime>("ArrivalDate")
                         .HasColumnType("timestamp without time zone");
@@ -622,34 +586,44 @@ namespace EstateSync.Api.Migrations
 
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DestinationId")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("StripePayoutId")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone");
 
-                    b.HasKey("OwnerSettlementId");
+                    b.HasKey("OwnerSettlementId")
+                        .HasName("PK_OwnerSettlementId");
+
+                    b.HasIndex("ArrivalDate");
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("OwnerSettlements");
+                    b.HasIndex("StripePayoutId")
+                        .IsUnique();
+
+                    b.ToTable("OwnerSettlements", (string)null);
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.Payment", b =>
@@ -708,6 +682,9 @@ namespace EstateSync.Api.Migrations
 
                     b.HasIndex("PaymentStatus");
 
+                    b.HasIndex("TransactionId")
+                        .IsUnique();
+
                     b.ToTable("Payments", (string)null);
                 });
 
@@ -742,6 +719,11 @@ namespace EstateSync.Api.Migrations
                     b.Property<decimal>("BuildupArea")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
@@ -759,9 +741,6 @@ namespace EstateSync.Api.Migrations
                     b.Property<decimal?>("Latitude")
                         .HasColumnType("numeric");
 
-                    b.Property<Guid>("LocationId")
-                        .HasColumnType("uuid");
-
                     b.Property<decimal?>("Longitude")
                         .HasColumnType("numeric");
 
@@ -770,6 +749,11 @@ namespace EstateSync.Api.Migrations
 
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Pincode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<string>("PropertyType")
                         .IsRequired()
@@ -781,6 +765,11 @@ namespace EstateSync.Api.Migrations
 
                     b.Property<decimal>("SecurityDeposit")
                         .HasColumnType("numeric");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -803,13 +792,13 @@ namespace EstateSync.Api.Migrations
                     b.HasIndex("DeletedAt")
                         .HasFilter("\"DeletedAt\" IS NULL");
 
-                    b.HasIndex("LocationId");
-
                     b.HasIndex("MonthlyRent");
 
                     b.HasIndex("OwnerId");
 
                     b.HasIndex("PropertyType");
+
+                    b.HasIndex("State");
 
                     b.HasIndex("Latitude", "Longitude");
 
@@ -1097,14 +1086,26 @@ namespace EstateSync.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("ChargesEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<bool>("DetailsSubmitted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastSyncedAt")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("PayoutsEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("StripeAccountId")
                         .IsRequired()
@@ -1543,7 +1544,7 @@ namespace EstateSync.Api.Migrations
                     b.HasOne("EstateSync.Api.Models.User", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Owner");
@@ -1575,12 +1576,6 @@ namespace EstateSync.Api.Migrations
                         .HasForeignKey("ApproveById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("EstateSync.Api.Models.Location", "Location")
-                        .WithMany("Properties")
-                        .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("EstateSync.Api.Models.User", "Owner")
                         .WithMany("Properties")
                         .HasForeignKey("OwnerId")
@@ -1588,8 +1583,6 @@ namespace EstateSync.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("ApproveBy");
-
-                    b.Navigation("Location");
 
                     b.Navigation("Owner");
                 });
@@ -1820,11 +1813,6 @@ namespace EstateSync.Api.Migrations
                     b.Navigation("Complaints");
 
                     b.Navigation("Payments");
-                });
-
-            modelBuilder.Entity("EstateSync.Api.Models.Location", b =>
-                {
-                    b.Navigation("Properties");
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.Property", b =>

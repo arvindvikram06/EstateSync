@@ -78,13 +78,13 @@
           </div>
           <div class="doc-progress-wrap">
             <div class="doc-progress-bar">
-              <div class="doc-progress-fill" [style.width.%]="uploadedDocCount * 25"></div>
+              <div class="doc-progress-fill" [style.width.%]="uploadedDocCount() * 25"></div>
             </div>
-            <span class="doc-progress-label">{{ uploadedDocCount }}/4 uploaded</span>
+            <span class="doc-progress-label">{{ uploadedDocCount() }}/4 uploaded</span>
           </div>
           <div class="doc-grid">
             @for (slot of DOC_SLOTS; track slot.type) {
-              <input type="file" [id]="'file-' + slot.type" [accept]="slot.accept"
+              <input #fileInput type="file" [id]="'file-' + slot.type" [accept]="slot.accept"
                 style="display:none" (change)="onFileSelected($event, slot.type)" />
               <div class="doc-slot" [class.doc-slot--done]="store.uploadedDocs()[slot.type]">
                 <div class="doc-slot__icon">
@@ -110,7 +110,7 @@
                   } @else if (store.uploadedDocs()[slot.type]) {
                     <label [for]="'file-' + slot.type" class="doc-slot__replace">Replace</label>
                   } @else {
-                    <button mat-stroked-button type="button" (click)="triggerFileInput(slot.type)">
+                    <button mat-stroked-button type="button" (click)="fileInput.click()">
                       <mat-icon>cloud_upload</mat-icon> Upload
                     </button>
                   }
@@ -121,7 +121,7 @@
         </div>
         <div class="kyc-card__actions">
           <button mat-flat-button color="primary" class="kyc-cta-btn"
-            [disabled]="!allDocsUploaded" (click)="proceedToDetails()">
+            [disabled]="!allDocsUploaded()" (click)="proceedToDetails()">
             Continue to details
             <mat-icon iconPositionEnd>chevron_right</mat-icon>
           </button>

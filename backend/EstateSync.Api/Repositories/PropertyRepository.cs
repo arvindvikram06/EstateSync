@@ -19,7 +19,6 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
     {
         return await _dbSet
             .Include(p => p.Owner)
-            .Include(p => p.Location)
             .Include(p => p.PropertyImages)
             .Include(p => p.PropertyDocuments)
                 .ThenInclude(pd => pd.Document)
@@ -31,7 +30,6 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
         return await _dbSet
             .AsNoTracking()
             .Include(p => p.Owner)
-            .Include(p => p.Location)
             .Include(p => p.PropertyImages)
             .Include(p => p.PropertyDocuments)
                 .ThenInclude(pd => pd.Document)
@@ -49,12 +47,11 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
         int offset)
     {
         var query = _dbSet.AsNoTracking()
-            .Include(p => p.Location)
             .Include(p => p.PropertyImages)
             .Where(p => p.Status == PropertyStatus.Active);
 
         if (!string.IsNullOrEmpty(state))
-            query = query.Where(p => p.Location != null && p.Location.StateName.ToLower() == state.ToLower());
+            query = query.Where(p => p.State.ToLower() == state.ToLower());
 
         if (minRent.HasValue)
             query = query.Where(p => p.MonthlyRent >= minRent.Value);
@@ -86,8 +83,8 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
     public async Task<(IEnumerable<Property> Items, int Total)> GetPendingApprovalPropertiesAsync(int limit, int offset)
     {
         var query = _dbSet.AsNoTracking()
-            .Include(p => p.Location)
             .Include(p => p.PropertyImages)
+            .Include(p => p.Owner)
             .Where(p => p.Status == PropertyStatus.PendingApproval);
 
         var total = await query.CountAsync();

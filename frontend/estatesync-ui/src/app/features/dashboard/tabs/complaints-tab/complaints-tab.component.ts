@@ -20,6 +20,7 @@ import { NewComplaintDialogComponent } from './new-complaint-dialog.component';
   imports: [MatIconModule, MatButtonModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './complaints-tab.component.html',
+  styleUrl: './complaints-tab.component.css',
 })
 export class ComplaintsTabComponent implements OnInit {
   private readonly svc        = inject(ComplaintService);
@@ -59,7 +60,7 @@ export class ComplaintsTabComponent implements OnInit {
       data: { propertyId: pid, propertyTitle: title },
       maxWidth: 540,
     });
-    ref.afterClosed().subscribe((result: ComplaintResponse | undefined) => {
+    ref.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((result: ComplaintResponse | undefined) => {
       if (result) this.complaints.update(list => [result, ...list]);
     });
   }

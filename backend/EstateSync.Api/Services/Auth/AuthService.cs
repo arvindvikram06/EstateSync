@@ -106,6 +106,13 @@ public class AuthService : IAuthService
         return (authResponse, refreshTokenString);
     }
 
+    // Tokens rotate on every refresh. The SPA refreshes on each page load, so quick
+    // or overlapping reloads can present a token that was rotated milliseconds earlier
+    // (the new cookie not yet committed by the browser). Within this grace window we
+    // treat that as a benign duplicate and return the family's current successor instead
+    // of revoking the whole family. A genuine replay later still trips reuse detection.
+    private static readonly TimeSpan RefreshRotationGrace = TimeSpan.FromSeconds(60);
+
     public async Task<(AuthResponse Auth, string RefreshToken)> RefreshTokenAsync(string refreshToken)
     {
         var tokenEntity = await _refreshTokenRepository.GetByTokenAsync(refreshToken);
@@ -116,6 +123,24 @@ public class AuthService : IAuthService
 
         if (tokenEntity.RevokedAt != null)
         {
+            // Benign concurrent/duplicate refresh: token was rotated very recently and a
+            // valid successor still exists in the family — hand that back, don't nuke.
+            if (DateTime.UtcNow - tokenEntity.RevokedAt.Value <= RefreshRotationGrace)
+            {
+                var activeSuccessor = (await _refreshTokenRepository
+                        .GetActiveTokensInFamilyAsync(tokenEntity.TokenFamily))
+                    .OrderByDescending(t => t.CreatedAt)
+                    .FirstOrDefault();
+
+                if (activeSuccessor != null)
+                {
+                    var successorUser = await GetAndVerifyUserForRefreshAsync(activeSuccessor.UserId);
+                    var successorAccessToken = _tokenService.GenerateAccessToken(successorUser);
+                    return (_authMapper.MapToAuthResponse(successorUser, successorAccessToken), activeSuccessor.Token);
+                }
+            }
+
+            // Outside the grace window, or no live successor — real reuse: revoke the family.
             await RevokeTokenFamilyAsync(tokenEntity.TokenFamily);
             await _unitOfWork.SaveChangesAsync();
             throw new UnauthorizedException("Token family reuse detected. Please log in again.");
@@ -139,6 +164,25 @@ public class AuthService : IAuthService
 
         var authResponse = _authMapper.MapToAuthResponse(user, newAccessToken);
         return (authResponse, newRefreshTokenString);
+    }
+
+    public async Task LogoutAsync(string? refreshToken)
+    {
+        // Idempotent: a missing/unknown token is a no-op so logout never fails.
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return;
+        }
+
+        var tokenEntity = await _refreshTokenRepository.GetByTokenAsync(refreshToken);
+        if (tokenEntity == null)
+        {
+            return;
+        }
+
+        // Revoke the whole family so the session is truly ended server-side.
+        await RevokeTokenFamilyAsync(tokenEntity.TokenFamily);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public Task ForgotPasswordAsync(ForgotPasswordRequest request)

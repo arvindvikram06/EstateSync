@@ -1,0 +1,76 @@
+<div class="tab-header">
+  <div>
+    <h2 class="tab-title">Financial Profile Reviews</h2>
+    <p class="tab-subtitle">Verify tenant income documents and approve financial profiles.</p>
+  </div>
+
+  <div class="flex gap-3 items-center flex-wrap">
+    <mat-form-field appearance="outline" style="width:220px">
+      <mat-label>Search</mat-label>
+      <mat-icon matPrefix class="mr-1">search</mat-icon>
+      <input matInput [formControl]="searchControl" placeholder="Name or email…" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" style="width:160px">
+      <mat-label>Status</mat-label>
+      <mat-icon matPrefix class="mr-1">filter_list</mat-icon>
+      <mat-select [formControl]="statusFilter">
+        <mat-option value="">All</mat-option>
+        <mat-option value="Pending">Pending</mat-option>
+        <mat-option value="Approved">Approved</mat-option>
+        <mat-option value="Rejected">Rejected</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="flex items-center gap-3 py-12" style="color:#717171;font-size:14px">
+    <mat-spinner diameter="24" /><span>Loading…</span>
+  </div>
+} @else if (filteredItems().length === 0) {
+  <app-empty-state icon="account_balance_wallet" title="No financial profiles" subtitle="No profiles match the selected filter." />
+} @else {
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Tenant</th>
+          <th>Employment</th>
+          <th>Monthly Income</th>
+          <th>Status</th>
+          <th>Submitted</th>
+          <th style="text-align:right">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of filteredItems(); track item.profileId) {
+          <tr>
+            <td>
+              <div class="user-name">{{ item.tenantName }}</div>
+              <div style="font-size:12px;color:#717171">{{ item.tenantEmail }}</div>
+            </td>
+            <td style="font-size:13px;color:#717171">{{ item.employmentType }}</td>
+            <td style="font-weight:600;color:#222">{{ item.declaredMonthlyIncome > 0 ? '₹' + item.declaredMonthlyIncome.toLocaleString('en-IN') : '—' }}</td>
+            <td><app-status-badge [status]="item.status" /></td>
+            <td style="font-size:13px;color:#717171">{{ item.createdAt | slice:0:10 }}</td>
+            <td style="text-align:right">
+              @if (item.status === 'Pending') {
+                <button mat-stroked-button color="primary" class="!rounded-full !text-xs !h-8" (click)="openReview(item)">Review</button>
+              } @else {
+                <button mat-button class="!rounded-full !text-xs !h-8" style="color:#717171" (click)="openReview(item)">View</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="pagination">
+    <span style="font-size:13px;color:#717171">Page {{ page() }} of {{ totalPages }} · {{ totalCount() }} total</span>
+    <div class="flex gap-2">
+      <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="page() === 1" (click)="prevPage()"><mat-icon>chevron_left</mat-icon></button>
+      <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="page() >= totalPages" (click)="nextPage()"><mat-icon>chevron_right</mat-icon></button>
+    </div>
+  </div>
+}

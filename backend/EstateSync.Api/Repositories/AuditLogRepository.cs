@@ -21,7 +21,11 @@ public class AuditLogRepository : BaseRepository<AuditLog>, IAuditLogRepository
         int page,
         int limit)
     {
-        var query = _dbSet.AsNoTracking();
+        // Internal token management entities are noise for the admin log viewer
+        var internalEntityTypes = new[] { "RefreshToken" };
+
+        var query = _dbSet.AsNoTracking()
+            .Where(x => !internalEntityTypes.Contains(x.EntityType));
 
         if (!string.IsNullOrWhiteSpace(entityType))
         {

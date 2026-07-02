@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
 
@@ -46,7 +47,7 @@ public class PenaltyScheduler : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         var leaseBillRepo = scope.ServiceProvider.GetRequiredService<ILeaseBillRepository>();
-        var notificationRepo = scope.ServiceProvider.GetRequiredService<INotificationRepository>();
+        var notificationSender = scope.ServiceProvider.GetRequiredService<INotificationSender>();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
         var overdueBills = await leaseBillRepo.GetOverdueBillsWithLeaseAsync(DateTime.UtcNow);
@@ -82,7 +83,7 @@ public class PenaltyScheduler : BackgroundService
             });
 
             // Notify tenant that a penalty bill has been generated
-            await notificationRepo.AddAsync(new Notification
+            await notificationSender.SendAsync(new Notification
             {
                 NotificationId = Guid.NewGuid(),
                 UserId = lease.TenantId,

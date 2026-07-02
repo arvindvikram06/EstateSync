@@ -17,6 +17,7 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
 
         builder.HasIndex(x => x.LeaseBillId);
         builder.HasIndex(x => x.PaymentStatus);
+        builder.HasIndex(x => x.TransactionId).IsUnique();
 
         builder.HasOne(x => x.LeaseBill)
             .WithMany(c => c.Payments)

@@ -1,0 +1,69 @@
+<h2 style="font-size:20px;font-weight:700;color:#222;margin-bottom:20px">Tenant Complaints</h2>
+
+<!-- Filter pills -->
+<div class="flex flex-wrap gap-2 mb-5">
+  @for (f of filters; track f) {
+    <button
+      class="filter-pill"
+      [class.filter-pill--active]="activeFilter() === f"
+      (click)="activeFilter.set(f)">
+      {{ f }}
+    </button>
+  }
+</div>
+
+@if (loading()) {
+  <div class="flex items-center gap-3 py-8 text-sm text-es-muted">
+    <mat-spinner diameter="24" /><span>Loading…</span>
+  </div>
+} @else if (filtered().length === 0) {
+  <app-empty-state icon="report_problem" title="No complaints"
+    subtitle="Complaints raised by tenants on your properties will appear here." />
+} @else {
+  <div class="flex flex-col gap-3">
+    @for (c of filtered(); track c.complaintId) {
+      <div class="complaint-card">
+        <div class="card-top">
+          <div class="flex-1 min-w-0">
+            <div style="font-size:14px;font-weight:600;color:#222" class="truncate">{{ c.title }}</div>
+            <div style="font-size:12px;color:#717171;margin-top:2px" class="truncate">
+              <mat-icon class="!text-[13px] !w-[13px] !h-[13px] align-middle">home</mat-icon>
+              {{ c.propertyTitle }}
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <!-- Priority chip -->
+            <span class="priority-chip"
+              [style.background]="priorityStyle[c.priority].bg"
+              [style.color]="priorityStyle[c.priority].color">
+              {{ c.priority }}
+            </span>
+            <app-status-badge [status]="c.status" />
+          </div>
+        </div>
+
+        <p style="font-size:13px;color:#555;margin:10px 0;line-clamp:2" class="line-clamp-2">
+          {{ c.description }}
+        </p>
+
+        <div class="card-bottom">
+          <div class="flex items-center gap-3">
+            <span class="type-chip">{{ c.type }}</span>
+            <span style="font-size:11px;color:#AAAAAA">{{ formatDate(c.createdAt) }}</span>
+          </div>
+          @if (nextStatus(c.status)) {
+            <button mat-stroked-button class="!rounded-full !h-8 !text-xs !px-3"
+              [disabled]="updatingId() === c.complaintId"
+              (click)="updateStatus(c)">
+              @if (updatingId() === c.complaintId) {
+                <mat-spinner diameter="14" style="display:inline-block" />
+              } @else {
+                {{ nextLabel(c.status) }}
+              }
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}

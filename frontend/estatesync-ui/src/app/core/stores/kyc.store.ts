@@ -102,7 +102,11 @@ export const KycStore = signalStore(
       pipe(
         tap(() => patchState(store, { isSubmitting: true })),
         exhaustMap((details) => kycService.submit(store.kycId()!, details).pipe(
-          tap(() => patchState(store, { isSubmitting: false, step: 'done' })),
+          tap(() => patchState(store, {
+        isSubmitting: false,
+        step: 'done',
+        kyc: store.kyc() ? { ...store.kyc()!, status: 'Pending' } : null,
+      })),
           catchError(() => {
             patchState(store, { isSubmitting: false });
             return of(null);

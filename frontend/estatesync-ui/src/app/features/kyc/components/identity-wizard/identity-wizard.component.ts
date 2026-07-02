@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -40,7 +40,7 @@ const DOC_SLOTS: DocSlot[] = [
   templateUrl: './identity-wizard.component.html',
   styleUrl: '../../kyc-wizard.component.css'
 })
-export class IdentityWizardComponent implements OnInit {
+export class IdentityWizardComponent {
   readonly store = inject(KycStore);
   private readonly router = inject(Router);
 
@@ -61,18 +61,13 @@ export class IdentityWizardComponent implements OnInit {
   get aadhaarCtrl() { return this.detailsForm.controls.aadhaarNumber; }
   get panCtrl()     { return this.detailsForm.controls.panNumber; }
 
-  get allDocsUploaded(): boolean {
-    const docs = this.store.uploadedDocs();
-    return DOC_SLOTS.every(slot => !!docs[slot.type]);
-  }
+  readonly allDocsUploaded = computed(() =>
+    DOC_SLOTS.every(slot => !!this.store.uploadedDocs()[slot.type])
+  );
 
-  get uploadedDocCount(): number {
-    return Object.keys(this.store.uploadedDocs()).filter(k => !!this.store.uploadedDocs()[k]).length;
-  }
-
-  ngOnInit(): void {
-    this.store.loadExisting();
-  }
+  readonly uploadedDocCount = computed(() =>
+    DOC_SLOTS.filter(slot => !!this.store.uploadedDocs()[slot.type]).length
+  );
 
   startKyc(): void {
     this.detailsForm.reset();
@@ -86,7 +81,7 @@ export class IdentityWizardComponent implements OnInit {
   }
 
   proceedToDetails(): void {
-    if (!this.allDocsUploaded) return;
+    if (!this.allDocsUploaded()) return;
     this.store.setStep('details');
   }
 
@@ -96,10 +91,6 @@ export class IdentityWizardComponent implements OnInit {
       return;
     }
     this.store.submitKyc(this.detailsForm.getRawValue());
-  }
-
-  triggerFileInput(docType: KycDocumentType): void {
-    (document.getElementById('file-' + docType) as HTMLInputElement)?.click();
   }
 
   goToDashboard(): void {

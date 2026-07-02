@@ -23,6 +23,16 @@ public class NotificationRepository : BaseRepository<Notification>, INotificatio
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Notification>> GetAllByUserIdAsync(Guid userId)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Where(n => n.UserId == userId)
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(50)
+            .ToListAsync();
+    }
+
     public async Task MarkAllReadAsync(Guid userId)
     {
         var unread = await _dbSet
@@ -35,6 +45,18 @@ public class NotificationRepository : BaseRepository<Notification>, INotificatio
             n.ReadAt = DateTime.UtcNow;
         }
         // SaveChangesAsync will be called by UnitOfWork, so just modify in memory.
+    }
+
+    public async Task<bool> MarkOneReadAsync(Guid userId, Guid notificationId)
+    {
+        var notification = await _dbSet
+            .FirstOrDefaultAsync(n => n.NotificationId == notificationId && n.UserId == userId);
+
+        if (notification == null || notification.IsRead) return false;
+
+        notification.IsRead = true;
+        notification.ReadAt = DateTime.UtcNow;
+        return true;
     }
 
     // Reserved for background cleanup job — not yet implemented

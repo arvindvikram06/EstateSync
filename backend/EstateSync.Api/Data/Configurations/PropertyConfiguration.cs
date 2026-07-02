@@ -18,8 +18,12 @@ public class PropertyConfiguration : IEntityTypeConfiguration<Property>
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(100);
         builder.Property(x => x.ApproveRemarks).HasMaxLength(1000);
 
+        builder.Property(x => x.State).HasMaxLength(150);
+        builder.Property(x => x.City).HasMaxLength(150);
+        builder.Property(x => x.Pincode).HasMaxLength(20);
+
         builder.HasIndex(x => x.OwnerId);
-        builder.HasIndex(x => x.LocationId);
+        builder.HasIndex(x => x.State);
         builder.HasIndex(x => x.PropertyType);
         builder.HasIndex(x => x.MonthlyRent);
         builder.HasIndex(x => x.DeletedAt).HasFilter("\"DeletedAt\" IS NULL");
@@ -28,11 +32,6 @@ public class PropertyConfiguration : IEntityTypeConfiguration<Property>
         builder.HasOne(x => x.Owner)
             .WithMany(u => u.Properties)
             .HasForeignKey(x => x.OwnerId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(x => x.Location)
-            .WithMany(l => l.Properties)
-            .HasForeignKey(x => x.LocationId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.ApproveBy)

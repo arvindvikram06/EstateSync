@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using EstateSync.Api.DTOs.Users;
 using EstateSync.Api.Exceptions;
 using EstateSync.Api.Interfaces.Services.Users;
 using EstateSync.Api.Models;
@@ -32,19 +33,26 @@ public class UserService : IUserService
 
         var alreadyOwner = user.UserRoles.Any(ur => ur.Role?.Name == "Owner");
         if (alreadyOwner)
-            return "You are already registered as an owner.";
+            return "You are already an owner. Complete Stripe onboarding to start listing properties.";
 
         var ownerRole = await _roleRepo.GetByNameAsync("Owner")
-            ?? throw new BadRequestException("Owner role not found. Please contact support.");
+            ?? throw new NotFoundException("Role", "Owner");
 
-        user.UserRoles.Add(new UserRole
-        {
-            UserId = userId,
-            RoleId = ownerRole.RoleId
-        });
-
+        user.UserRoles.Add(new UserRole { UserId = user.UserId, RoleId = ownerRole.RoleId });
         await _unitOfWork.SaveChangesAsync(ct);
 
-        return "Owner role assigned successfully. Please complete Stripe onboarding to start listing properties.";
+        return "Owner role granted. Complete Stripe onboarding to start listing properties.";
+    }
+
+    public async Task<UserProfileResponse> GetProfileAsync(Guid userId, CancellationToken ct = default)
+    {
+        var user = await _userRepo.GetByIdAsync(userId)
+            ?? throw new NotFoundException("User", userId);
+
+        return new UserProfileResponse
+        {
+            IsKycVerified   = user.IsKycVerified,
+            IsOwnerVerified = user.IsOwnerVerified,
+        };
     }
 }

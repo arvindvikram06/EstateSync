@@ -1,0 +1,80 @@
+@if (loading()) {
+  <div class="flex items-center gap-3 py-12" style="color:#717171;font-size:14px">
+    <mat-spinner diameter="24" /><span>Loading…</span>
+  </div>
+} @else {
+
+  <!-- Welcome -->
+  <div style="background:white;border:1px solid #EBEBEB;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:28px 32px;margin-bottom:28px">
+    <div class="flex items-center gap-4">
+      <div style="width:52px;height:52px;border-radius:14px;background:color-mix(in srgb,var(--mat-sys-primary) 12%,white);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <mat-icon style="font-size:26px;width:26px;height:26px;color:var(--mat-sys-primary)">shield</mat-icon>
+      </div>
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#222;margin-bottom:3px">Welcome, {{ userName }}</div>
+        <div style="font-size:13px;color:#717171">EstateSync Verification Team — here's your queue for today.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+
+    <!-- KYC pending -->
+    <div style="background:white;border:1px solid #EBEBEB;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:24px 28px">
+      <div class="flex items-start justify-between mb-4">
+        <div style="width:44px;height:44px;border-radius:12px;background:color-mix(in srgb,var(--mat-sys-primary) 10%,white);display:flex;align-items:center;justify-content:center">
+          <mat-icon style="font-size:22px;width:22px;height:22px;color:var(--mat-sys-primary)">verified_user</mat-icon>
+        </div>
+        @if (pendingKycCount() > 0) {
+          <span class="es-badge es-badge--pending">Needs review</span>
+        } @else {
+          <span class="es-badge es-badge--approved">All clear</span>
+        }
+      </div>
+      <div style="font-size:36px;font-weight:800;color:#222;line-height:1;margin-bottom:4px">
+        {{ pendingKycCount() }}
+      </div>
+      <div style="font-size:14px;font-weight:600;color:#222;margin-bottom:2px">Pending KYC Reviews</div>
+      <div style="font-size:12px;color:#717171;margin-bottom:16px">Identity verification requests awaiting review</div>
+      <button mat-stroked-button color="primary" class="!rounded-full !text-xs" (click)="tabSwitch.emit('kyc')">
+        Open queue <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">arrow_forward</mat-icon>
+      </button>
+    </div>
+
+    <!-- Financial profiles pending -->
+    <div style="background:white;border:1px solid #EBEBEB;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:24px 28px">
+      <div class="flex items-start justify-between mb-4">
+        <div style="width:44px;height:44px;border-radius:12px;background:color-mix(in srgb,var(--mat-sys-primary) 10%,white);display:flex;align-items:center;justify-content:center">
+          <mat-icon style="font-size:22px;width:22px;height:22px;color:var(--mat-sys-primary)">account_balance_wallet</mat-icon>
+        </div>
+        @if (pendingFinancialCount() > 0) {
+          <span class="es-badge es-badge--pending">Needs review</span>
+        } @else {
+          <span class="es-badge es-badge--approved">All clear</span>
+        }
+      </div>
+      <div style="font-size:36px;font-weight:800;color:#222;line-height:1;margin-bottom:4px">
+        {{ pendingFinancialCount() }}
+      </div>
+      <div style="font-size:14px;font-weight:600;color:#222;margin-bottom:2px">Pending Financial Profiles</div>
+      <div style="font-size:12px;color:#717171;margin-bottom:16px">Income and bank statement reviews awaiting assessment</div>
+      <button mat-stroked-button color="primary" class="!rounded-full !text-xs" (click)="tabSwitch.emit('financial-profiles')">
+        Open queue <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">arrow_forward</mat-icon>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- All clear notice -->
+  @if (pendingKycCount() === 0 && pendingFinancialCount() === 0) {
+    <div class="flex items-center gap-3" style="padding:18px 22px;background:white;border:1px solid #D1FAE5;border-radius:14px">
+      <mat-icon style="color:#059669;font-size:22px;width:22px;height:22px">check_circle</mat-icon>
+      <div>
+        <div style="font-size:14px;font-weight:600;color:#222;margin-bottom:2px">All caught up!</div>
+        <div style="font-size:13px;color:#717171">No pending reviews at this time. Check back later.</div>
+      </div>
+    </div>
+  }
+
+}

@@ -8,7 +8,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LeaseService } from '../../../../core/services/lease.service';
 import { LeaseSummaryResponse } from '../../../../core/models/lease.model';
-import { AuthService } from '../../../../core/services/auth.service';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { formatDate, formatCurrency } from '../../../../core/utils/format.utils';
@@ -19,10 +18,10 @@ import { formatDate, formatCurrency } from '../../../../core/utils/format.utils'
   imports: [RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './leases-tab.component.html',
+  styleUrl: './leases-tab.component.css',
 })
 export class LeasesTabComponent implements OnInit {
   private readonly svc        = inject(LeaseService);
-  private readonly authService= inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly leases  = signal<LeaseSummaryResponse[]>([]);
@@ -30,8 +29,6 @@ export class LeasesTabComponent implements OnInit {
 
   readonly formatDate     = formatDate;
   readonly formatCurrency = formatCurrency;
-
-  private get userId(): string { return this.authService.currentUser()?.userId ?? ''; }
 
   ngOnInit(): void {
     this.svc.getMyLeases().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -41,6 +38,6 @@ export class LeasesTabComponent implements OnInit {
   }
 
   canSign(lease: LeaseSummaryResponse): boolean {
-    return lease.status === 'PartialSigned' && !lease.tenantSignedAt;
+    return (lease.status === 'PendingApproval' || lease.status === 'PartialSigned') && !lease.tenantSignedAt;
   }
 }

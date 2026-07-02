@@ -30,7 +30,6 @@ public partial class AppDbContext : DbContext
     public DbSet<TenantFinancialProfile> TenantFinancialProfiles => Set<TenantFinancialProfile>();
     public DbSet<TenantFinancialDocument> TenantFinancialDocuments => Set<TenantFinancialDocument>();
     public DbSet<Document> Documents => Set<Document>();
-    public DbSet<Location> Locations => Set<Location>();
     public DbSet<Property> Properties => Set<Property>();
     public DbSet<PropertyImage> PropertyImages => Set<PropertyImage>();
     public DbSet<SavedProperty> SavedProperties => Set<SavedProperty>();

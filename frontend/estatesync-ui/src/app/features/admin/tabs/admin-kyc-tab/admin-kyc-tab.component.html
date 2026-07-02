@@ -1,0 +1,91 @@
+<div class="tab-header">
+  <div>
+    <h2 class="tab-title">KYC Verifications</h2>
+    <p class="tab-subtitle">Review and approve tenant identity documents.</p>
+  </div>
+
+  <div class="flex gap-3 items-center flex-wrap">
+    <!-- Search -->
+    <mat-form-field appearance="outline" style="width:220px">
+      <mat-label>Search</mat-label>
+      <mat-icon matPrefix class="mr-1">search</mat-icon>
+      <input matInput [formControl]="searchControl" placeholder="Name or email…" />
+    </mat-form-field>
+
+    <!-- Status filter -->
+    <mat-form-field appearance="outline" style="width:160px">
+      <mat-label>Status</mat-label>
+      <mat-icon matPrefix class="mr-1">filter_list</mat-icon>
+      <mat-select [formControl]="statusFilter">
+        <mat-option value="">All</mat-option>
+        <mat-option value="Pending">Pending</mat-option>
+        <mat-option value="Approved">Approved</mat-option>
+        <mat-option value="Rejected">Rejected</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="flex items-center gap-3 py-12" style="color:#717171;font-size:14px">
+    <mat-spinner diameter="24" /><span>Loading…</span>
+  </div>
+} @else if (filteredItems().length === 0) {
+  <app-empty-state icon="verified_user" title="No KYC requests" subtitle="No requests match the selected filter." />
+} @else {
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Submitted</th>
+          <th>Remarks</th>
+          <th style="text-align:right">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of filteredItems(); track item.kycVerificationId) {
+          <tr>
+            <td><span class="user-name">{{ item.fullName }}</span></td>
+            <td style="color:#717171;font-size:13px">{{ item.email }}</td>
+            <td><app-status-badge [status]="item.status" /></td>
+            <td style="color:#717171;font-size:13px">{{ item.createdAt | slice:0:10 }}</td>
+            <td style="color:#717171;font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+              {{ item.reviewRemarks || '—' }}
+            </td>
+            <td style="text-align:right">
+              @if (item.status === 'Pending') {
+                <button mat-stroked-button color="primary" class="!rounded-full !text-xs !h-8"
+                  (click)="openReview(item)">
+                  Review
+                </button>
+              } @else {
+                <button mat-button class="!rounded-full !text-xs !h-8" style="color:#717171"
+                  (click)="openReview(item)">
+                  View
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination">
+    <span style="font-size:13px;color:#717171">
+      Page {{ page() }} of {{ totalPages }} · {{ totalCount() }} total
+    </span>
+    <div class="flex gap-2">
+      <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="page() === 1" (click)="prevPage()">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="page() >= totalPages" (click)="nextPage()">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  </div>
+}

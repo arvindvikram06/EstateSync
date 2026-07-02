@@ -1,29 +1,80 @@
+export type LeaseStatusString =
+  | 'PendingApproval'
+  | 'PartialSigned'
+  | 'PendingAdminApproval'
+  | 'Active'
+  | 'Expired'
+  | 'Voided'
+  | 'Terminated';
+
 export interface LeaseSummaryResponse {
   leaseId: string;
   propertyId: string;
-  propertyTitle: string;
-  propertyAddress: string;
+  propertyTitle: string | null;
+  propertyAddress: string | null;
+  tenantId: string;
+  ownerId: string | null;
+  tenantName: string | null;
+  ownerName: string | null;
   startDate: string;
   endDate: string;
   monthlyRent: number;
-  status: 'PendingApproval' | 'PartialSigned' | 'PendingAdminApproval' | 'Active' | 'Expired' | 'Voided' | 'Terminated';
+  status: LeaseStatusString;
   tenantSignedAt: string | null;
   ownerSignedAt: string | null;
   agreementPdfUrl: string | null;
-  signedPdfUrl: string | null;
+}
+
+export interface OwnerLeaseSummaryResponse extends LeaseSummaryResponse {
+  tenantEmail: string | null;
 }
 
 export interface LeaseDetailResponse extends LeaseSummaryResponse {
-  tenantName: string;
-  ownerName: string;
+  tenantEmail: string | null;
+  applicationId: string;
   securityDeposit: number;
   paymentFrequency: 'Monthly' | 'Quarterly' | 'HalfYearly' | 'Yearly';
-  penaltyPercentage: number;
-  lockInPeriodMonths: number;
+  noticePeriodDays: number | null;
+  penaltyPercentage: number | null;
+  agreementText: string | null;
+  tenantSignature: string | null;
+  ownerSignature: string | null;
+  tenantSignatureImageUrl: string | null;
+  ownerSignatureImageUrl: string | null;
   signatureVerificationHash: string | null;
+  adminApprovedAt: string | null;
+  adminRemarks: string | null;
+  activatedAt: string | null;
+  cancelledBy: string | null;
+  cancellationReason: string | null;
+  cancelledAt: string | null;
+}
+
+export interface CreateLeaseRequest {
+  applicationId: string;
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  securityDeposit: number;
+  paymentFrequency: string;
+  noticePeriodDays: number;
+  penaltyPercentage: number;
 }
 
 export interface SignLeaseRequest {
   signatureText: string;
   signatureImageBase64: string;
+}
+
+export interface VoidLeaseRequest {
+  reason: string;
+}
+
+export interface TerminateLeaseRequest {
+  reason: string;
+}
+
+export interface AdminLeaseApprovalRequest {
+  approve: boolean;
+  remarks?: string;
 }

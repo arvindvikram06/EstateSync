@@ -27,10 +27,10 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<object>>> GetUnread(CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<object>>> GetAll(CancellationToken ct)
     {
         var userId = User.GetUserId();
-        var notifications = await _notificationRepo.GetUnreadByUserIdAsync(userId);
+        var notifications = await _notificationRepo.GetAllByUserIdAsync(userId);
 
         var response = notifications.Select(n => new NotificationResponse
         {
@@ -47,11 +47,21 @@ public class NotificationsController : ControllerBase
         return Ok(new ApiResponse<object> { Data = response });
     }
 
+    [HttpPut("{id:guid}/read")]
+    public async Task<ActionResult<ApiResponse<object>>> MarkOneRead(Guid id, CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        await _notificationRepo.MarkOneReadAsync(userId, id);
+        await _unitOfWork.SaveChangesAsync(ct);
+        return Ok(new ApiResponse<object> { Message = "Notification marked as read." });
+    }
+
     [HttpPut("read")]
     public async Task<ActionResult<ApiResponse<object>>> MarkAllRead(CancellationToken ct)
     {
         var userId = User.GetUserId();
         await _notificationRepo.MarkAllReadAsync(userId);
+        await _unitOfWork.SaveChangesAsync(ct);
         return Ok(new ApiResponse<object> { Message = "All notifications marked as read." });
     }
 }

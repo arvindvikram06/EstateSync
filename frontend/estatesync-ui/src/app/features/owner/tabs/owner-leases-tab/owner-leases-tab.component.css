@@ -1,0 +1,53 @@
+.lease-card {
+  background: white;
+  border: 1px solid #EBEBEB;
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.lease-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.lease-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  background: #F7F7F7;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.lease-detail { display: flex; flex-direction: column; gap: 2px; }
+
+.detail-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #AAAAAA;
+}
+
+.detail-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+}
+
+.lease-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.void-btn {
+  color: #DC2626 !important;
+  border-color: #FECACA !important;
+}

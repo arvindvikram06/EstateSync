@@ -36,6 +36,9 @@ using EstateSync.Api.Services.Users;
 using EstateSync.Api.Interfaces.Services.Admin;
 using EstateSync.Api.Services.Admin;
 using EstateSync.Api.Services.Background;
+using EstateSync.Api.Services.Notifications;
+using EstateSync.Api.Interfaces.Services.Notifications;
+using EstateSync.Api.Hubs;
 using EstateSync.Api.Extensions;
 using EstateSync.Api.Validators;
 using Serilog;
@@ -52,6 +55,7 @@ builder.Host.UseSerilog((context, loggerConfiguration) =>
 });
 
 // Add services to the container.
+builder.Services.AddSignalR();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -169,10 +173,16 @@ builder.Services.AddScoped<ITenantFinancialProfileService, TenantFinancialProfil
 builder.Services.AddScoped<ILeaseService, LeaseService>();
 builder.Services.AddScoped<ILeaseDocumentService, LeaseDocumentService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IStripeConnectedAccountService, StripeConnectedAccountService>();
+builder.Services.AddScoped<ITenantPaymentService, TenantPaymentService>();
+builder.Services.AddScoped<IStripeWebhookService, StripeWebhookService>();
 builder.Services.AddScoped<IComplaintService, ComplaintService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+builder.Services.AddScoped<IAdminFinancialService, AdminFinancialService>();
+builder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
+builder.Services.AddScoped<INotificationSender, NotificationSender>();
 
 // Register Auth Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -188,8 +198,16 @@ builder.Services.AddHostedService<LeaseBillScheduler>();
 builder.Services.AddHostedService<PenaltyScheduler>();
 builder.Services.AddHostedService<PropertyStatusUpdateScheduler>();
 builder.Services.AddHostedService<LeaseExpiryScheduler>();
+builder.Services.AddHostedService<RefreshTokenCleanupScheduler>();
 
 var app = builder.Build();
+
+// Apply any pending EF Core migrations automatically on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 // Configure Stripe Global API Key
 Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
@@ -224,5 +242,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.Run();

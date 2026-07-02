@@ -3,10 +3,9 @@ import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
 import { catchError, of, tap, pipe, switchMap, exhaustMap, concatMap } from 'rxjs';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { FinancialProfileService } from '../services/financial-profile.service';
-import { TenantFinancialProfileResponse } from '../models/financial-profile.model';
+import { FinancialDocumentResponse, TenantFinancialProfileResponse } from '../models/financial-profile.model';
 
-export const REQUIRED_FINANCIAL_DOCS = ['SalarySlip', 'BankStatement'] as const;
-export type FinancialDocumentType = typeof REQUIRED_FINANCIAL_DOCS[number];
+export type FinancialDocumentType = 'SalarySlip' | 'BankStatement' | 'EmploymentLetter' | 'IncomeTaxReturn';
 
 export type FinancialStep = 'loading' | 'intro' | 'documents' | 'details' | 'done' | 'pending' | 'approved' | 'rejected';
 
@@ -14,8 +13,8 @@ interface FinancialState {
   step: FinancialStep;
   profileId: string | null;
   profile: TenantFinancialProfileResponse | null;
-  uploadedDocs: Record<string, any>;
-  uploadingDoc: string | null;
+  uploadedDocs: Record<string, FinancialDocumentResponse>;
+  uploadingDoc: FinancialDocumentType | null;
   isSubmitting: boolean;
 }
 
@@ -49,15 +48,13 @@ export const FinancialStore = signalStore(
             }
             const latest = list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
             
-            const docs: Record<string, any> = {};
-            latest.documents?.forEach((d: any) => { docs[d.documentType] = d; });
+            const docs: Record<string, FinancialDocumentResponse> = {};
+            latest.documents?.forEach(d => { docs[d.documentType] = d; });
             
             let step: FinancialStep = 'documents';
-            // Need SalarySlip and BankStatement as mandatory, for example
-            const allUploaded = REQUIRED_FINANCIAL_DOCS.every(type => !!docs[type]);
-            
+
             switch (latest.status) {
-              case 'Draft': step = allUploaded ? 'details' : 'documents'; break;
+              case 'Draft': step = 'documents'; break;
               case 'Pending': step = 'pending'; break;
               case 'Approved': step = 'approved'; break;
               case 'Rejected': step = 'rejected'; break;
@@ -86,7 +83,7 @@ export const FinancialStore = signalStore(
       )
     ),
 
-    uploadDocument: rxMethod<{file: File, docType: string}>(
+    uploadDocument: rxMethod<{file: File, docType: FinancialDocumentType}>(
       pipe(
         tap(({docType}) => patchState(store, { uploadingDoc: docType })),
         concatMap(({file, docType}) => financialService.uploadDocument(store.profileId()!, file, docType).pipe(
@@ -106,7 +103,11 @@ export const FinancialStore = signalStore(
       pipe(
         tap(() => patchState(store, { isSubmitting: true })),
         exhaustMap((details) => financialService.submit(store.profileId()!, details).pipe(
-          tap(() => patchState(store, { isSubmitting: false, step: 'done' })),
+          tap(() => patchState(store, {
+            isSubmitting: false,
+            step: 'done',
+            profile: store.profile() ? { ...store.profile()!, status: 'Pending' } : null,
+          })),
           catchError(() => {
             patchState(store, { isSubmitting: false });
             return of(null);

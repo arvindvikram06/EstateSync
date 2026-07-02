@@ -1,0 +1,137 @@
+<div class="space-y-6">
+
+  <!-- Summary Cards -->
+  @if (summary()) {
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-white border border-[#EBEBEB] rounded-2xl p-6 flex items-start gap-4"
+           style="box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+             style="background:color-mix(in srgb,var(--mat-sys-primary) 10%,white)">
+          <mat-icon style="color:var(--mat-sys-primary);font-size:22px;width:22px;height:22px">payments</mat-icon>
+        </div>
+        <div>
+          <p class="text-xs text-es-muted font-medium mb-0.5">Total Earned</p>
+          <p class="text-[22px] font-bold text-es-text leading-tight">
+            ₹{{ (summary()!.totalPaid | number:'1.0-0') }}
+          </p>
+          <p class="text-xs text-es-muted mt-0.5">{{ summary()!.totalPayouts }} payout{{ summary()!.totalPayouts !== 1 ? 's' : '' }}</p>
+        </div>
+      </div>
+
+      <div class="bg-white border border-[#EBEBEB] rounded-2xl p-6 flex items-start gap-4"
+           style="box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+             style="background:#FEF3C7">
+          <mat-icon style="color:#92400E;font-size:22px;width:22px;height:22px">pending</mat-icon>
+        </div>
+        <div>
+          <p class="text-xs text-es-muted font-medium mb-0.5">Pending Payout</p>
+          <p class="text-[22px] font-bold text-es-text leading-tight">
+            ₹{{ (summary()!.totalPending | number:'1.0-0') }}
+          </p>
+          <p class="text-xs text-es-muted mt-0.5">In Stripe balance</p>
+        </div>
+      </div>
+
+      <div class="bg-white border border-[#EBEBEB] rounded-2xl p-6 flex items-start gap-4"
+           style="box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+             style="background:#D1FAE5">
+          <mat-icon style="color:#065F46;font-size:22px;width:22px;height:22px">account_balance</mat-icon>
+        </div>
+        <div>
+          <p class="text-xs text-es-muted font-medium mb-0.5">Last Payout</p>
+          @if (summary()!.lastPayoutDate) {
+            <p class="text-[22px] font-bold text-es-text leading-tight">
+              ₹{{ (summary()!.lastPayoutAmount! | number:'1.0-0') }}
+            </p>
+            <p class="text-xs text-es-muted mt-0.5">{{ summary()!.lastPayoutDate | date:'d MMM yyyy' }}</p>
+          } @else {
+            <p class="text-[15px] font-semibold text-es-muted leading-tight mt-1">No payouts yet</p>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Header row: filter + Stripe button -->
+  <div class="flex items-center justify-between gap-4 flex-wrap">
+    <div class="flex items-center gap-2 flex-wrap">
+      @for (opt of statusOptions; track opt.value) {
+        <button type="button" class="filter-pill"
+          [class.filter-pill--active]="statusFilter() === opt.value"
+          (click)="setStatus(opt.value)">{{ opt.label }}</button>
+      }
+    </div>
+
+    <button mat-stroked-button class="!rounded-full !px-5 !gap-1.5"
+      [disabled]="stripeLoading()"
+      (click)="openStripeDashboard()">
+      @if (stripeLoading()) {
+        <mat-icon class="animate-spin !text-[18px] !w-[18px] !h-[18px]">autorenew</mat-icon>
+      } @else {
+        <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">open_in_new</mat-icon>
+      }
+      Manage Stripe Account
+    </button>
+  </div>
+
+  <!-- Settlement List -->
+  <div class="bg-white border border-[#EBEBEB] rounded-2xl overflow-hidden"
+       style="box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+
+    @if (isLoading()) {
+      <div class="flex justify-center py-12">
+        <app-page-spinner />
+      </div>
+    } @else if (settlements().length === 0) {
+      <div class="py-12">
+        <app-empty-state icon="account_balance_wallet"
+          title="No payouts yet"
+          subtitle="Payouts from Stripe will appear here once your first rent payment is processed." />
+      </div>
+    } @else {
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-[#EBEBEB]">
+            <th class="text-left px-6 py-3.5 text-xs font-semibold text-es-muted uppercase tracking-wider">Date</th>
+            <th class="text-left px-6 py-3.5 text-xs font-semibold text-es-muted uppercase tracking-wider">Payout ID</th>
+            <th class="text-left px-6 py-3.5 text-xs font-semibold text-es-muted uppercase tracking-wider">Amount</th>
+            <th class="text-left px-6 py-3.5 text-xs font-semibold text-es-muted uppercase tracking-wider">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of settlements(); track item.ownerSettlementId) {
+            <tr class="border-b border-[#F5F5F5] hover:bg-[#FAFAFA] transition-colors">
+              <td class="px-6 py-4 text-es-text">
+                {{ item.arrivalDate | date:'d MMM yyyy' }}
+              </td>
+              <td class="px-6 py-4">
+                <span class="text-es-muted font-mono text-xs">{{ item.stripePayoutId }}</span>
+              </td>
+              <td class="px-6 py-4 font-semibold text-es-text">
+                ₹{{ (item.amount | number:'1.0-0') }}
+                <span class="text-xs font-normal text-es-muted ml-1 uppercase">{{ item.currency }}</span>
+              </td>
+              <td class="px-6 py-4">
+                <span class="es-badge" [class]="getBadgeClass(item.status)">{{ item.status }}</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (total() > limit()) {
+        <div class="px-4 py-2 border-t border-[#EBEBEB]">
+          <mat-paginator
+            [length]="total()"
+            [pageSize]="limit()"
+            [pageIndex]="page()"
+            [pageSizeOptions]="[10, 20, 50]"
+            (page)="onPage($event)" />
+        </div>
+      }
+    }
+  </div>
+
+</div>

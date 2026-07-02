@@ -1,6 +1,7 @@
 import {
-  Component, ChangeDetectionStrategy, inject, signal
+  Component, ChangeDetectionStrategy, inject, signal, DestroyRef
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -105,9 +106,10 @@ export interface NewComplaintDialogData {
 })
 export class NewComplaintDialogComponent {
   readonly data: NewComplaintDialogData = inject(MAT_DIALOG_DATA);
-  private readonly dialogRef = inject(MatDialogRef<NewComplaintDialogComponent>);
-  private readonly fb        = inject(FormBuilder);
-  private readonly svc       = inject(ComplaintService);
+  private readonly dialogRef  = inject(MatDialogRef<NewComplaintDialogComponent>);
+  private readonly fb         = inject(FormBuilder);
+  private readonly svc        = inject(ComplaintService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly submitting = signal(false);
   readonly error      = signal<string | null>(null);
@@ -133,11 +135,11 @@ export class NewComplaintDialogComponent {
       description: v.description,
       type:        v.type,
       priority:    v.priority,
-    }).subscribe({
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => { this.submitting.set(false); this.dialogRef.close(res.data); },
       error: (err) => {
         this.submitting.set(false);
-        this.error.set(err?.error?.message ?? 'Failed to submit complaint.');
+        this.error.set(err?.error?.detail ?? err?.error?.message ?? 'Failed to submit complaint.');
       }
     });
   }

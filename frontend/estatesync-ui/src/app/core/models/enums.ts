@@ -102,3 +102,29 @@ export enum EmploymentType {
   Student,
   Other
 }
+
+export enum NotificationType {
+  LeaseCreated = 'LeaseCreated',
+  LeaseExpiring = 'LeaseExpiring',
+  LeaseTerminated = 'LeaseTerminated',
+  LeaseExpired = 'LeaseExpired',
+  LeasePendingAdminApproval = 'LeasePendingAdminApproval',
+  LeaseApprovedByAdmin = 'LeaseApprovedByAdmin',
+  LeaseRejectedByAdmin = 'LeaseRejectedByAdmin',
+  LeaseVoided = 'LeaseVoided',
+  RentDue = 'RentDue',
+  PaymentReceived = 'PaymentReceived',
+  PaymentFailed = 'PaymentFailed',
+  ApplicationReceived = 'ApplicationReceived',
+  ApplicationApproved = 'ApplicationApproved',
+  ApplicationRejected = 'ApplicationRejected',
+  ComplaintRaised = 'ComplaintRaised',
+  ComplaintUpdated = 'ComplaintUpdated',
+  ComplaintResolved = 'ComplaintResolved',
+  VerificationApproved = 'VerificationApproved',
+  VerificationRejected = 'VerificationRejected',
+  PropertyApproved = 'PropertyApproved',
+  PropertyRejected = 'PropertyRejected',
+  DocumentUploaded = 'DocumentUploaded',
+  General = 'General',
+}

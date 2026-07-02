@@ -1,6 +1,6 @@
 <app-dashboard-layout
   [title]="'My Account'"
-  [subtitle]="sidebarSubtitle"
+  [subtitle]="''"
   [navItems]="navItems()"
   [activeTab]="activeTab()"
   (tabChange)="setTab($event)">
@@ -8,7 +8,7 @@
   @if (activeTab() === 'overview') {
     <app-overview-tab
       [latestKyc]="latestKyc()"
-      [kycLoading]="kycIsLoading"
+      [kycLoading]="kycIsLoading()"
       (tabSwitch)="setTab($event)" />
   }
 

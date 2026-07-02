@@ -1,0 +1,826 @@
+@if (loading()) {
+  <div class="flex items-center justify-center min-h-[60vh]">
+    <mat-spinner diameter="48" />
+  </div>
+} @else if (property(); as p) {
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       DRAFT — 3-step stepper (continue from where you left off)
+  ═══════════════════════════════════════════════════════════════════ -->
+  @if (isDraft()) {
+    <div class="create-page">
+
+      <!-- Header -->
+      <div class="create-header">
+        <a routerLink="/owner/dashboard" [queryParams]="{tab:'properties'}" class="back-link">
+          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">arrow_back</mat-icon>
+          My Properties
+        </a>
+        <h1 class="page-title">{{ p.title }}</h1>
+        <p class="page-sub">Continue your draft listing — pick up right where you left off</p>
+      </div>
+
+      <!-- Step indicator -->
+      <div class="kyc-steps">
+        @for (label of stepLabels; track $index) {
+          <div class="kyc-step"
+            [class.kyc-step--active]="step() === $index + 1"
+            [class.kyc-step--done]="step() > $index + 1">
+            <div class="kyc-step__circle">
+              @if (step() > $index + 1) {
+                <mat-icon class="step-check-icon">check</mat-icon>
+              } @else {
+                {{ $index + 1 }}
+              }
+            </div>
+            <span class="kyc-step__label">{{ label }}</span>
+          </div>
+          @if ($index < stepLabels.length - 1) {
+            <div class="kyc-step__line" [class.kyc-step__line--done]="step() > $index + 1"></div>
+          }
+        }
+      </div>
+
+      <!-- ── STEP 1: Property Details ──────────────────────────────── -->
+      @if (step() === 1) {
+        <div class="step-card">
+          <form [formGroup]="form" (ngSubmit)="saveDetails()">
+
+            <div class="section-block">
+              <h2 class="section-title">Basic Information</h2>
+              <div class="field-col">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Property title</mat-label>
+                  <mat-icon matPrefix>home</mat-icon>
+                  <input matInput formControlName="title" placeholder="e.g. 3BHK Villa in Chennai" />
+                  @if (form.controls.title.invalid && form.controls.title.touched) {
+                    <mat-error>Title is required</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Description</mat-label>
+                  <mat-icon matPrefix>description</mat-icon>
+                  <textarea matInput formControlName="description" rows="4" placeholder="Describe the property…"></textarea>
+                  @if (form.controls.description.invalid && form.controls.description.touched) {
+                    <mat-error>Description is required</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Property type</mat-label>
+                  <mat-icon matPrefix>category</mat-icon>
+                  <mat-select formControlName="propertyType">
+                    <mat-option value="IndependentHouse">Independent House</mat-option>
+                    <mat-option value="Villa">Villa</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="section-block">
+              <h2 class="section-title">Location</h2>
+              <div class="field-grid-2">
+
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Country</mat-label>
+                  <mat-icon matPrefix>public</mat-icon>
+                  <mat-select formControlName="countryCode" (selectionChange)="onCountryChange($event.value)">
+                    @for (c of countries; track c.isoCode) {
+                      <mat-option [value]="c.isoCode">{{ c.name }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>State</mat-label>
+                  <mat-icon matPrefix>map</mat-icon>
+                  <input matInput
+                    [matAutocomplete]="stateAuto"
+                    [value]="stateDisplay()"
+                    [disabled]="!form.controls.countryCode.value"
+                    (input)="onStateInput($any($event.target).value)"
+                    placeholder="Type to search state…" />
+                  <mat-autocomplete #stateAuto (optionSelected)="onStateSelected($event.option.value)">
+                    @for (s of filteredStates(); track s.isoCode) {
+                      <mat-option [value]="s">{{ s.name }}</mat-option>
+                    }
+                  </mat-autocomplete>
+                  @if (form.controls.state.invalid && form.controls.state.touched) {
+                    <mat-error>State is required</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>City</mat-label>
+                  <mat-icon matPrefix>location_city</mat-icon>
+                  <input matInput
+                    [matAutocomplete]="cityAuto"
+                    [value]="cityDisplay()"
+                    [disabled]="!stateCode()"
+                    (input)="onCityInput($any($event.target).value)"
+                    placeholder="Type to search city…" />
+                  <mat-autocomplete #cityAuto (optionSelected)="onCitySelected($event.option.value)">
+                    @for (c of filteredCities(); track c.name) {
+                      <mat-option [value]="c">{{ c.name }}</mat-option>
+                    }
+                  </mat-autocomplete>
+                  @if (form.controls.city.invalid && form.controls.city.touched) {
+                    <mat-error>City is required</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Pincode</mat-label>
+                  <mat-icon matPrefix>pin</mat-icon>
+                  <input matInput formControlName="pincode" placeholder="e.g. 600001" maxlength="6" />
+                  @if (form.controls.pincode.invalid && form.controls.pincode.touched) {
+                    <mat-error>Enter a valid 6-digit pincode</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full" style="grid-column: 1 / -1">
+                  <mat-label>Address line</mat-label>
+                  <mat-icon matPrefix>home_pin</mat-icon>
+                  <input matInput formControlName="addressLine" placeholder="Street, building, landmark" />
+                  @if (form.controls.addressLine.invalid && form.controls.addressLine.touched) {
+                    <mat-error>Address is required</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="section-block">
+              <h2 class="section-title">Specifications</h2>
+              <div class="field-grid-4">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Bedrooms</mat-label>
+                  <mat-icon matPrefix>bed</mat-icon>
+                  <input matInput type="number" formControlName="bedrooms" min="1" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Bathrooms</mat-label>
+                  <mat-icon matPrefix>bathtub</mat-icon>
+                  <input matInput type="number" formControlName="bathrooms" min="1" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Land area (sq ft)</mat-label>
+                  <mat-icon matPrefix>square_foot</mat-icon>
+                  <input matInput type="number" formControlName="landArea" min="0" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Buildup area (sq ft)</mat-label>
+                  <mat-icon matPrefix>straighten</mat-icon>
+                  <input matInput type="number" formControlName="buildupArea" min="0" />
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="section-block">
+              <h2 class="section-title">Pricing</h2>
+              <div class="field-grid-2">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Monthly rent (₹)</mat-label>
+                  <mat-icon matPrefix>currency_rupee</mat-icon>
+                  <input matInput type="number" formControlName="monthlyRent" min="1" />
+                  @if (form.controls.monthlyRent.invalid && form.controls.monthlyRent.touched) {
+                    <mat-error>Enter a valid rent amount</mat-error>
+                  }
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Security deposit (₹)</mat-label>
+                  <mat-icon matPrefix>savings</mat-icon>
+                  <input matInput type="number" formControlName="securityDeposit" min="0" />
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="section-block">
+              <h2 class="section-title">Amenities <span class="section-optional">(optional)</span></h2>
+              <div class="amenity-grid">
+                @for (a of amenityList; track a) {
+                  <button type="button" class="amenity-chip"
+                    [class.amenity-chip--selected]="isSelected(a)"
+                    (click)="toggleAmenity(a)">
+                    @if (isSelected(a)) {
+                      <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">check_circle</mat-icon>
+                    } @else {
+                      <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">add</mat-icon>
+                    }
+                    {{ a }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="section-block">
+              <h2 class="section-title">Pin Location on Map <span class="section-required">*</span></h2>
+              <p class="section-desc">Click the map to update coordinates. Your existing pin is shown.</p>
+              <div #mapEl class="map-container"></div>
+              <div class="field-grid-2" style="margin-top:16px">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Latitude (−90 to 90)</mat-label>
+                  <mat-icon matPrefix>my_location</mat-icon>
+                  <input matInput type="number" formControlName="latInput"
+                    min="-90" max="90" step="0.000001" (change)="onLatLngInput()" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Longitude (−180 to 180)</mat-label>
+                  <mat-icon matPrefix>explore</mat-icon>
+                  <input matInput type="number" formControlName="lngInput"
+                    min="-180" max="180" step="0.000001" (change)="onLatLngInput()" />
+                </mat-form-field>
+              </div>
+              @if (lat() !== null && lng() !== null) {
+                <p class="coord-label">Pinned at {{ lat() | number:'1.6-6' }}, {{ lng() | number:'1.6-6' }}</p>
+              }
+            </div>
+
+            <div class="step-footer">
+              <a mat-stroked-button class="!rounded-full !h-11 !px-8"
+                routerLink="/owner/dashboard" [queryParams]="{tab:'properties'}">
+                Cancel
+              </a>
+              <button type="submit" mat-flat-button color="primary"
+                class="!rounded-full !h-11 !px-8 !font-semibold"
+                [disabled]="saving()">
+                @if (saving()) {
+                  <mat-spinner diameter="18" style="display:inline-block;margin-right:8px" />
+                }
+                Save & Continue
+                <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">arrow_forward</mat-icon>
+              </button>
+            </div>
+
+          </form>
+        </div>
+      }
+
+      <!-- ── STEP 2: Media & Documents ─────────────────────────────── -->
+      @if (step() === 2) {
+        <div class="step-card">
+
+          <!-- Images -->
+          <div class="section-block">
+            <div class="section-header-row">
+              <h2 class="section-title">Property Images</h2>
+              <span class="section-count">{{ images().length }} / 10</span>
+            </div>
+            <p class="section-desc">Upload at least 1 photo. Max 10 total. First image is the primary thumbnail.</p>
+
+            @if (images().length > 0) {
+              <div class="img-grid">
+                @for (img of images(); track img.imageId) {
+                  <div class="img-card">
+                    <img [src]="propSvc.imageUrl(img.image)" [alt]="'Property image'" class="img-thumb" loading="lazy" decoding="async" />
+                    @if (img.isPrimary) {
+                      <span class="primary-badge">Primary</span>
+                    }
+                    <button type="button" class="img-delete-btn"
+                      [disabled]="deletingImageId() === img.imageId"
+                      (click)="deleteImage(img.imageId)">
+                      @if (deletingImageId() === img.imageId) {
+                        <mat-spinner diameter="14" />
+                      } @else {
+                        <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">delete</mat-icon>
+                      }
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (uploadingImages()) {
+              <mat-progress-bar mode="indeterminate" class="my-3" />
+            }
+
+            @if (images().length < 10) {
+              <input type="file" #imageInput multiple accept="image/*"
+                (change)="onImagesSelected($event)" style="display:none" />
+              <button type="button" mat-stroked-button class="!rounded-full !h-10 !px-5 !text-sm"
+                [disabled]="uploadingImages()"
+                (click)="imageInput.click()">
+                <mat-icon class="!text-[18px] !w-[18px] !h-[18px] mr-1">add_photo_alternate</mat-icon>
+                Add Images
+              </button>
+            }
+
+            @if (images().length === 0 && !uploadingImages()) {
+              <p class="requirement-hint">
+                <mat-icon class="!text-[16px] !w-[16px] !h-[16px]" style="color:#DC2626">error_outline</mat-icon>
+                At least 1 image is required
+              </p>
+            }
+          </div>
+
+          <div class="section-divider"></div>
+
+          <!-- Ownership Proof -->
+          <div class="section-block">
+            <h2 class="section-title">Ownership Proof</h2>
+            <p class="section-desc">Upload a document proving property ownership. Accepted: PDF, JPG, PNG (max 10 MB).</p>
+
+            @if (ownershipDoc(); as doc) {
+              <div class="doc-card">
+                <mat-icon style="color:var(--mat-sys-primary);font-size:28px;width:28px;height:28px">description</mat-icon>
+                <div class="doc-info">
+                  <span class="doc-name">{{ doc.originalFileName }}</span>
+                  <span class="doc-date">Uploaded {{ doc.uploadedAt | date:'d MMM y' }}</span>
+                </div>
+                <app-status-badge [status]="doc.reviewStatus" />
+                <a [href]="propSvc.fileUrl(doc.documentUrl)" target="_blank" mat-icon-button>
+                  <mat-icon>open_in_new</mat-icon>
+                </a>
+              </div>
+              <p class="section-desc">Upload a new file to replace</p>
+            }
+
+            @if (uploadingDoc()) {
+              <mat-progress-bar mode="indeterminate" class="my-3" />
+            }
+
+            <input type="file" #docInput accept=".pdf,.jpg,.jpeg,.png"
+              (change)="onDocSelected($event)" style="display:none" />
+            <button type="button" mat-stroked-button class="!rounded-full !h-10 !px-5 !text-sm"
+              [disabled]="uploadingDoc()"
+              (click)="docInput.click()">
+              <mat-icon class="!text-[18px] !w-[18px] !h-[18px] mr-1">upload_file</mat-icon>
+              {{ ownershipDoc() ? 'Replace Document' : 'Upload Ownership Proof' }}
+            </button>
+
+            @if (!ownershipDoc() && !uploadingDoc()) {
+              <p class="requirement-hint">
+                <mat-icon class="!text-[16px] !w-[16px] !h-[16px]" style="color:#DC2626">error_outline</mat-icon>
+                Ownership proof document is required
+              </p>
+            }
+          </div>
+
+          <div class="step-footer">
+            <button type="button" mat-stroked-button class="!rounded-full !h-11 !px-8"
+              (click)="step.set(1)">
+              <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">arrow_back</mat-icon>
+              Back
+            </button>
+            <button type="button" mat-flat-button color="primary"
+              class="!rounded-full !h-11 !px-8 !font-semibold"
+              [disabled]="!canProceedToReview()"
+              (click)="step.set(3)">
+              Continue to Review
+              <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">arrow_forward</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- ── STEP 3: Review & Submit ────────────────────────────────── -->
+      @if (step() === 3) {
+        <div class="step-card">
+          <div class="review-icon">
+            <mat-icon style="font-size:48px;width:48px;height:48px;color:var(--mat-sys-primary)">check_circle</mat-icon>
+          </div>
+          <h2 class="review-title">Ready to Submit</h2>
+          <p class="section-desc" style="text-align:center;margin-bottom:28px">
+            Review your property details before submitting for admin approval.
+          </p>
+
+          <div class="review-card">
+            <div class="review-row">
+              <span class="review-label">Title</span>
+              <span class="review-value">{{ p.title }}</span>
+            </div>
+            <div class="review-row">
+              <span class="review-label">Location</span>
+              <span class="review-value">{{ p.city }}, {{ p.state }}</span>
+            </div>
+            <div class="review-row">
+              <span class="review-label">Type</span>
+              <span class="review-value">{{ p.propertyType }}</span>
+            </div>
+            <div class="review-row">
+              <span class="review-label">Bedrooms / Bathrooms</span>
+              <span class="review-value">{{ p.bedrooms }} BHK / {{ p.bathrooms }} Bath</span>
+            </div>
+            <div class="review-row">
+              <span class="review-label">Monthly Rent</span>
+              <span class="review-value">₹{{ p.monthlyRent | number }}</span>
+            </div>
+            <div class="review-row">
+              <span class="review-label">Security Deposit</span>
+              <span class="review-value">₹{{ p.securityDeposit | number }}</span>
+            </div>
+            <div class="review-row">
+              <span class="review-label">Images</span>
+              <span class="review-value">{{ images().length }} uploaded</span>
+            </div>
+            <div class="review-row">
+              <span class="review-label">Ownership Proof</span>
+              <span class="review-value" style="color:#16A34A">
+                <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">check</mat-icon>
+                Uploaded
+              </span>
+            </div>
+          </div>
+
+          <p class="section-desc" style="margin-top:16px;text-align:center">
+            Once submitted, an admin will review your property. You'll be notified when it's approved.
+          </p>
+
+          <div class="step-footer" style="justify-content:center;flex-direction:column;align-items:center;gap:12px">
+            <button type="button" mat-flat-button color="primary"
+              class="!rounded-full !h-12 !px-10 !font-semibold"
+              [disabled]="submitting()"
+              (click)="submitForApproval()">
+              @if (submitting()) {
+                <mat-spinner diameter="18" style="display:inline-block;margin-right:8px" />
+              }
+              Submit for Admin Review
+            </button>
+            <button type="button" mat-button class="!text-es-muted"
+              (click)="step.set(2)">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">arrow_back</mat-icon>
+              Back to Media
+            </button>
+          </div>
+        </div>
+      }
+
+    </div>
+
+  } @else {
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         NON-DRAFT (Rejected / Active / Leased / etc.) — long-form edit
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div class="edit-page">
+
+      <div class="edit-header">
+        <a routerLink="/owner/dashboard" [queryParams]="{ tab: 'properties' }" class="back-link">
+          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">arrow_back</mat-icon>
+          My properties
+        </a>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div>
+            <h1 class="page-title">{{ p.title }}</h1>
+            <p class="page-sub">{{ p.city }}, {{ p.state }}</p>
+          </div>
+          <app-status-badge [status]="p.status" />
+        </div>
+      </div>
+
+      <form [formGroup]="form" class="edit-body" (ngSubmit)="save()">
+
+        <section class="edit-section">
+          <h2 class="section-title">Basic information</h2>
+          <div class="field-col">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Property title</mat-label>
+              <mat-icon matPrefix>home</mat-icon>
+              <input matInput formControlName="title" placeholder="e.g. 3BHK villa in Whitefield" />
+              @if (form.controls.title.invalid && form.controls.title.touched) {
+                <mat-error>Title is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Description</mat-label>
+              <mat-icon matPrefix>description</mat-icon>
+              <textarea matInput formControlName="description" rows="4" placeholder="Describe the property…"></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Property type</mat-label>
+              <mat-icon matPrefix>category</mat-icon>
+              <mat-select formControlName="propertyType">
+                <mat-option value="IndependentHouse">Independent House</mat-option>
+                <mat-option value="Villa">Villa</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <section class="edit-section">
+          <h2 class="section-title">Location</h2>
+          <div class="field-grid-2">
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Country</mat-label>
+              <mat-icon matPrefix>public</mat-icon>
+              <mat-select formControlName="countryCode" (selectionChange)="onCountryChange($event.value)">
+                @for (c of countries; track c.isoCode) {
+                  <mat-option [value]="c.isoCode">{{ c.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>State</mat-label>
+              <mat-icon matPrefix>map</mat-icon>
+              <input matInput
+                [matAutocomplete]="stateAutoLF"
+                [value]="stateDisplay()"
+                [disabled]="!form.controls.countryCode.value"
+                (input)="onStateInput($any($event.target).value)"
+                placeholder="Type to search state…" />
+              <mat-autocomplete #stateAutoLF (optionSelected)="onStateSelected($event.option.value)">
+                @for (s of filteredStates(); track s.isoCode) {
+                  <mat-option [value]="s">{{ s.name }}</mat-option>
+                }
+              </mat-autocomplete>
+              @if (form.controls.state.invalid && form.controls.state.touched) {
+                <mat-error>State is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>City</mat-label>
+              <mat-icon matPrefix>location_city</mat-icon>
+              <input matInput
+                [matAutocomplete]="cityAutoLF"
+                [value]="cityDisplay()"
+                [disabled]="!stateCode()"
+                (input)="onCityInput($any($event.target).value)"
+                placeholder="Type to search city…" />
+              <mat-autocomplete #cityAutoLF (optionSelected)="onCitySelected($event.option.value)">
+                @for (c of filteredCities(); track c.name) {
+                  <mat-option [value]="c">{{ c.name }}</mat-option>
+                }
+              </mat-autocomplete>
+              @if (form.controls.city.invalid && form.controls.city.touched) {
+                <mat-error>City is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Pincode</mat-label>
+              <mat-icon matPrefix>pin</mat-icon>
+              <input matInput formControlName="pincode" placeholder="e.g. 600001" maxlength="6" />
+              @if (form.controls.pincode.invalid && form.controls.pincode.touched) {
+                <mat-error>Enter a valid 6-digit pincode</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full" style="grid-column: 1 / -1">
+              <mat-label>Address line</mat-label>
+              <mat-icon matPrefix>home_pin</mat-icon>
+              <input matInput formControlName="addressLine" />
+              @if (form.controls.addressLine.invalid && form.controls.addressLine.touched) {
+                <mat-error>Address is required</mat-error>
+              }
+            </mat-form-field>
+          </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <section class="edit-section">
+          <h2 class="section-title">Specifications</h2>
+          <div class="field-grid-4">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Bedrooms</mat-label>
+              <mat-icon matPrefix>bed</mat-icon>
+              <input matInput type="number" formControlName="bedrooms" min="1" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Bathrooms</mat-label>
+              <mat-icon matPrefix>bathtub</mat-icon>
+              <input matInput type="number" formControlName="bathrooms" min="1" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Land area (sq ft)</mat-label>
+              <mat-icon matPrefix>square_foot</mat-icon>
+              <input matInput type="number" formControlName="landArea" min="0" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Buildup area (sq ft)</mat-label>
+              <mat-icon matPrefix>straighten</mat-icon>
+              <input matInput type="number" formControlName="buildupArea" min="0" />
+            </mat-form-field>
+          </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <section class="edit-section">
+          <h2 class="section-title">Pricing</h2>
+          <div class="field-grid-2">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Monthly rent (₹)</mat-label>
+              <mat-icon matPrefix>currency_rupee</mat-icon>
+              <input matInput type="number" formControlName="monthlyRent" min="1" />
+              @if (form.controls.monthlyRent.invalid && form.controls.monthlyRent.touched) {
+                <mat-error>Enter a valid rent amount</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Security deposit (₹)</mat-label>
+              <mat-icon matPrefix>savings</mat-icon>
+              <input matInput type="number" formControlName="securityDeposit" min="0" />
+            </mat-form-field>
+          </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <section class="edit-section">
+          <h2 class="section-title">Amenities</h2>
+          <div class="amenity-grid">
+            @for (a of amenityList; track a) {
+              <button type="button"
+                class="amenity-chip"
+                [class.amenity-chip--selected]="isSelected(a)"
+                (click)="toggleAmenity(a)">
+                @if (isSelected(a)) {
+                  <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">check_circle</mat-icon>
+                } @else {
+                  <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">add</mat-icon>
+                }
+                {{ a }}
+              </button>
+            }
+          </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <section class="edit-section">
+          <h2 class="section-title">Location on map</h2>
+          <p style="font-size:13px;color:#717171;margin-bottom:16px">
+            Click the map to update your property's exact location.
+          </p>
+          <div #mapEl class="map-container"></div>
+          <div class="field-grid-2" style="margin-top:16px">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Latitude (−90 to 90)</mat-label>
+              <mat-icon matPrefix>my_location</mat-icon>
+              <input matInput type="number" formControlName="latInput"
+                min="-90" max="90" step="0.000001" (change)="onLatLngInput()" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Longitude (−180 to 180)</mat-label>
+              <mat-icon matPrefix>explore</mat-icon>
+              <input matInput type="number" formControlName="lngInput"
+                min="-180" max="180" step="0.000001" (change)="onLatLngInput()" />
+            </mat-form-field>
+          </div>
+          @if (lat() !== null && lng() !== null) {
+            <p style="font-size:12px;color:#717171;margin-top:4px">
+              Pinned at {{ lat() | number:'1.6-6' }}, {{ lng() | number:'1.6-6' }}
+            </p>
+          }
+        </section>
+
+        <div class="section-divider"></div>
+
+        <section class="edit-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <h2 class="section-title" style="margin:0">Property Images</h2>
+            <span style="font-size:13px;color:#717171;font-weight:600">{{ images().length }} / 10</span>
+          </div>
+          <p style="font-size:13px;color:#717171;margin-bottom:16px">
+            At least 1 image required before submitting for review.
+          </p>
+
+          @if (images().length > 0) {
+            <div class="img-grid">
+              @for (img of images(); track img.imageId) {
+                <div class="img-card">
+                  <img [src]="propSvc.imageUrl(img.image)" alt="Property image" class="img-thumb" loading="lazy" decoding="async" />
+                  @if (img.isPrimary) {
+                    <span class="primary-badge">Primary</span>
+                  }
+                  <button type="button" class="img-delete-btn"
+                    [disabled]="deletingImageId() === img.imageId"
+                    (click)="deleteImage(img.imageId)">
+                    @if (deletingImageId() === img.imageId) {
+                      <mat-spinner diameter="14" />
+                    } @else {
+                      <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">delete</mat-icon>
+                    }
+                  </button>
+                </div>
+              }
+            </div>
+          }
+
+          @if (uploadingImages()) {
+            <mat-progress-bar mode="indeterminate" class="my-3" />
+          }
+
+          @if (images().length < 10) {
+            <input type="file" #imageInput multiple accept="image/*"
+              (change)="onImagesSelected($event)" style="display:none" />
+            <button type="button" mat-stroked-button class="!rounded-full !h-10 !px-5 !text-sm"
+              [disabled]="uploadingImages()"
+              (click)="imageInput.click()">
+              <mat-icon class="!text-[18px] !w-[18px] !h-[18px] mr-1">add_photo_alternate</mat-icon>
+              Add Images
+            </button>
+          }
+
+          @if (canSubmit() && images().length === 0 && !uploadingImages()) {
+            <p class="requirement-hint">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px]" style="color:#DC2626">error_outline</mat-icon>
+              At least 1 image is required before submitting
+            </p>
+          }
+        </section>
+
+        <div class="section-divider"></div>
+
+        <section class="edit-section">
+          <h2 class="section-title">Ownership Proof</h2>
+          <p style="font-size:13px;color:#717171;margin-bottom:16px">
+            Required before submitting for review. Accepted: PDF, JPG, PNG (max 10 MB).
+          </p>
+
+          @if (ownershipDoc(); as doc) {
+            <div class="doc-card">
+              <mat-icon style="color:var(--mat-sys-primary);font-size:28px;width:28px;height:28px">description</mat-icon>
+              <div class="doc-info">
+                <span class="doc-name">{{ doc.originalFileName }}</span>
+                <span class="doc-date">Uploaded {{ doc.uploadedAt | date:'d MMM y' }}</span>
+              </div>
+              <app-status-badge [status]="doc.reviewStatus" />
+              <a [href]="propSvc.fileUrl(doc.documentUrl)" target="_blank" mat-icon-button>
+                <mat-icon>open_in_new</mat-icon>
+              </a>
+            </div>
+            <p style="font-size:12px;color:#717171;margin-bottom:12px">Upload a new file to replace</p>
+          }
+
+          @if (uploadingDoc()) {
+            <mat-progress-bar mode="indeterminate" class="my-3" />
+          }
+
+          @if (canSubmit()) {
+            <input type="file" #docInput accept=".pdf,.jpg,.jpeg,.png"
+              (change)="onDocSelected($event)" style="display:none" />
+            <button type="button" mat-stroked-button class="!rounded-full !h-10 !px-5 !text-sm"
+              [disabled]="uploadingDoc()"
+              (click)="docInput.click()">
+              <mat-icon class="!text-[18px] !w-[18px] !h-[18px] mr-1">upload_file</mat-icon>
+              {{ ownershipDoc() ? 'Replace Document' : 'Upload Ownership Proof' }}
+            </button>
+          }
+
+          @if (canSubmit() && !ownershipDoc() && !uploadingDoc()) {
+            <p class="requirement-hint">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px]" style="color:#DC2626">error_outline</mat-icon>
+              Ownership proof document is required before submitting
+            </p>
+          }
+        </section>
+
+        <div class="edit-footer">
+          <a mat-stroked-button class="!rounded-full !h-11 !px-8"
+            routerLink="/owner/dashboard" [queryParams]="{ tab: 'properties' }">
+            Cancel
+          </a>
+          <div class="flex gap-3 flex-wrap items-center">
+            <button type="button" mat-stroked-button
+              class="!rounded-full !h-11 !px-8 !font-semibold"
+              [disabled]="saving() || submitting()"
+              (click)="save(false)">
+              @if (saving()) {
+                <mat-spinner diameter="18" style="display:inline-block;margin-right:8px" />
+              }
+              Save changes
+            </button>
+
+            @if (canSubmit()) {
+              @if (!submitReady()) {
+                <p style="font-size:12px;color:#B45309;margin:0">
+                  Upload ≥1 image and ownership proof to enable submission
+                </p>
+              }
+              <button type="button" mat-flat-button color="primary"
+                class="!rounded-full !h-11 !px-8 !font-semibold"
+                [disabled]="saving() || submitting() || !submitReady()"
+                (click)="save(true)">
+                @if (submitting()) {
+                  <mat-spinner diameter="18" style="display:inline-block;margin-right:8px" />
+                }
+                Submit for admin review
+              </button>
+            }
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+  }
+}

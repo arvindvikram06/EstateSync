@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
 
@@ -44,7 +45,7 @@ public class PropertyStatusUpdateScheduler : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         var leaseRepo = scope.ServiceProvider.GetRequiredService<ILeaseRepository>();
-        var notificationRepo = scope.ServiceProvider.GetRequiredService<INotificationRepository>();
+        var notificationSender = scope.ServiceProvider.GetRequiredService<INotificationSender>();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
         var targetDate = DateTime.UtcNow.AddMonths(3);
@@ -62,7 +63,7 @@ public class PropertyStatusUpdateScheduler : BackgroundService
                 _logger.LogInformation("Background Scheduler: Updated Property {PropertyId} status to AvailableSoon because active lease ends on {EndDate}",
                     lease.PropertyId, lease.EndDate);
 
-                await notificationRepo.AddAsync(new Notification
+                await notificationSender.SendAsync(new Notification
                 {
                     NotificationId = Guid.NewGuid(),
                     UserId = lease.TenantId,
@@ -75,7 +76,7 @@ public class PropertyStatusUpdateScheduler : BackgroundService
                     CreatedAt = DateTime.UtcNow
                 });
 
-                await notificationRepo.AddAsync(new Notification
+                await notificationSender.SendAsync(new Notification
                 {
                     NotificationId = Guid.NewGuid(),
                     UserId = lease.Property.OwnerId,

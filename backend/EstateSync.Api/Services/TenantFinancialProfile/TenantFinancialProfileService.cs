@@ -9,6 +9,7 @@ using EstateSync.Api.Common;
 using EstateSync.Api.DTOs.TenantFinancialProfile;
 using EstateSync.Api.DTOs.Users;
 using EstateSync.Api.Exceptions;
+using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Interfaces.Services.Storage;
 using EstateSync.Api.Interfaces.Services.TenantFinancialProfile;
 using EstateSync.Api.Mappers;
@@ -30,7 +31,7 @@ public class TenantFinancialProfileService : ITenantFinancialProfileService
     private readonly ITenantFinancialProfileRepository _profileRepo;
     private readonly IDocumentRepository _documentRepo;
     private readonly IUserRepository _userRepo;
-    private readonly INotificationRepository _notificationRepo;
+    private readonly INotificationSender _notificationSender;
     private readonly IFileStorageService _fileStorageService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly UserMapper _mapper;
@@ -40,7 +41,7 @@ public class TenantFinancialProfileService : ITenantFinancialProfileService
         ITenantFinancialProfileRepository profileRepo,
         IDocumentRepository documentRepo,
         IUserRepository userRepo,
-        INotificationRepository notificationRepo,
+        INotificationSender notificationSender,
         IFileStorageService fileStorageService,
         IUnitOfWork unitOfWork,
         UserMapper mapper,
@@ -49,7 +50,7 @@ public class TenantFinancialProfileService : ITenantFinancialProfileService
         _profileRepo = profileRepo ?? throw new ArgumentNullException(nameof(profileRepo));
         _documentRepo = documentRepo ?? throw new ArgumentNullException(nameof(documentRepo));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
-        _notificationRepo = notificationRepo ?? throw new ArgumentNullException(nameof(notificationRepo));
+        _notificationSender = notificationSender ?? throw new ArgumentNullException(nameof(notificationSender));
         _fileStorageService = fileStorageService ?? throw new ArgumentNullException(nameof(fileStorageService));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
@@ -243,7 +244,7 @@ public class TenantFinancialProfileService : ITenantFinancialProfileService
             }
         }
 
-        await _notificationRepo.AddAsync(new Notification
+        await _notificationSender.SendAsync(new Notification
         {
             NotificationId = Guid.NewGuid(),
             UserId = profile.TenantId,

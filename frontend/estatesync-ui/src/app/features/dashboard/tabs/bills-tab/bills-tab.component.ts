@@ -20,6 +20,7 @@ import { PayConfirmDialogComponent } from './pay-confirm-dialog.component';
   imports: [MatIconModule, MatButtonModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent, LoadingButtonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bills-tab.component.html',
+  styleUrl: './bills-tab.component.css',
 })
 export class BillsTabComponent implements OnInit {
   private readonly svc        = inject(PaymentService);
@@ -52,11 +53,13 @@ export class BillsTabComponent implements OnInit {
       data: { bill },
       maxWidth: 420,
     });
-    ref.afterClosed().subscribe(confirmed => {
+    ref.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(confirmed => {
       if (!confirmed) return;
       this.payingId.set(bill.leaseBillId);
-      this.svc.createCheckoutSession(bill.leaseBillId).subscribe({
-        next: res => { window.location.href = res.data.checkoutUrl; },
+      this.svc.createCheckoutSession(bill.leaseBillId).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: res => { window.location.href = res.data.url; },
         error: () => this.payingId.set(null),
       });
     });

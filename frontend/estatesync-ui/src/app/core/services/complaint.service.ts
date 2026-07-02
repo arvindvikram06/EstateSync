@@ -17,4 +17,12 @@ export class ComplaintService {
   createComplaint(body: CreateComplaintRequest): Observable<ApiResponse<ComplaintResponse>> {
     return this.http.post<ApiResponse<ComplaintResponse>>(this.baseUrl, body);
   }
+
+  getOwnerComplaints(): Observable<ApiResponse<ComplaintResponse[]>> {
+    return this.http.get<ApiResponse<ComplaintResponse[]>>(this.baseUrl);
+  }
+
+  updateComplaintStatus(id: string, body: { status: string }): Observable<ApiResponse<ComplaintResponse>> {
+    return this.http.put<ApiResponse<ComplaintResponse>>(`${this.baseUrl}/${id}/status`, body);
+  }
 }

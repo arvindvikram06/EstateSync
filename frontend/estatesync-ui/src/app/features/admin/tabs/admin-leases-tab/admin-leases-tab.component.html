@@ -1,0 +1,112 @@
+<div class="flex items-center justify-between mb-5">
+  <h2 style="font-size:20px;font-weight:700;color:#222;margin:0">Lease Approvals</h2>
+  @if (pendingCount() > 0) {
+    <span class="es-badge es-badge--pending">{{ pendingCount() }} pending review</span>
+  }
+</div>
+
+<!-- Filter tabs -->
+<div class="filter-tabs mb-5">
+  @for (tab of filterTabs; track tab.id) {
+    <button class="filter-tab" [class.filter-tab--active]="filter() === tab.id"
+      (click)="setFilter(tab.id)">
+      {{ tab.label }}
+    </button>
+  }
+</div>
+
+@if (loading()) {
+  <div class="flex items-center gap-3 py-8 text-sm text-es-muted">
+    <mat-spinner diameter="24" /><span>Loading…</span>
+  </div>
+} @else if (filtered().length === 0) {
+  <app-empty-state icon="article" title="No leases"
+    [subtitle]="filter() === 'PendingAdminApproval' ? 'No leases awaiting approval.' : 'No leases in this category.'" />
+} @else {
+  <div class="flex flex-col gap-4">
+    @for (lease of filtered(); track lease.leaseId) {
+      <div class="lease-card">
+        <!-- Header -->
+        <div class="lease-header">
+          <div class="flex-1 min-w-0">
+            <div style="font-size:15px;font-weight:700;color:#222">{{ lease.propertyTitle ?? '—' }}</div>
+            <div style="font-size:12px;color:#717171;margin-top:2px">{{ lease.propertyAddress ?? '' }}</div>
+            <div class="flex gap-4 mt-2 text-xs text-es-muted">
+              @if (lease.tenantName) {
+                <span>
+                  <mat-icon class="!text-[13px] !w-[13px] !h-[13px] align-middle">person</mat-icon>
+                  Tenant: <strong class="text-es-text">{{ lease.tenantName }}</strong>
+                </span>
+              }
+              @if (lease.ownerName) {
+                <span>
+                  <mat-icon class="!text-[13px] !w-[13px] !h-[13px] align-middle">home</mat-icon>
+                  Owner: <strong class="text-es-text">{{ lease.ownerName }}</strong>
+                </span>
+              }
+            </div>
+          </div>
+          <app-status-badge [status]="lease.status" />
+        </div>
+
+        <!-- Details grid -->
+        <div class="lease-grid">
+          <div class="lease-detail">
+            <span class="detail-label">Start</span>
+            <span class="detail-value">{{ formatDate(lease.startDate) }}</span>
+          </div>
+          <div class="lease-detail">
+            <span class="detail-label">End</span>
+            <span class="detail-value">{{ formatDate(lease.endDate) }}</span>
+          </div>
+          <div class="lease-detail">
+            <span class="detail-label">Rent</span>
+            <span class="detail-value">{{ formatCurrency(lease.monthlyRent) }}/mo</span>
+          </div>
+          <div class="lease-detail">
+            <span class="detail-label">Deposit</span>
+            <span class="detail-value">{{ formatCurrency(lease.securityDeposit) }}</span>
+          </div>
+        </div>
+
+        <!-- Signing status -->
+        <div class="sign-row">
+          <span class="sign-indicator" [style.color]="lease.ownerSignedAt ? '#059669' : '#9CA3AF'">
+            <mat-icon class="!text-[15px] !w-[15px] !h-[15px] align-middle">
+              {{ lease.ownerSignedAt ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            Owner {{ lease.ownerSignedAt ? 'signed' : 'pending' }}
+          </span>
+          <span class="sign-indicator" [style.color]="lease.tenantSignedAt ? '#059669' : '#9CA3AF'">
+            <mat-icon class="!text-[15px] !w-[15px] !h-[15px] align-middle">
+              {{ lease.tenantSignedAt ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            Tenant {{ lease.tenantSignedAt ? 'signed' : 'pending' }}
+          </span>
+        </div>
+
+        <!-- Actions -->
+        <div class="lease-actions">
+          <a mat-stroked-button class="!rounded-full !h-9 !px-4 !text-sm"
+            [routerLink]="['/leases', lease.leaseId]">
+            View
+          </a>
+          @if (lease.agreementPdfUrl) {
+            <a mat-stroked-button class="!rounded-full !h-9 !px-4 !text-sm"
+              [href]="lease.agreementPdfUrl" target="_blank">
+              <mat-icon class="!text-[15px] !w-[15px] !h-[15px] mr-1">download</mat-icon>
+              Agreement
+            </a>
+          }
+          @if (lease.status === 'PendingAdminApproval') {
+            <button mat-flat-button color="primary" class="!rounded-full !h-9 !px-5 !text-sm"
+              (click)="openApproveDialog(lease)">
+              <mat-icon class="!text-[15px] !w-[15px] !h-[15px] mr-1">rate_review</mat-icon>
+              Review
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}

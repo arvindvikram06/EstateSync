@@ -1,0 +1,19 @@
+<app-dashboard-layout
+  [title]="'Verification Portal'"
+  [subtitle]="''"
+  [navItems]="navItems"
+  [activeTab]="activeTab()"
+  [topOffset]="0"
+  (tabChange)="setTab($event)">
+
+  @if (activeTab() === 'overview') {
+    <app-verifier-overview-tab (tabSwitch)="setTab($event)" />
+  }
+  @if (activeTab() === 'kyc') {
+    <app-admin-kyc-tab />
+  }
+  @if (activeTab() === 'financial-profiles') {
+    <app-admin-financial-profiles-tab />
+  }
+
+</app-dashboard-layout>

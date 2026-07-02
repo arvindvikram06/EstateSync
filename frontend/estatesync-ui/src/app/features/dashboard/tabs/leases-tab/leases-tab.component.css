@@ -1,0 +1,46 @@
+.lease-card {
+  border: 1px solid #EBEBEB;
+  border-radius: 14px;
+  overflow: hidden;
+  background: white;
+}
+
+.lease-card__header {
+  padding: 18px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #EBEBEB;
+}
+
+.lease-card__stats {
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  overflow-x: auto;
+}
+
+@media (max-width: 480px) {
+  .lease-card__stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.lease-stat__label {
+  font-size: 11px;
+  color: #717171;
+}
+
+.lease-stat__value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #222;
+  margin-top: 2px;
+}
+
+.lease-card__actions {
+  padding: 0 20px 16px;
+  display: flex;
+  gap: 8px;
+}

@@ -1,4 +1,3 @@
-using System;
 using EstateSync.Api.Models;
 
 namespace EstateSync.Api.DTOs.Properties;
@@ -8,7 +7,9 @@ public abstract record PropertyRequestBase
     public required string Title { get; init; }
     public required string Description { get; init; }
     public PropertyType PropertyType { get; init; }
-    public Guid LocationId { get; init; }
+    public required string State { get; init; }
+    public required string City { get; init; }
+    public required string Pincode { get; init; }
     public required string AddressLine { get; init; }
     public decimal? Latitude { get; init; }
     public decimal? Longitude { get; init; }

@@ -66,7 +66,7 @@ public class PropertyApprovalServiceTests
                 {
                     Document = new Document
                     {
-                        DocumentType = DocumentType.OwnerShipProof,
+                        DocumentType = DocumentType.OwnershipCertificate,
                         DocumentUrl = "/docs/deed.pdf",
                         OriginalFileName = "deed.pdf",
                         MimeType = "application/pdf"
@@ -128,7 +128,7 @@ public class PropertyApprovalServiceTests
                 {
                     Document = new Document
                     {
-                        DocumentType = DocumentType.OwnerShipProof,
+                        DocumentType = DocumentType.OwnershipCertificate,
                         DocumentUrl = "/docs/deed.pdf",
                         OriginalFileName = "deed.pdf",
                         MimeType = "application/pdf"

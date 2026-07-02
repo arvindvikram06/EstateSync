@@ -1,0 +1,37 @@
+<app-dashboard-layout
+  [title]="'Admin Dashboard'"
+  [subtitle]="''"
+  [navItems]="navItems()"
+  [activeTab]="activeTab()"
+  [topOffset]="0"
+  (tabChange)="setTab($event)">
+
+  @if (activeTab() === 'overview') {
+    <app-admin-overview-tab (tabSwitch)="setTab($event)" />
+  }
+  @if (activeTab() === 'kyc') {
+    <app-admin-kyc-tab />
+  }
+  @if (activeTab() === 'financial-profiles') {
+    <app-admin-financial-profiles-tab />
+  }
+  @if (activeTab() === 'properties') {
+    <app-admin-properties-tab />
+  }
+  @if (activeTab() === 'leases') {
+    <app-admin-leases-tab (pendingCountChange)="updateLeaseBadge($event)" />
+  }
+  @if (activeTab() === 'verifiers') {
+    <app-admin-verifiers-tab />
+  }
+  @if (activeTab() === 'financial') {
+    <app-admin-financial-tab />
+  }
+  @if (activeTab() === 'complaints') {
+    <app-admin-complaints-tab />
+  }
+  @if (activeTab() === 'audit-logs') {
+    <app-admin-audit-logs-tab />
+  }
+
+</app-dashboard-layout>

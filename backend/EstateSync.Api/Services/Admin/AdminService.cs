@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -81,4 +82,11 @@ public class AdminService : IAdminService
 
     public Task ApproveLeaseAsync(Guid leaseId, bool approve, string? remarks, Guid adminId, CancellationToken ct = default)
         => _leaseService.AdminApproveLeaseAsync(leaseId, approve, remarks, adminId, ct);
+
+    public async Task<IEnumerable<StaffResponse>> GetStaffAsync(CancellationToken ct = default)
+    {
+        var verifiers = await _userRepo.GetUsersByRoleAsync("Verifier");
+        return verifiers.Select(u => new StaffResponse(
+            u.UserId, u.FullName, u.Email, u.PhoneNumber, u.IsActive, u.CreatedAt));
+    }
 }

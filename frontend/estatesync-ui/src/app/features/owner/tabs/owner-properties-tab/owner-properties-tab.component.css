@@ -1,0 +1,44 @@
+.tab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.filter-pill {
+  border: 1px solid #DDDDDD;
+  background: white;
+  color: #444;
+  border-radius: 20px;
+  padding: 5px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-pill--active {
+  border-color: var(--mat-sys-primary);
+  background: #EDE9F8;
+  color: var(--mat-sys-primary);
+  font-weight: 600;
+}
+
+.prop-card {
+  background: white;
+  border: 1px solid #EBEBEB;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.prop-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(103, 80, 164, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

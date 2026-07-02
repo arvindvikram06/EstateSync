@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -23,5 +23,5 @@ export class AlertBannerComponent {
   readonly message = input.required<string>();
   readonly type    = input<AlertType>('error');
 
-  get icon(): string { return ICON_MAP[this.type()]; }
+  readonly icon = computed(() => ICON_MAP[this.type()]);
 }

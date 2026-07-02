@@ -9,6 +9,7 @@ using EstateSync.Api.Exceptions;
 using EstateSync.Api.Mappers;
 using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
+using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Interfaces.Services.Properties;
 
 namespace EstateSync.Api.Services.Properties;
@@ -17,7 +18,7 @@ public class PropertyApprovalService : IPropertyApprovalService
 {
     private readonly IPropertyRepository _propertyRepo;
     private readonly IUserRepository _userRepo;
-    private readonly INotificationRepository _notificationRepo;
+    private readonly INotificationSender _notificationSender;
     private readonly IUnitOfWork _unitOfWork;
     private readonly PropertyMapper _mapper;
     private readonly ILogger<PropertyApprovalService> _logger;
@@ -25,14 +26,14 @@ public class PropertyApprovalService : IPropertyApprovalService
     public PropertyApprovalService(
         IPropertyRepository propertyRepo,
         IUserRepository userRepo,
-        INotificationRepository notificationRepo,
+        INotificationSender notificationSender,
         IUnitOfWork unitOfWork,
         PropertyMapper mapper,
         ILogger<PropertyApprovalService> logger)
     {
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
-        _notificationRepo = notificationRepo ?? throw new ArgumentNullException(nameof(notificationRepo));
+        _notificationSender = notificationSender ?? throw new ArgumentNullException(nameof(notificationSender));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -51,10 +52,10 @@ public class PropertyApprovalService : IPropertyApprovalService
             throw new ForbiddenException("You do not own this property.");
         }
 
-        if (property.PropertyDocuments == null || 
-            !property.PropertyDocuments.Any(pd => pd.Document != null && pd.Document.DocumentType == DocumentType.OwnerShipProof))
+        if (property.PropertyDocuments == null ||
+            !property.PropertyDocuments.Any(pd => pd.Document != null && pd.Document.DocumentType == DocumentType.OwnershipCertificate))
         {
-            throw new BadRequestException("You must upload a property ownership document (OwnerShipProof) before submitting for approval.");
+            throw new BadRequestException("You must upload a property ownership document before submitting for approval.");
         }
 
         if (property.PropertyImages == null || !property.PropertyImages.Any())
@@ -154,7 +155,7 @@ public class PropertyApprovalService : IPropertyApprovalService
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow
             };
-            await _notificationRepo.AddAsync(notification);
+            await _notificationSender.SendAsync(notification);
         }
     }
 
@@ -177,6 +178,6 @@ public class PropertyApprovalService : IPropertyApprovalService
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };
-        await _notificationRepo.AddAsync(notification);
+        await _notificationSender.SendAsync(notification);
     }
 }

@@ -1,8 +1,10 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, effect, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { KycStore } from '../../core/stores/kyc.store';
 import { FinancialStore } from '../../core/stores/financial.store';
+import { PaymentService } from '../../core/services/payment.service';
 import { DashboardLayoutComponent, NavItem } from '../../shared/components/dashboard-layout/dashboard-layout.component';
 import { OverviewTabComponent } from './tabs/overview-tab/overview-tab.component';
 import { ApplicationsTabComponent } from './tabs/applications-tab/applications-tab.component';
@@ -30,10 +32,12 @@ import { VerificationsTabComponent } from './tabs/verifications-tab/verification
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent implements OnInit {
-  readonly kycStore = inject(KycStore);
-  readonly finStore = inject(FinancialStore);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  readonly kycStore              = inject(KycStore);
+  readonly finStore              = inject(FinancialStore);
+  private readonly paymentService = inject(PaymentService);
+  private readonly destroyRef    = inject(DestroyRef);
+  private readonly route         = inject(ActivatedRoute);
+  private readonly router        = inject(Router);
 
   constructor() {
     effect(() => {
@@ -41,39 +45,54 @@ export class DashboardComponent implements OnInit {
         this.finStore.loadExisting();
       }
     });
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {
+      const tab = params.get('tab');
+      if (tab) this.activeTab.set(tab);
+    });
   }
 
   readonly activeTab = signal('overview');
 
-  // Convenience aliases surfaced from the store — no duplicate API call
   readonly latestKyc = this.kycStore.kyc;
 
-  readonly navItems = signal<NavItem[]>([
-    { id: 'overview',     label: 'Overview',     icon: 'dashboard' },
-    { id: 'applications', label: 'Applications', icon: 'mail' },
-    { id: 'leases',       label: 'Leases',       icon: 'article' },
-    { id: 'bills',        label: 'Bills',        icon: 'receipt_long' },
-    { id: 'complaints',   label: 'Complaints',   icon: 'report_problem' },
-    { id: 'verifications',label: 'Verifications',icon: 'verified_user' },
-  ]);
+  private readonly pendingBillCount = signal(0);
 
-  get kycStatus()   { return this.kycStore.kyc()?.status ?? null; }
-  get kycIsLoading(){ return this.kycStore.step() === 'loading'; }
+  readonly navItems = computed<NavItem[]>(() => {
+    const pendingBills = this.pendingBillCount();
+    // Owner Dashboard is reachable from the navbar link; no sidebar duplicate here.
+    return [
+      { id: 'overview',     label: 'Overview',     icon: 'dashboard' },
+      { id: 'applications', label: 'Applications', icon: 'mail' },
+      { id: 'leases',       label: 'Leases',       icon: 'article' },
+      { id: 'bills',        label: 'Bills',        icon: 'receipt_long', badge: pendingBills || undefined },
+      { id: 'complaints',   label: 'Complaints',   icon: 'report_problem' },
+      { id: 'verifications',label: 'Verifications',icon: 'verified_user' },
+    ];
+  });
+
+  readonly kycStatus    = computed(() => this.kycStore.kyc()?.status ?? null);
+  readonly kycIsLoading = computed(() => this.kycStore.step() === 'loading');
 
   ngOnInit(): void {
-    // Read the tab from the URL, if present
-    const urlTab = this.route.snapshot.queryParamMap.get('tab');
-    if (urlTab) {
-      this.activeTab.set(urlTab);
-    }
-
-    // Load KYC state into the store (only if not already loaded)
     if (this.kycStore.step() === 'loading') {
       this.kycStore.loadExisting();
     }
+    this.paymentService.getTenantBills()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          const pending = (res.data ?? []).filter(b => b.status === 'Pending').length;
+          this.pendingBillCount.set(pending);
+        },
+      });
   }
 
   setTab(id: string): void {
+    const item = this.navItems().find(i => i.id === id);
+    if (item?.route) {
+      this.router.navigate([item.route]);
+      return;
+    }
     this.activeTab.set(id);
     this.router.navigate([], {
       relativeTo: this.route,
@@ -83,10 +102,7 @@ export class DashboardComponent implements OnInit {
   }
 
   updateBillsBadge(count: number): void {
-    this.navItems.update(items =>
-      items.map(i => i.id === 'bills' ? { ...i, badge: count || undefined } : i)
-    );
+    this.pendingBillCount.set(count);
   }
 
-  get sidebarSubtitle(): string { return ''; }
 }

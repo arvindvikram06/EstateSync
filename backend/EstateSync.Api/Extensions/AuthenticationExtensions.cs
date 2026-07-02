@@ -40,6 +40,17 @@ public static class AuthenticationExtensions
 
             options.Events = new JwtBearerEvents
             {
+                // SignalR WebSocket connections can't set headers — read token from query string
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    if (!string.IsNullOrEmpty(accessToken) &&
+                        context.HttpContext.Request.Path.StartsWithSegments("/hubs/notifications"))
+                    {
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                },
                 OnChallenge = async context =>
                 {
                     context.HandleResponse();
