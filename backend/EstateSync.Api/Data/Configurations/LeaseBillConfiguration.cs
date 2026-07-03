@@ -12,6 +12,7 @@ public class LeaseBillConfiguration : IEntityTypeConfiguration<LeaseBill>
         builder.HasKey(x => x.LeaseBillId).HasName("PK_LeaseBillId");
 
         builder.Property(x => x.BillType).HasConversion<string>().HasMaxLength(100);
+        builder.Property(x => x.ActiveStripeSessionId).HasMaxLength(255);
 
         builder.HasIndex(x => x.LeaseId);
         builder.HasIndex(x => x.DueDate);

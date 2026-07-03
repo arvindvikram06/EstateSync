@@ -9,13 +9,23 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DatePipe, CurrencyPipe } from '@angular/common';
 import { LeaseService } from '../../../../core/services/lease.service';
 
 export interface ApproveLeaseDialogData {
   leaseId: string;
   propertyTitle: string | null;
+  propertyAddress: string | null;
   tenantName: string | null;
+  tenantEmail: string | null;
   ownerName: string | null;
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  securityDeposit: number;
+  paymentFrequency: string;
+  tenantSignedAt: string | null;
+  ownerSignedAt: string | null;
 }
 
 @Component({
@@ -29,66 +39,150 @@ export interface ApproveLeaseDialogData {
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    DatePipe,
+    CurrencyPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="p-7" style="min-width:440px;max-width:520px">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="flex items-center justify-center w-10 h-10 rounded-full"
+    <div style="min-width:480px;max-width:580px;font-family:Inter,sans-serif">
+
+      <!-- Header -->
+      <div class="flex items-center gap-3 px-6 pt-6 pb-4"
+        style="border-bottom:1px solid #EBEBEB">
+        <div class="flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0"
           style="background:color-mix(in srgb,var(--mat-sys-primary) 10%,white)">
-          <mat-icon style="color:var(--mat-sys-primary)">gavel</mat-icon>
+          <mat-icon style="color:var(--mat-sys-primary);font-size:20px;width:20px;height:20px">gavel</mat-icon>
         </div>
-        <h2 class="text-[18px] font-bold text-es-text m-0">Review Lease</h2>
+        <div>
+          <h2 class="m-0 text-[17px] font-bold text-es-text">Review Lease</h2>
+          <p class="m-0 text-xs text-es-muted">Both parties have signed. Review and take action.</p>
+        </div>
       </div>
 
-      <div class="mb-5 p-3 rounded-lg bg-gray-50 text-sm flex flex-col gap-1">
-        @if (data.propertyTitle) {
-          <div><span class="text-es-muted">Property:</span> <strong>{{ data.propertyTitle }}</strong></div>
-        }
-        @if (data.tenantName) {
-          <div><span class="text-es-muted">Tenant:</span> <strong>{{ data.tenantName }}</strong></div>
-        }
-        @if (data.ownerName) {
-          <div><span class="text-es-muted">Owner:</span> <strong>{{ data.ownerName }}</strong></div>
-        }
+      <!-- Body -->
+      <div class="px-6 py-4 flex flex-col gap-4">
+
+        <!-- Property -->
+        <div class="rounded-xl p-4" style="background:#F7F7F7;border:1px solid #EBEBEB">
+          <div class="flex items-start gap-3">
+            <mat-icon class="!text-[18px] !w-[18px] !h-[18px] mt-[2px] flex-shrink-0"
+              style="color:var(--mat-sys-primary)">home</mat-icon>
+            <div>
+              <div class="text-[13px] font-semibold text-es-text">{{ data.propertyTitle ?? '—' }}</div>
+              @if (data.propertyAddress) {
+                <div class="text-[12px] text-es-muted mt-0.5">{{ data.propertyAddress }}</div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Parties -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-xl p-3" style="background:#F7F7F7;border:1px solid #EBEBEB">
+            <div class="text-[11px] font-semibold text-es-muted uppercase tracking-wide mb-1">Tenant</div>
+            <div class="text-[13px] font-semibold text-es-text">{{ data.tenantName ?? '—' }}</div>
+            @if (data.tenantEmail) {
+              <div class="text-[11px] text-es-muted mt-0.5">{{ data.tenantEmail }}</div>
+            }
+          </div>
+          <div class="rounded-xl p-3" style="background:#F7F7F7;border:1px solid #EBEBEB">
+            <div class="text-[11px] font-semibold text-es-muted uppercase tracking-wide mb-1">Owner</div>
+            <div class="text-[13px] font-semibold text-es-text">{{ data.ownerName ?? '—' }}</div>
+          </div>
+        </div>
+
+        <!-- Lease terms -->
+        <div class="rounded-xl p-4" style="background:#F7F7F7;border:1px solid #EBEBEB">
+          <div class="text-[11px] font-semibold text-es-muted uppercase tracking-wide mb-3">Lease Terms</div>
+          <div class="grid grid-cols-2 gap-y-2 gap-x-4 text-[13px]">
+            <div>
+              <span class="text-es-muted">Start date</span>
+              <div class="font-semibold text-es-text">{{ data.startDate | date:'d MMM yyyy' }}</div>
+            </div>
+            <div>
+              <span class="text-es-muted">End date</span>
+              <div class="font-semibold text-es-text">{{ data.endDate | date:'d MMM yyyy' }}</div>
+            </div>
+            <div>
+              <span class="text-es-muted">Monthly rent</span>
+              <div class="font-semibold text-es-text">{{ data.monthlyRent | currency:'INR':'symbol':'1.0-0' }}</div>
+            </div>
+            <div>
+              <span class="text-es-muted">Security deposit</span>
+              <div class="font-semibold text-es-text">{{ data.securityDeposit | currency:'INR':'symbol':'1.0-0' }}</div>
+            </div>
+            <div>
+              <span class="text-es-muted">Payment frequency</span>
+              <div class="font-semibold text-es-text">{{ data.paymentFrequency }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Signatures -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-xl p-3 flex items-center gap-2"
+            style="background:#F0FDF4;border:1px solid #BBF7D0">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] flex-shrink-0" style="color:#059669">
+              verified
+            </mat-icon>
+            <div>
+              <div class="text-[11px] font-semibold" style="color:#059669">Owner signed</div>
+              <div class="text-[11px] text-es-muted">{{ data.ownerSignedAt | date:'d MMM yyyy, h:mm a' }}</div>
+            </div>
+          </div>
+          <div class="rounded-xl p-3 flex items-center gap-2"
+            style="background:#F0FDF4;border:1px solid #BBF7D0">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] flex-shrink-0" style="color:#059669">
+              verified
+            </mat-icon>
+            <div>
+              <div class="text-[11px] font-semibold" style="color:#059669">Tenant signed</div>
+              <div class="text-[11px] text-es-muted">{{ data.tenantSignedAt | date:'d MMM yyyy, h:mm a' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Remarks -->
+        <form [formGroup]="form">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Remarks (optional when approving, explain if rejecting)</mat-label>
+            <mat-icon matPrefix>comment</mat-icon>
+            <textarea matInput formControlName="remarks" rows="3"
+              placeholder="Add any notes or reason for your decision…"></textarea>
+          </mat-form-field>
+
+          @if (error()) {
+            <p class="text-sm text-red-600 mb-3">{{ error() }}</p>
+          }
+        </form>
+
       </div>
 
-      <form [formGroup]="form">
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Remarks (optional when approving, explain if rejecting)</mat-label>
-          <mat-icon matPrefix>comment</mat-icon>
-          <textarea matInput formControlName="remarks" rows="3"
-            placeholder="Add any notes or reason for your decision…"></textarea>
-        </mat-form-field>
+      <!-- Footer -->
+      <div class="flex gap-3 justify-end px-6 pb-6">
+        <button type="button" mat-stroked-button class="!rounded-full !px-6" mat-dialog-close>
+          Cancel
+        </button>
+        <button type="button" mat-stroked-button class="!rounded-full !px-6"
+          style="color:#DC2626;border-color:#FECACA"
+          [disabled]="submitting()"
+          (click)="decide(false)">
+          @if (submitting() && lastAction() === 'reject') {
+            <mat-spinner diameter="16" style="display:inline-block;margin-right:6px" />
+          }
+          Reject
+        </button>
+        <button type="button" mat-flat-button class="!rounded-full !px-6"
+          style="background:#059669;color:white"
+          [disabled]="submitting()"
+          (click)="decide(true)">
+          @if (submitting() && lastAction() === 'approve') {
+            <mat-spinner diameter="16" style="display:inline-block;margin-right:6px" />
+          }
+          Approve
+        </button>
+      </div>
 
-        @if (error()) {
-          <p class="text-sm text-red-600 mb-3">{{ error() }}</p>
-        }
-
-        <div class="flex gap-3 justify-end mt-3">
-          <button type="button" mat-stroked-button class="!rounded-full !px-6" mat-dialog-close>
-            Cancel
-          </button>
-          <button type="button" mat-stroked-button class="!rounded-full !px-6"
-            style="color:#DC2626;border-color:#FECACA"
-            [disabled]="submitting()"
-            (click)="decide(false)">
-            @if (submitting() && lastAction() === 'reject') {
-              <mat-spinner diameter="16" style="display:inline-block;margin-right:6px" />
-            }
-            Reject
-          </button>
-          <button type="button" mat-flat-button class="!rounded-full !px-6"
-            style="background:#059669;color:white"
-            [disabled]="submitting()"
-            (click)="decide(true)">
-            @if (submitting() && lastAction() === 'approve') {
-              <mat-spinner diameter="16" style="display:inline-block;margin-right:6px" />
-            }
-            Approve
-          </button>
-        </div>
-      </form>
     </div>
   `
 })

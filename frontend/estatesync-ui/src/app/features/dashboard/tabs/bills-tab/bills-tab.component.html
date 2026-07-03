@@ -1,52 +1,145 @@
-<h2 style="font-size:20px;font-weight:700;color:#222;margin-bottom:20px">Bills & payments</h2>
+<!-- Page header -->
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h2 style="font-size:20px;font-weight:700;color:#222;margin:0">Bills & Payments</h2>
+    <p style="font-size:13px;color:#717171;margin:4px 0 0">Track your rent, deposits, and other charges.</p>
+  </div>
+</div>
 
 @if (loading()) {
-  <div class="flex items-center gap-3 py-8 text-sm text-es-muted">
+  <div class="flex items-center gap-3 py-12" style="color:#717171;font-size:14px">
     <mat-spinner diameter="24" /><span>Loading…</span>
   </div>
 } @else if (bills().length === 0) {
-  <app-empty-state icon="receipt_long" title="No bills"
-    subtitle="Your rent and payment bills will appear here." />
+  <app-empty-state icon="receipt_long" title="No bills yet"
+    subtitle="Your rent and payment bills will appear here once your lease is active." />
 } @else {
-  <div class="flex flex-col gap-3">
-    @for (bill of bills(); track bill.leaseBillId) {
-      <div class="bill-card">
-        <!-- Icon -->
-        <div class="bill-icon" [class.bill-icon--paid]="bill.status === 'Paid'"
-          [class.bill-icon--pending]="bill.status !== 'Paid'">
-          <mat-icon class="!text-[20px] !w-[20px] !h-[20px]"
-            [style.color]="bill.status === 'Paid' ? '#059669' : '#D97706'">
-            receipt
-          </mat-icon>
-        </div>
 
-        <!-- Info -->
-        <div class="flex-1 min-w-0">
-          <div style="font-size:14px;font-weight:600;color:#222">
-            {{ bill.billType }} — {{ bill.propertyTitle }}
-          </div>
-          <div style="font-size:12px;color:#717171;margin-top:2px">
-            Due: {{ formatDate(bill.dueDate) }}
-          </div>
-        </div>
-
-        <!-- Right -->
-        <div class="flex flex-col items-end gap-2 shrink-0">
-          <span style="font-size:16px;font-weight:700;color:#222">{{ formatCurrency(bill.pendingAmount) }}</span>
-          <app-status-badge [status]="bill.status" />
-          @if (bill.status === 'Pending') {
-            <app-loading-button
-              [loading]="payingId() === bill.leaseBillId"
-              [disabled]="payingId() !== null"
-              color="primary"
-              variant="flat"
-              (click)="pay(bill)"
-              style="--mdc-filled-button-container-height:32px;font-size:12px;border-radius:20px">
-              Pay now
-            </app-loading-button>
-          }
-        </div>
+  <!-- Summary cards -->
+  <div class="summary-row">
+    <div class="summary-card summary-card--purple">
+      <div class="summary-card__icon">
+        <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">receipt_long</mat-icon>
       </div>
-    }
+      <div>
+        <div class="summary-card__label">Total Bills</div>
+        <div class="summary-card__value">{{ bills().length }}</div>
+      </div>
+    </div>
+
+    <div class="summary-card summary-card--amber">
+      <div class="summary-card__icon summary-card__icon--amber">
+        <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">schedule</mat-icon>
+      </div>
+      <div>
+        <div class="summary-card__label">Pending Amount</div>
+        <div class="summary-card__value">{{ summary().totalPending | currency:'INR':'symbol':'1.0-0' }}</div>
+      </div>
+    </div>
+
+    <div class="summary-card summary-card--green">
+      <div class="summary-card__icon summary-card__icon--green">
+        <mat-icon class="!text-[20px] !w-[20px] !h-[20px]">check_circle</mat-icon>
+      </div>
+      <div>
+        <div class="summary-card__label">Total Paid</div>
+        <div class="summary-card__value">{{ summary().totalPaid | currency:'INR':'symbol':'1.0-0' }}</div>
+      </div>
+    </div>
   </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <!-- Status tabs -->
+    <div class="status-tabs">
+      @for (tab of statusTabs; track tab.id) {
+        <button class="status-tab" [class.status-tab--active]="statusFilter() === tab.id"
+          (click)="setStatus(tab.id)">
+          {{ tab.label }}
+          @if (tab.id === 'Pending' && summary().pendingCount > 0) {
+            <span class="status-tab__badge">{{ summary().pendingCount }}</span>
+          }
+        </button>
+      }
+    </div>
+
+    <!-- Type filter -->
+    <mat-form-field appearance="outline" style="width:160px">
+      <mat-label>Bill Type</mat-label>
+      <mat-icon matPrefix class="mr-1">filter_list</mat-icon>
+      <mat-select [value]="typeFilter()" (selectionChange)="setType($event.value)">
+        @for (opt of typeOptions; track opt) {
+          <mat-option [value]="opt">{{ opt === 'All' ? 'All Types' : opt }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Bill list -->
+  @if (filtered().length === 0) {
+    <app-empty-state icon="filter_list" title="No matching bills"
+      subtitle="Try changing the status or type filter." />
+  } @else {
+    <div class="flex flex-col gap-3">
+      @for (bill of filtered(); track bill.leaseBillId) {
+        <div class="bill-card" (click)="openDetail(bill)">
+
+          <!-- Left: type icon -->
+          <div class="bill-type-icon" [style.background]="billBg(bill.billType)">
+            <mat-icon class="!text-[22px] !w-[22px] !h-[22px]"
+              [style.color]="billColor(bill.billType)">{{ billIcon(bill.billType) }}</mat-icon>
+          </div>
+
+          <!-- Center: info -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="bill-type-pill" [style.background]="billBg(bill.billType)"
+                [style.color]="billColor(bill.billType)">
+                {{ bill.billType }}
+              </span>
+              @if (bill.status === 'Pending' && daysUntilDue(bill.dueDate) <= 7 && daysUntilDue(bill.dueDate) >= 0) {
+                <span class="bill-due-chip">
+                  Due in {{ daysUntilDue(bill.dueDate) }}d
+                </span>
+              }
+              @if (bill.status === 'Pending' && daysUntilDue(bill.dueDate) < 0) {
+                <span class="bill-overdue-chip">Overdue</span>
+              }
+            </div>
+            <div style="font-size:14px;font-weight:600;color:#222;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+              {{ bill.propertyTitle }}
+            </div>
+            <div class="flex gap-4 mt-1 flex-wrap">
+              <span style="font-size:12px;color:#717171;display:flex;align-items:center;gap:3px">
+                <mat-icon class="!text-[12px] !w-[12px] !h-[12px]">calendar_today</mat-icon>
+                Due {{ bill.dueDate | date:'d MMM yyyy' }}
+              </span>
+              @if (bill.paidAt) {
+                <span style="font-size:12px;color:#059669;display:flex;align-items:center;gap:3px">
+                  <mat-icon class="!text-[12px] !w-[12px] !h-[12px]">check_circle</mat-icon>
+                  Paid {{ bill.paidAt | date:'d MMM yyyy' }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <!-- Right: amount + status + action -->
+          <div class="flex flex-col items-end gap-2 shrink-0 ml-4">
+            <div style="font-size:18px;font-weight:800;color:#222;letter-spacing:-.3px">
+              {{ (bill.status === 'Paid' ? bill.amount : bill.pendingAmount) | currency:'INR':'symbol':'1.0-0' }}
+            </div>
+            <span class="es-badge"
+              [class.es-badge--approved]="bill.status === 'Paid'"
+              [class.es-badge--pending]="bill.status === 'Pending'"
+              [class.es-badge--rejected]="bill.status === 'Failed'">
+              {{ bill.status }}
+            </span>
+          </div>
+
+          <!-- Chevron hint -->
+          <mat-icon class="!text-[18px] !w-[18px] !h-[18px] shrink-0 ml-1" style="color:#CCCCCC">chevron_right</mat-icon>
+        </div>
+      }
+    </div>
+  }
 }

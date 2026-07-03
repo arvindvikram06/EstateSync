@@ -71,7 +71,6 @@ public class ComplaintRepository : BaseRepository<Complaint>, IComplaintReposito
     {
         var query = _dbSet
             .AsNoTracking()
-            .Include(c => c.ComplaintImages)
             .Include(c => c.Lease)
                 .ThenInclude(l => l!.Property)
             .AsQueryable();

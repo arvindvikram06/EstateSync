@@ -44,6 +44,27 @@ public class TenantFinancialProfileRepository : BaseRepository<TenantFinancialPr
             .ToListAsync();
     }
 
+    public async Task<(IEnumerable<TenantFinancialProfile> Items, int Total)> GetPagedForListAsync(string? status, int page, int limit)
+    {
+        var query = _dbSet.AsNoTracking()
+            .Include(p => p.Tenant)
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<ApprovalStatus>(status, true, out var parsedStatus))
+        {
+            query = query.Where(p => p.Status == parsedStatus);
+        }
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToListAsync();
+
+        return (items, total);
+    }
+
     public async Task<(IEnumerable<TenantFinancialProfile> Items, int Total)> GetPagedAsync(string? status, int page, int limit)
     {
         var query = _dbSet.AsNoTracking()

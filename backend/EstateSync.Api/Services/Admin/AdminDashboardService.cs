@@ -38,6 +38,9 @@ public class AdminDashboardService : IAdminDashboardService
             LeaseStatusBreakdown         = await _statsRepo.GetLeaseStatusBreakdownAsync(ct),
             ComplaintStatusBreakdown     = await _statsRepo.GetComplaintStatusBreakdownAsync(ct),
             KycStatusBreakdown           = await _statsRepo.GetKycStatusBreakdownAsync(ct),
+            BillStatusBreakdown          = await _statsRepo.GetBillStatusBreakdownAsync(ct),
+            RevenueByBillType            = await _statsRepo.GetRevenueByBillTypeAsync(ct),
+            PayoutStatusBreakdown        = await _statsRepo.GetPayoutStatusBreakdownAsync(ct),
             NewUsersTimeSeries           = await _statsRepo.GetNewUsersTimeSeriesAsync(30, ct),
             PaymentsTimeSeries           = await _statsRepo.GetPaymentsTimeSeriesAsync(30, ct),
         };

@@ -11,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { AdminService } from '../../../../core/services/admin.service';
 import { AuditLogResponse } from '../../../../core/models/admin.model';
 
@@ -20,7 +21,7 @@ import { AuditLogResponse } from '../../../../core/models/admin.model';
   imports: [
     SlicePipe, ReactiveFormsModule, MatButtonModule, MatIconModule,
     MatSelectModule, MatInputModule, MatFormFieldModule, MatProgressSpinnerModule,
-    EmptyStateComponent,
+    EmptyStateComponent, SkeletonLoaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-audit-logs-tab.component.html',

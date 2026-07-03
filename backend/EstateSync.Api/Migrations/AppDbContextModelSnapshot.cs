@@ -448,6 +448,10 @@ namespace EstateSync.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ActiveStripeSessionId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
@@ -1136,7 +1140,8 @@ namespace EstateSync.Api.Migrations
 
                     b.Property<string>("StripeCustomerId")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
@@ -1146,10 +1151,12 @@ namespace EstateSync.Api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("StripeCustomerId");
+
                     b.HasIndex("TenantId")
                         .IsUnique();
 
-                    b.ToTable("StripeCustomerProfiles");
+                    b.ToTable("StripeCustomerProfiles", (string)null);
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.TenantFinancialDocument", b =>
@@ -1701,7 +1708,7 @@ namespace EstateSync.Api.Migrations
                     b.HasOne("EstateSync.Api.Models.User", "Tenant")
                         .WithOne("StripeCustomerProfile")
                         .HasForeignKey("EstateSync.Api.Models.StripeCustomerProfile", "TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Tenant");

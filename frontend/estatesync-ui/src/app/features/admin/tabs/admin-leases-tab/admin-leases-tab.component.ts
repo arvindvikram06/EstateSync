@@ -34,9 +34,10 @@ export class AdminLeasesTabComponent implements OnInit {
 
   readonly pendingCountChange = output<number>();
 
-  readonly all     = signal<LeaseDetailResponse[]>([]);
-  readonly loading = signal(true);
-  readonly filter  = signal<FilterTab>('PendingAdminApproval');
+  readonly all          = signal<LeaseDetailResponse[]>([]);
+  readonly loading      = signal(true);
+  readonly reviewingId  = signal<string | null>(null);
+  readonly filter       = signal<FilterTab>('PendingAdminApproval');
 
   readonly formatDate     = formatDate;
   readonly formatCurrency = formatCurrency;
@@ -73,26 +74,47 @@ export class AdminLeasesTabComponent implements OnInit {
   }
 
   openApproveDialog(lease: LeaseDetailResponse): void {
-    const data: ApproveLeaseDialogData = {
-      leaseId: lease.leaseId,
-      propertyTitle: lease.propertyTitle,
-      tenantName: lease.tenantName,
-      ownerName: lease.ownerName,
-    };
-    this.dialog.open(ApproveLeaseDialogComponent, {
-      data,
-      maxWidth: '520px',
-      width: '100%',
-      panelClass: 'rounded-dialog',
-      autoFocus: false,
-    }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
-      if (result) {
-        const newStatus: LeaseStatusString = result.approved ? 'Active' : 'Voided';
-        this.all.update(list =>
-          list.map(l => l.leaseId === lease.leaseId ? { ...l, status: newStatus } : l)
-        );
-        this.pendingCountChange.emit(this.pendingCount());
-      }
-    });
+    if (this.reviewingId()) return;
+    this.reviewingId.set(lease.leaseId);
+
+    this.leaseSvc.getLeaseDetail(lease.leaseId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.reviewingId.set(null);
+          const full = res.data;
+          const data: ApproveLeaseDialogData = {
+            leaseId:          full.leaseId,
+            propertyTitle:    full.propertyTitle,
+            propertyAddress:  full.propertyAddress,
+            tenantName:       full.tenantName,
+            tenantEmail:      full.tenantEmail,
+            ownerName:        full.ownerName,
+            startDate:        full.startDate,
+            endDate:          full.endDate,
+            monthlyRent:      full.monthlyRent,
+            securityDeposit:  full.securityDeposit,
+            paymentFrequency: full.paymentFrequency,
+            tenantSignedAt:   full.tenantSignedAt,
+            ownerSignedAt:    full.ownerSignedAt,
+          };
+          this.dialog.open(ApproveLeaseDialogComponent, {
+            data,
+            maxWidth: '580px',
+            width: '100%',
+            panelClass: 'rounded-dialog',
+            autoFocus: false,
+          }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
+            if (result) {
+              const newStatus: LeaseStatusString = result.approved ? 'Active' : 'Voided';
+              this.all.update(list =>
+                list.map(l => l.leaseId === lease.leaseId ? { ...l, status: newStatus } : l)
+              );
+              this.pendingCountChange.emit(this.pendingCount());
+            }
+          });
+        },
+        error: () => this.reviewingId.set(null),
+      });
   }
 }

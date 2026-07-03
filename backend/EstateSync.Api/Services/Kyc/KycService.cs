@@ -201,7 +201,7 @@ public class KycService : IKycService
 
     public async Task<PagedResponse<KycVerificationResponse>> GetPagedAsync(string? status, int page, int limit, CancellationToken ct)
     {
-        var (items, total) = await _kycRepo.GetPagedAsync(status, page, limit);
+        var (items, total) = await _kycRepo.GetPagedForListAsync(status, page, limit);
         return new PagedResponse<KycVerificationResponse>
         {
             Success = true,
@@ -210,6 +210,13 @@ public class KycService : IKycService
             Limit = limit,
             Total = total
         };
+    }
+
+    public async Task<KycVerificationResponse> GetByIdForAdminAsync(Guid kycId, CancellationToken ct)
+    {
+        var kyc = await _kycRepo.GetWithDetailsByIdAsync(kycId)
+            ?? throw new NotFoundException("KycVerification", kycId);
+        return _mapper.MapToKycResponse(kyc);
     }
 
     public async Task ReviewAsync(Guid kycId, Guid reviewerId, string status, string remarks, CancellationToken ct)

@@ -41,6 +41,10 @@ export class AdminService {
     return this.http.get<PagedResponse<KycVerificationResponse>>(`${this.base}/kyc-requests`, { params });
   }
 
+  getKycRequestById(id: string): Observable<ApiResponse<KycVerificationResponse>> {
+    return this.http.get<ApiResponse<KycVerificationResponse>>(`${this.base}/kyc-requests/${id}`);
+  }
+
   reviewKyc(id: string, req: ReviewVerificationRequest): Observable<ApiResponse<object>> {
     return this.http.put<ApiResponse<object>>(`${this.base}/kyc-requests/${id}/review`, req);
   }
@@ -51,6 +55,10 @@ export class AdminService {
     let params = new HttpParams().set('page', page).set('limit', limit);
     if (status) params = params.set('status', status);
     return this.http.get<PagedResponse<FinancialProfileResponse>>(`${this.base}/financial-profiles`, { params });
+  }
+
+  getFinancialProfileById(id: string): Observable<ApiResponse<FinancialProfileResponse>> {
+    return this.http.get<ApiResponse<FinancialProfileResponse>>(`${this.base}/financial-profiles/${id}`);
   }
 
   reviewFinancialProfile(id: string, req: ReviewVerificationRequest): Observable<ApiResponse<object>> {

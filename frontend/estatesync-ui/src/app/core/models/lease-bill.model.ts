@@ -31,3 +31,20 @@ export interface OwnerEarningsSummaryResponse {
   lastPayoutDate: string | null;
   lastPayoutAmount: number | null;
 }
+
+export interface OwnerAvailableBalance {
+  available: number;
+  instantAvailable: number;
+  pending: number;
+  currency: string;
+  payoutsEnabled: boolean;
+}
+
+export interface RequestPayoutResult {
+  stripePayoutId: string;
+  amount: number;
+  currency: string;
+  arrivalDate: string;
+  status: string;
+  method: string;
+}

@@ -4,6 +4,12 @@
   border-radius: 14px;
   padding: 20px 22px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+.lease-card:hover {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.09);
+  transform: translateY(-2px);
+  border-color: #D4C9F0;
 }
 
 .lease-header {
@@ -16,12 +22,15 @@
 
 .lease-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   background: #F7F7F7;
   border-radius: 10px;
   padding: 12px 16px;
   margin-bottom: 16px;
+}
+@media (min-width: 640px) {
+  .lease-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 .lease-detail { display: flex; flex-direction: column; gap: 2px; }

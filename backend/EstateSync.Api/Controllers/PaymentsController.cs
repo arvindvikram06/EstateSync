@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using EstateSync.Api.Common;
 using EstateSync.Api.DTOs.Admin;
+using EstateSync.Api.DTOs.Payments;
 using EstateSync.Api.Extensions;
 using EstateSync.Api.Interfaces.Services.Payments;
 using Microsoft.AspNetCore.Authorization;
@@ -70,6 +71,23 @@ public class PaymentsController : ControllerBase
     {
         var summary = await _connectedAccountService.GetOwnerEarningsSummaryAsync(User.GetUserId(), ct);
         return Ok(new ApiResponse<object> { Data = summary });
+    }
+
+    [HttpGet("owner/available-balance")]
+    [Authorize(Roles = "Owner")]
+    public async Task<ActionResult<ApiResponse<OwnerAvailableBalanceResponse>>> GetAvailableBalance(CancellationToken ct)
+    {
+        var result = await _connectedAccountService.GetAvailableBalanceAsync(User.GetUserId(), ct);
+        return Ok(new ApiResponse<OwnerAvailableBalanceResponse> { Data = result });
+    }
+
+    [HttpPost("owner/request-payout")]
+    [Authorize(Roles = "Owner")]
+    public async Task<ActionResult<ApiResponse<RequestPayoutResponse>>> RequestPayout(
+        [FromBody] RequestPayoutRequest request, CancellationToken ct)
+    {
+        var result = await _connectedAccountService.RequestPayoutAsync(User.GetUserId(), request.Method, ct);
+        return Ok(new ApiResponse<RequestPayoutResponse> { Data = result });
     }
 
     // ── Tenant: bills and checkout ────────────────────────────────

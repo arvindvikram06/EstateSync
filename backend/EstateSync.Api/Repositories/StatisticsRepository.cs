@@ -121,4 +121,47 @@ public class StatisticsRepository : IStatisticsRepository
             })
             .ToList();
     }
+
+    public async Task<Dictionary<string, int>> GetBillStatusBreakdownAsync(CancellationToken ct = default)
+    {
+        var bills = await _db.LeaseBills
+            .Select(b => new
+            {
+                HasPaid   = b.Payments.Any(p => p.PaymentStatus == PaymentStatus.Paid),
+                HasFailed = b.Payments.Any(p => p.PaymentStatus == PaymentStatus.Failed),
+            })
+            .ToListAsync(ct);
+
+        return new Dictionary<string, int>
+        {
+            ["Paid"]    = bills.Count(b => b.HasPaid),
+            ["Failed"]  = bills.Count(b => !b.HasPaid && b.HasFailed),
+            ["Pending"] = bills.Count(b => !b.HasPaid && !b.HasFailed),
+        };
+    }
+
+    public async Task<Dictionary<string, decimal>> GetRevenueByBillTypeAsync(CancellationToken ct = default)
+    {
+        return await _db.Payments
+            .Where(p => p.PaymentStatus == PaymentStatus.Paid)
+            .Join(_db.LeaseBills,
+                p => p.LeaseBillId,
+                b => b.LeaseBillId,
+                (p, b) => new { p.Amount, b.BillType })
+            .GroupBy(x => x.BillType)
+            .Select(g => new { Key = g.Key.ToString(), Total = g.Sum(x => x.Amount) })
+            .ToDictionaryAsync(x => x.Key, x => x.Total, ct);
+    }
+
+    public async Task<Dictionary<string, int>> GetPayoutStatusBreakdownAsync(CancellationToken ct = default)
+    {
+        var raw = await _db.OwnerSettlements
+            .GroupBy(s => s.Status)
+            .Select(g => new { Key = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        return raw.ToDictionary(
+            x => char.ToUpper(x.Key[0]) + x.Key[1..],
+            x => x.Count);
+    }
 }

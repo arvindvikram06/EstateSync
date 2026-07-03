@@ -11,13 +11,14 @@ import { LeaseService } from '../../../../core/services/lease.service';
 import { ComplaintResponse } from '../../../../core/models/complaint.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { formatDate } from '../../../../core/utils/format.utils';
 import { NewComplaintDialogComponent } from './new-complaint-dialog.component';
 
 @Component({
   selector: 'app-complaints-tab',
   standalone: true,
-  imports: [MatIconModule, MatButtonModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent],
+  imports: [MatIconModule, MatButtonModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent, SkeletonLoaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './complaints-tab.component.html',
   styleUrl: './complaints-tab.component.css',

@@ -9,5 +9,6 @@ public interface IKycVerificationRepository : IRepository<KycVerification>
 {
     Task<KycVerification?> GetWithDetailsByIdAsync(Guid id);
     Task<IEnumerable<KycVerification>> GetByUserIdAsync(Guid userId);
+    Task<(IEnumerable<KycVerification> Items, int Total)> GetPagedForListAsync(string? status, int page, int limit);
     Task<(IEnumerable<KycVerification> Items, int Total)> GetPagedAsync(string? status, int page, int limit);
 }

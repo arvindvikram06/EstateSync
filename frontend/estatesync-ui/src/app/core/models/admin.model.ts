@@ -22,6 +22,9 @@ export interface AdminDashboardStats {
   leaseStatusBreakdown: Record<string, number>;
   complaintStatusBreakdown: Record<string, number>;
   kycStatusBreakdown: Record<string, number>;
+  billStatusBreakdown: Record<string, number>;
+  revenueByBillType: Record<string, number>;
+  payoutStatusBreakdown: Record<string, number>;
   newUsersTimeSeries: TimeSeriesPoint[];
   paymentsTimeSeries: TimeSeriesPoint[];
 }

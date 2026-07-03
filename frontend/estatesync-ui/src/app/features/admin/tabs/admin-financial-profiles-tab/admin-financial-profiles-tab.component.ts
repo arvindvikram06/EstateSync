@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { AdminService } from '../../../../core/services/admin.service';
 import { FinancialProfileResponse } from '../../../../core/models/admin.model';
 import { AdminReviewDialogComponent, AdminReviewDialogData } from '../../dialogs/admin-review-dialog.component';
@@ -23,7 +24,7 @@ import { AdminReviewDialogComponent, AdminReviewDialogData } from '../../dialogs
   imports: [
     SlicePipe, ReactiveFormsModule, MatButtonModule, MatIconModule,
     MatSelectModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule,
-    StatusBadgeComponent, EmptyStateComponent,
+    StatusBadgeComponent, EmptyStateComponent, SkeletonLoaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-financial-profiles-tab.component.html',
@@ -34,11 +35,12 @@ export class AdminFinancialProfilesTabComponent implements OnInit {
   private readonly dialog       = inject(MatDialog);
   private readonly destroyRef   = inject(DestroyRef);
 
-  readonly loading    = signal(true);
-  readonly items      = signal<FinancialProfileResponse[]>([]);
-  readonly totalCount = signal(0);
-  readonly page       = signal(1);
-  readonly limit      = 20;
+  readonly loading     = signal(true);
+  readonly reviewingId = signal<string | null>(null);
+  readonly items       = signal<FinancialProfileResponse[]>([]);
+  readonly totalCount  = signal(0);
+  readonly page        = signal(1);
+  readonly limit       = 20;
 
   readonly statusFilter = new FormControl<string>('Pending');
   readonly searchControl = new FormControl<string>('');
@@ -77,23 +79,36 @@ export class AdminFinancialProfilesTabComponent implements OnInit {
   }
 
   openReview(item: FinancialProfileResponse): void {
-    const isPending = item.status === 'Pending';
-    const data: AdminReviewDialogData = {
-      title: isPending ? 'Review Financial Profile' : 'Financial Profile',
-      subtitle: `${item.tenantName} · ${item.tenantEmail}`,
-      entityId: item.profileId,
-      type: 'financial-profile',
-      readOnly: !isPending,
-      currentStatus: item.status,
-      currentRemarks: item.reviewRemarks ?? undefined,
-      financialProfileItem: item,
-    };
-    const ref = this.dialog.open(AdminReviewDialogComponent, {
-      width: '620px',
-      panelClass: 'rounded-dialog',
-      data,
-    });
-    ref.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(r => { if (r) this.load(); });
+    if (this.reviewingId()) return;
+    this.reviewingId.set(item.profileId);
+
+    this.adminService.getFinancialProfileById(item.profileId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.reviewingId.set(null);
+          const full = res.data;
+          const isPending = full.status === 'Pending';
+          const data: AdminReviewDialogData = {
+            title: isPending ? 'Review Financial Profile' : 'Financial Profile',
+            subtitle: `${full.tenantName} · ${full.tenantEmail}`,
+            entityId: full.profileId,
+            type: 'financial-profile',
+            readOnly: !isPending,
+            currentStatus: full.status,
+            currentRemarks: full.reviewRemarks ?? undefined,
+            financialProfileItem: full,
+          };
+          this.dialog.open(AdminReviewDialogComponent, {
+            width: '620px',
+            panelClass: 'rounded-dialog',
+            data,
+          }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(r => {
+            if (r) this.load();
+          });
+        },
+        error: () => this.reviewingId.set(null),
+      });
   }
 
   prevPage(): void { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }

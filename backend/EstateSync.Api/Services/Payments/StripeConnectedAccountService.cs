@@ -74,6 +74,16 @@ public class StripeConnectedAccountService : IStripeConnectedAccountService
                 Capabilities = new AccountCapabilitiesOptions
                 {
                     Transfers = new AccountCapabilitiesTransfersOptions { Requested = true }
+                },
+                Settings = new AccountSettingsOptions
+                {
+                    Payouts = new AccountSettingsPayoutsOptions
+                    {
+                        Schedule = new AccountSettingsPayoutsScheduleOptions
+                        {
+                            Interval = "manual"
+                        }
+                    }
                 }
             };
             var account = await new AccountService().CreateAsync(options, cancellationToken: ct);
@@ -141,6 +151,96 @@ public class StripeConnectedAccountService : IStripeConnectedAccountService
     {
         var (paid, pending, total, lastDate, lastAmount) = await _settlementRepo.GetOwnerTotalsAsync(ownerId, ct);
         return new OwnerEarningsSummaryResponse(paid, pending, total, lastDate, lastAmount);
+    }
+
+    public async Task<OwnerAvailableBalanceResponse> GetAvailableBalanceAsync(Guid ownerId, CancellationToken ct = default)
+    {
+        var acct = await _stripeAccountRepo.GetByOwnerIdAsync(ownerId);
+        if (acct == null) throw new NotFoundException("StripeConnectedAccount", ownerId);
+
+        var balance = await new BalanceService().GetAsync(
+            requestOptions: new RequestOptions { StripeAccount = acct.StripeAccountId },
+            cancellationToken: ct);
+
+        var availableEntry        = balance.Available.FirstOrDefault(b => b.Amount > 0) ?? balance.Available.FirstOrDefault();
+        var instantAvailableEntry = balance.InstantAvailable?.FirstOrDefault(b => b.Amount > 0) ?? balance.InstantAvailable?.FirstOrDefault();
+        var pendingEntry          = balance.Pending.FirstOrDefault(b => b.Amount > 0) ?? balance.Pending.FirstOrDefault();
+
+        var currency = (availableEntry?.Currency ?? instantAvailableEntry?.Currency ?? pendingEntry?.Currency ?? "inr").ToUpperInvariant();
+
+        return new OwnerAvailableBalanceResponse
+        {
+            Available        = (availableEntry?.Amount        ?? 0L) / 100m,
+            InstantAvailable = (instantAvailableEntry?.Amount ?? 0L) / 100m,
+            Pending          = (pendingEntry?.Amount          ?? 0L) / 100m,
+            Currency         = currency,
+            PayoutsEnabled   = acct.PayoutsEnabled,
+        };
+    }
+
+    public async Task<RequestPayoutResponse> RequestPayoutAsync(Guid ownerId, string method, CancellationToken ct = default)
+    {
+        var isInstant = string.Equals(method, "instant", StringComparison.OrdinalIgnoreCase);
+
+        var acct = await _stripeAccountRepo.GetByOwnerIdAsync(ownerId);
+        if (acct == null) throw new NotFoundException("StripeConnectedAccount", ownerId);
+
+        if (!acct.PayoutsEnabled)
+            throw new BadRequestException("Payouts are not yet enabled on your Stripe account. Please complete onboarding.");
+
+        var balance = await new BalanceService().GetAsync(
+            requestOptions: new RequestOptions { StripeAccount = acct.StripeAccountId },
+            cancellationToken: ct);
+
+        var availableEntry        = balance.Available.FirstOrDefault(b => b.Amount > 0) ?? balance.Available.FirstOrDefault();
+        var instantAvailableEntry = balance.InstantAvailable?.FirstOrDefault(b => b.Amount > 0) ?? balance.InstantAvailable?.FirstOrDefault();
+        var payoutCurrency        = availableEntry?.Currency ?? instantAvailableEntry?.Currency ?? "inr";
+
+        var availableInCents        = availableEntry?.Amount        ?? 0L;
+        var instantAvailableInCents = instantAvailableEntry?.Amount ?? 0L;
+
+        long amountInCents;
+        if (isInstant)
+        {
+            if (instantAvailableInCents <= 0)
+                throw new BadRequestException("No funds are available for instant payout.");
+            amountInCents = instantAvailableInCents;
+        }
+        else
+        {
+            if (availableInCents <= 0)
+            {
+                if (instantAvailableInCents > 0)
+                    throw new BadRequestException($"Your funds ({instantAvailableInCents / 100m:N0} {payoutCurrency.ToUpper()}) are still settling. Use Instant Payout to withdraw now, or wait 1–2 business days for Standard.");
+                throw new BadRequestException("No funds are currently available to withdraw.");
+            }
+            amountInCents = availableInCents;
+        }
+
+        var payoutOptions = new PayoutCreateOptions
+        {
+            Amount   = amountInCents,
+            Currency = payoutCurrency,
+        };
+        if (isInstant) payoutOptions.Method = "instant";
+
+        var payout = await new PayoutService().CreateAsync(
+            payoutOptions,
+            new RequestOptions { StripeAccount = acct.StripeAccountId },
+            cancellationToken: ct);
+
+        _logger.LogInformation("{Method} payout {PayoutId} of {Amount} {Currency} initiated for Owner {OwnerId}",
+            method, payout.Id, amountInCents / 100m, payoutCurrency.ToUpper(), ownerId);
+
+        return new RequestPayoutResponse
+        {
+            StripePayoutId = payout.Id,
+            Amount         = payout.Amount / 100m,
+            Currency       = payout.Currency.ToUpperInvariant(),
+            ArrivalDate    = payout.ArrivalDate,
+            Status         = payout.Status,
+            Method         = payout.Method ?? method,
+        };
     }
 
     public async Task HandleAccountUpdatedAsync(string stripeAccountId, CancellationToken ct = default)

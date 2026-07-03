@@ -3,6 +3,12 @@
   border-radius: 14px;
   overflow: hidden;
   background: white;
+  transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+.lease-card:hover {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.09);
+  transform: translateY(-2px);
+  border-color: #D4C9F0;
 }
 
 .lease-card__header {

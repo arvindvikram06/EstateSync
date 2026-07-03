@@ -10,6 +10,7 @@ import { RentalApplicationService } from '../../../../core/services/rental-appli
 import { OwnerApplicationResponse } from '../../../../core/models/rental-application.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { ReviewApplicationDialogComponent, ReviewApplicationDialogData } from './review-application-dialog.component';
 import { CreateLeaseDialogComponent, CreateLeaseDialogData } from './create-lease-dialog.component';
 import { formatDate } from '../../../../core/utils/format.utils';
@@ -19,7 +20,7 @@ type AppFilter = 'All' | 'Pending' | 'Approved' | 'Rejected';
 @Component({
   selector: 'app-owner-applications-tab',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent],
+  imports: [MatButtonModule, MatIconModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent, SkeletonLoaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './owner-applications-tab.component.html',
   styleUrl: './owner-applications-tab.component.css',

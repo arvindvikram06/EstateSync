@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Interfaces.Services.Payments;
 using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Stripe;
@@ -55,8 +57,37 @@ public class TenantPaymentService : ITenantPaymentService
         var bill = await _leaseBillRepo.GetByIdWithLeaseAndPropertyAsync(leaseBillId);
         if (bill == null) throw new NotFoundException("LeaseBill", leaseBillId);
 
+        // Fix #3: Enforce that only the tenant who owns this bill can pay it.
+        if (bill.Lease?.TenantId != tenantId)
+            throw new ForbiddenException("You are not authorized to pay this bill.");
+
         if (bill.PendingAmount <= 0)
             throw new ConflictException("This bill has already been fully paid.");
+
+        // Fix #1: Reuse an existing open Stripe session instead of creating a second one.
+        // This prevents two-tab races where both tabs see PendingAmount > 0 and both create
+        // a session — which can result in the tenant being charged twice.
+        if (bill.ActiveStripeSessionId != null)
+        {
+            try
+            {
+                var existingSession = await new SessionService().GetAsync(bill.ActiveStripeSessionId, cancellationToken: ct);
+                if (existingSession.Status == "open")
+                {
+                    _logger.LogInformation(
+                        "Reusing open Stripe session {SessionId} for Bill {BillId}.",
+                        existingSession.Id, leaseBillId);
+                    return existingSession.Url;
+                }
+                // Session is no longer open (expired/completed) — fall through to create a new one.
+                bill.ActiveStripeSessionId = null;
+            }
+            catch (StripeException ex)
+            {
+                _logger.LogWarning(ex, "Could not retrieve existing session {SessionId}. Creating a new one.", bill.ActiveStripeSessionId);
+                bill.ActiveStripeSessionId = null;
+            }
+        }
 
         var ownerAccount = await _stripeAccountRepo.GetByOwnerIdAsync(bill.Lease!.Property!.OwnerId);
         if (ownerAccount == null) throw new BadRequestException("Owner has not set up payments yet.");
@@ -66,15 +97,18 @@ public class TenantPaymentService : ITenantPaymentService
 
         var stripeCustomerId = await GetOrCreateStripeCustomerAsync(tenant, tenantId, ct);
 
-        var (totalCents, rentCents, appFeeCents) = CalculateAmounts(bill.Amount);
+        var (totalCents, appFeeCents, platformFee) = CalculateAmounts(bill.Amount);
 
-        // Embed metadata on both Session AND PaymentIntent so any payment-level
-        // webhook (payment_intent.payment_failed, etc.) can correlate back to our bill.
+        // Correlation metadata set on both Session and PaymentIntent so any payment-level
+        // webhook can look up our DB records without an extra Stripe API round-trip.
         var correlationMetadata = new Dictionary<string, string>
         {
             { "LeaseBillId", bill.LeaseBillId.ToString() },
             { "TenantId",    tenantId.ToString() }
         };
+
+        var baseSuccessUrl = _config["Stripe:CheckoutSuccessUrl"]
+            ?? throw new InvalidOperationException("Stripe:CheckoutSuccessUrl is not configured.");
 
         var options = new SessionCreateOptions
         {
@@ -107,13 +141,19 @@ public class TenantPaymentService : ITenantPaymentService
                 Metadata = correlationMetadata,
             },
             Metadata   = correlationMetadata,
-            SuccessUrl = _config["Stripe:CheckoutSuccessUrl"]
-                ?? throw new InvalidOperationException("Stripe:CheckoutSuccessUrl is not configured."),
+            // Append billId so the success page can poll for the specific bill flipping to Paid.
+            SuccessUrl = $"{baseSuccessUrl}&billId={bill.LeaseBillId}",
             CancelUrl  = _config["Stripe:CheckoutCancelUrl"]
                 ?? throw new InvalidOperationException("Stripe:CheckoutCancelUrl is not configured."),
         };
 
         var session = await new SessionService().CreateAsync(options, cancellationToken: ct);
+
+        // Persist the session ID on the bill so concurrent requests reuse it instead of
+        // creating a second chargeable session.
+        bill.ActiveStripeSessionId = session.Id;
+        await _unitOfWork.SaveChangesAsync(ct);
+
         return session.Url;
     }
 
@@ -143,8 +183,7 @@ public class TenantPaymentService : ITenantPaymentService
 
         var transactionId = session.PaymentIntentId ?? session.Id;
 
-        // Idempotency guard 1: skip if this transaction was already recorded.
-        // Stripe retries webhooks on non-2xx responses, so the same event can arrive more than once.
+        // Idempotency guard 1: skip if this exact transaction was already recorded.
         var existingPayment = await _paymentRepo.GetByTransactionIdAsync(transactionId, ct);
         if (existingPayment != null)
         {
@@ -156,7 +195,7 @@ public class TenantPaymentService : ITenantPaymentService
 
         var bill = await _leaseBillRepo.GetByIdWithLeaseAndPropertyAsync(leaseBillId);
 
-        // Idempotency guard 2: skip if the bill was already fully settled.
+        // Idempotency guard 2: skip if the bill is already fully settled.
         if (bill != null && bill.PendingAmount == 0m)
         {
             _logger.LogWarning(
@@ -165,10 +204,14 @@ public class TenantPaymentService : ITenantPaymentService
             return;
         }
 
-        if (bill != null)
-            bill.PendingAmount = 0m;
-
+        var (_, _, platformFee) = CalculateAmounts(bill?.Amount ?? (session.AmountTotal ?? 0) / 100m);
         var paidAmount = (session.AmountTotal ?? 0) / 100m;
+
+        if (bill != null)
+        {
+            bill.PendingAmount        = 0m;
+            bill.ActiveStripeSessionId = null; // session is complete — allow future bills to create new sessions
+        }
 
         await _paymentRepo.AddAsync(new Payment
         {
@@ -176,9 +219,9 @@ public class TenantPaymentService : ITenantPaymentService
             LeaseBillId     = leaseBillId,
             PaidByUserId    = tenantId,
             Amount          = paidAmount,
-            PlatformFee     = bill != null ? bill.Amount * 0.02m : paidAmount * 0.02m,
+            PlatformFee     = platformFee,  // Fix #8: derived from CalculateAmounts, not hardcoded 2%
             TransactionId   = transactionId,
-            GatewayResponse = "{\"status\":\"paid\",\"source\":\"stripe_checkout\"}",
+            GatewayResponse = session.ToJson(), // Fix #7: store real Stripe session data for audit/disputes
             PaymentStatus   = PaymentStatus.Paid,
             PaidDate        = DateTime.UtcNow
         });
@@ -217,8 +260,7 @@ public class TenantPaymentService : ITenantPaymentService
     }
 
     // Fires when a Stripe Checkout session expires after 24 hours without a completed payment.
-    // This is the authoritative "tenant abandoned" signal — more reliable than
-    // payment_intent.payment_failed which fires on each card decline but the session stays open for retry.
+    // The bill stays Pending. We clear ActiveStripeSessionId so the tenant can create a new session.
     public async Task HandleSessionExpiredAsync(string sessionJson, CancellationToken ct = default)
     {
         var session = Session.FromJson(sessionJson);
@@ -228,7 +270,10 @@ public class TenantPaymentService : ITenantPaymentService
 
         _logger.LogInformation("Checkout session {SessionId} expired without payment for Bill {BillId}.", session.Id, leaseBillId);
 
-        // Bill remains Pending — no state change needed. Just notify the tenant.
+        var bill = await _leaseBillRepo.GetByIdWithLeaseAndPropertyAsync(leaseBillId);
+        if (bill != null)
+            bill.ActiveStripeSessionId = null;
+
         await _notificationSender.SendAsync(new Notification
         {
             NotificationId = Guid.NewGuid(),
@@ -261,17 +306,34 @@ public class TenantPaymentService : ITenantPaymentService
             TenantId         = tenantId,
             StripeCustomerId = customer.Id
         });
-        await _unitOfWork.SaveChangesAsync(ct);
+
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Fix #2: Another concurrent request won the race and saved first.
+            // The Stripe customer we just created is orphaned — acceptable, Stripe cleans
+            // up unused customers. Re-read the winner's profile and use that ID.
+            _logger.LogWarning(
+                "Concurrent StripeCustomerProfile insert for Tenant {TenantId}. Re-reading winner.", tenantId);
+            var winner = await _stripeCustomerProfileRepo.GetByTenantIdAsync(tenantId);
+            if (winner != null) return winner.StripeCustomerId;
+            throw;
+        }
+
         return customer.Id;
     }
 
-    private (long totalCents, long rentCents, long appFeeCents) CalculateAmounts(decimal billAmount)
+    // Fix #9: Use InvariantCulture so "0.054" parses correctly on any server locale.
+    private (long totalCents, long appFeeCents, decimal platformFee) CalculateAmounts(decimal billAmount)
     {
-        double stripePercent   = double.TryParse(_config["Stripe:StripeFeePercent"],   out var sp) ? sp : 0.054;
-        double stripeFixedInr  = double.TryParse(_config["Stripe:StripeFeeFixedInr"],  out var sf) ? sf : 25.0;
-        double platformPercent = double.TryParse(_config["Stripe:PlatformFeePercent"], out var pf) ? pf : 0.02;
+        double stripePercent   = double.TryParse(_config["Stripe:StripeFeePercent"],   NumberStyles.Float, CultureInfo.InvariantCulture, out var sp) ? sp : 0.054;
+        double stripeFixedInr  = double.TryParse(_config["Stripe:StripeFeeFixedInr"],  NumberStyles.Float, CultureInfo.InvariantCulture, out var sf) ? sf : 25.0;
+        double platformPercent = double.TryParse(_config["Stripe:PlatformFeePercent"], NumberStyles.Float, CultureInfo.InvariantCulture, out var pf) ? pf : 0.02;
 
-        double rent        = (double)billAmount;
+        double rent         = (double)billAmount;
         double totalCharged = (rent + stripeFixedInr) / (1.0 - stripePercent);
 
         long totalCents    = (long)Math.Round(totalCharged * 100);
@@ -280,7 +342,7 @@ public class TenantPaymentService : ITenantPaymentService
         long platformCents = (long)Math.Round(rent * platformPercent * 100);
         long appFeeCents   = platformCents + stripFeeCents;
 
-        return (totalCents, rentCents, appFeeCents);
+        return (totalCents, appFeeCents, platformCents / 100m);
     }
 
     private bool TryExtractMetadata(

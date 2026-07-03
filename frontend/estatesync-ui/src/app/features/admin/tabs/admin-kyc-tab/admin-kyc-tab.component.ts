@@ -13,6 +13,7 @@ import { SlicePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { AdminService } from '../../../../core/services/admin.service';
 import { KycVerificationResponse } from '../../../../core/models/admin.model';
 import { AdminReviewDialogComponent, AdminReviewDialogData } from '../../dialogs/admin-review-dialog.component';
@@ -23,7 +24,7 @@ import { AdminReviewDialogComponent, AdminReviewDialogData } from '../../dialogs
   imports: [
     SlicePipe, ReactiveFormsModule, MatButtonModule, MatIconModule,
     MatSelectModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule,
-    StatusBadgeComponent, EmptyStateComponent,
+    StatusBadgeComponent, EmptyStateComponent, SkeletonLoaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-kyc-tab.component.html',
@@ -34,11 +35,12 @@ export class AdminKycTabComponent implements OnInit {
   private readonly dialog       = inject(MatDialog);
   private readonly destroyRef   = inject(DestroyRef);
 
-  readonly loading    = signal(true);
-  readonly items      = signal<KycVerificationResponse[]>([]);
-  readonly totalCount = signal(0);
-  readonly page       = signal(1);
-  readonly limit      = 20;
+  readonly loading     = signal(true);
+  readonly reviewingId = signal<string | null>(null);
+  readonly items       = signal<KycVerificationResponse[]>([]);
+  readonly totalCount  = signal(0);
+  readonly page        = signal(1);
+  readonly limit       = 20;
 
   readonly statusFilter = new FormControl<string>('Pending');
   readonly searchControl = new FormControl<string>('');
@@ -80,25 +82,36 @@ export class AdminKycTabComponent implements OnInit {
   }
 
   openReview(item: KycVerificationResponse): void {
-    const isPending = item.status === 'Pending';
-    const data: AdminReviewDialogData = {
-      title: isPending ? 'Review KYC' : 'KYC Details',
-      subtitle: `${item.fullName} · ${item.email}`,
-      entityId: item.kycVerificationId,
-      type: 'kyc',
-      readOnly: !isPending,
-      currentStatus: item.status,
-      currentRemarks: item.reviewRemarks ?? undefined,
-      kycItem: item,
-    };
-    const ref = this.dialog.open(AdminReviewDialogComponent, {
-      width: '620px',
-      panelClass: 'rounded-dialog',
-      data,
-    });
-    ref.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
-      if (result) this.load();
-    });
+    if (this.reviewingId()) return;
+    this.reviewingId.set(item.kycVerificationId);
+
+    this.adminService.getKycRequestById(item.kycVerificationId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.reviewingId.set(null);
+          const full = res.data;
+          const isPending = full.status === 'Pending';
+          const data: AdminReviewDialogData = {
+            title: isPending ? 'Review KYC' : 'KYC Details',
+            subtitle: `${full.fullName} · ${full.email}`,
+            entityId: full.kycVerificationId,
+            type: 'kyc',
+            readOnly: !isPending,
+            currentStatus: full.status,
+            currentRemarks: full.reviewRemarks ?? undefined,
+            kycItem: full,
+          };
+          this.dialog.open(AdminReviewDialogComponent, {
+            width: '620px',
+            panelClass: 'rounded-dialog',
+            data,
+          }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
+            if (result) this.load();
+          });
+        },
+        error: () => this.reviewingId.set(null),
+      });
   }
 
   prevPage(): void { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }

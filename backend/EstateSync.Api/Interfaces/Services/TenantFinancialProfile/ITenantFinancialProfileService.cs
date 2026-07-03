@@ -17,5 +17,6 @@ public interface ITenantFinancialProfileService
     Task SubmitAsync(Guid tenantId, Guid profileId, SubmitTenantFinancialProfileRequest request, CancellationToken ct);
     Task<IEnumerable<TenantFinancialProfileResponse>> GetByTenantIdAsync(Guid tenantId, CancellationToken ct);
     Task<PagedResponse<TenantFinancialProfileResponse>> GetPagedAsync(string? status, int page, int limit, CancellationToken ct);
+    Task<TenantFinancialProfileResponse> GetByIdForAdminAsync(Guid profileId, CancellationToken ct);
     Task ReviewAsync(Guid profileId, Guid reviewerId, string status, string remarks, CancellationToken ct);
 }

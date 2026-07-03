@@ -100,8 +100,13 @@
           }
           @if (lease.status === 'PendingAdminApproval') {
             <button mat-flat-button color="primary" class="!rounded-full !h-9 !px-5 !text-sm"
+              [disabled]="reviewingId() !== null"
               (click)="openApproveDialog(lease)">
-              <mat-icon class="!text-[15px] !w-[15px] !h-[15px] mr-1">rate_review</mat-icon>
+              @if (reviewingId() === lease.leaseId) {
+                <mat-spinner diameter="14" style="display:inline-block;margin-right:6px" />
+              } @else {
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px] mr-1">rate_review</mat-icon>
+              }
               Review
             </button>
           }

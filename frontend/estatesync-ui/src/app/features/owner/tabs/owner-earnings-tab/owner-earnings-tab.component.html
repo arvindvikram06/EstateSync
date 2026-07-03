@@ -1,5 +1,147 @@
 <div class="space-y-6">
 
+  <!-- Payout Action Panel -->
+  <div class="bg-white border border-[#EBEBEB] rounded-2xl p-6"
+       style="box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+           style="background:color-mix(in srgb,var(--mat-sys-primary) 10%,white)">
+        <mat-icon style="color:var(--mat-sys-primary);font-size:20px;width:20px;height:20px">account_balance_wallet</mat-icon>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#222">Withdraw Funds</div>
+        <div style="font-size:12px;color:#717171">Choose payout speed — funds are transferred from your Stripe balance to your bank.</div>
+      </div>
+    </div>
+
+    @if (balanceLoading()) {
+      <div class="flex items-center gap-2 py-4" style="color:#717171;font-size:13px">
+        <mat-spinner diameter="16" /><span>Loading balance…</span>
+      </div>
+    } @else if (balance()) {
+
+      @if (!balance()!.payoutsEnabled) {
+        <div class="flex items-start gap-3 rounded-xl px-4 py-3 mb-4"
+             style="background:#FFFBEB;border:1px solid #FDE68A">
+          <mat-icon style="color:#D97706;font-size:16px;width:16px;height:16px;margin-top:1px;flex-shrink:0">warning</mat-icon>
+          <div style="font-size:12px;color:#92400E">Payouts not enabled — complete your Stripe onboarding first.</div>
+        </div>
+      }
+
+      @if (balance()!.pending > 0) {
+        <div class="flex items-center gap-2 mb-4" style="font-size:12px;color:#D97706">
+          <mat-icon style="font-size:14px;width:14px;height:14px;color:#D97706">schedule</mat-icon>
+          {{ balance()!.pending | currency:balance()!.currency:'symbol':'1.0-2' }} still processing (will appear soon)
+        </div>
+      }
+
+      <!-- Two option cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+        <!-- Standard -->
+        <div class="rounded-xl p-4 flex flex-col gap-3" style="border:1px solid #EBEBEB;background:#FAFAFA">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <mat-icon style="color:#6750A4;font-size:18px;width:18px;height:18px">account_balance</mat-icon>
+              <span style="font-size:13px;font-weight:700;color:#222">Standard Payout</span>
+            </div>
+            <span class="es-badge es-badge--approved" style="font-size:11px">Free</span>
+          </div>
+          <div>
+            <div style="font-size:22px;font-weight:800;color:#222;letter-spacing:-.3px">
+              {{ balance()!.available | currency:balance()!.currency:'symbol':'1.0-2' }}
+            </div>
+            <div style="font-size:11px;color:#717171;margin-top:2px">
+              @if (balance()!.available > 0) {
+                Ready to withdraw now
+              } @else if (balance()!.instantAvailable > 0) {
+                Settling — available in ~1–2 business days
+              } @else {
+                No funds available
+              }
+            </div>
+          </div>
+          <div style="font-size:11px;color:#717171">1–2 business days · No fee</div>
+          <button mat-stroked-button color="primary" class="!rounded-full !text-xs !h-9 !font-semibold"
+            [disabled]="requestingPayout() !== null || balance()!.available <= 0 || !balance()!.payoutsEnabled"
+            (click)="requestPayout('standard')">
+            @if (requestingPayout() === 'standard') {
+              <mat-spinner diameter="14" style="display:inline-block;margin-right:4px" />
+            }
+            {{ requestingPayout() === 'standard' ? 'Initiating…' : 'Withdraw Standard' }}
+          </button>
+        </div>
+
+        <!-- Instant -->
+        <div class="rounded-xl p-4 flex flex-col gap-3"
+             style="border:1px solid color-mix(in srgb,var(--mat-sys-primary) 20%,white);background:color-mix(in srgb,var(--mat-sys-primary) 4%,white)">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <mat-icon style="color:#6750A4;font-size:18px;width:18px;height:18px">bolt</mat-icon>
+              <span style="font-size:13px;font-weight:700;color:#222">Instant Payout</span>
+            </div>
+            <span class="es-badge es-badge--pending" style="font-size:11px">1% fee</span>
+          </div>
+          <div>
+            <div style="font-size:22px;font-weight:800;color:#222;letter-spacing:-.3px">
+              {{ balance()!.instantAvailable | currency:balance()!.currency:'symbol':'1.0-2' }}
+            </div>
+            <div style="font-size:11px;color:#717171;margin-top:2px">
+              @if (balance()!.instantAvailable > 0) {
+                Available for instant payout now
+              } @else {
+                No funds available
+              }
+            </div>
+          </div>
+          <div style="font-size:11px;color:#717171">Arrives in minutes · Stripe charges 1%</div>
+          <button mat-flat-button color="primary" class="!rounded-full !text-xs !h-9 !font-semibold"
+            [disabled]="requestingPayout() !== null || balance()!.instantAvailable <= 0 || !balance()!.payoutsEnabled"
+            (click)="requestPayout('instant')">
+            @if (requestingPayout() === 'instant') {
+              <mat-spinner diameter="14" style="display:inline-block;margin-right:4px" />
+            }
+            {{ requestingPayout() === 'instant' ? 'Initiating…' : 'Withdraw Instant' }}
+          </button>
+        </div>
+
+      </div>
+    } @else {
+      <p style="font-size:13px;color:#717171">Balance unavailable</p>
+    }
+  </div>
+
+  <!-- Success / Error banners -->
+  @if (payoutSuccess()) {
+    <div class="flex items-start gap-3 rounded-xl px-5 py-4"
+         style="background:#F0FDF4;border:1px solid #BBF7D0">
+      <mat-icon style="color:#059669;font-size:20px;width:20px;height:20px;margin-top:1px;flex-shrink:0">check_circle</mat-icon>
+      <div>
+        <div style="font-size:14px;font-weight:600;color:#065F46">
+          {{ payoutSuccess()!.method === 'instant' ? 'Instant payout' : 'Standard payout' }} initiated!
+        </div>
+        <div style="font-size:13px;color:#065F46;margin-top:2px">
+          {{ payoutSuccess()!.amount | currency:payoutSuccess()!.currency:'symbol':'1.0-2' }} is on its way to your bank.
+          @if (payoutSuccess()!.method === 'instant') {
+            Expected arrival: within minutes.
+          } @else {
+            Expected arrival: {{ payoutSuccess()!.arrivalDate | date:'d MMM yyyy' }}.
+          }
+          It will appear in your payout history below once confirmed by Stripe.
+        </div>
+      </div>
+    </div>
+  }
+  @if (payoutError()) {
+    <div class="flex items-start gap-3 rounded-xl px-5 py-4"
+         style="background:#FEF2F2;border:1px solid #FECACA">
+      <mat-icon style="color:#DC2626;font-size:20px;width:20px;height:20px;margin-top:1px;flex-shrink:0">error_outline</mat-icon>
+      <div style="font-size:13px;color:#991B1B">{{ payoutError() }}</div>
+    </div>
+  }
+
   <!-- Summary Cards -->
   @if (summary()) {
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -12,7 +154,7 @@
         <div>
           <p class="text-xs text-es-muted font-medium mb-0.5">Total Earned</p>
           <p class="text-[22px] font-bold text-es-text leading-tight">
-            ₹{{ (summary()!.totalPaid | number:'1.0-0') }}
+            {{ summary()!.totalPaid | currency:(balance()?.currency ?? 'USD'):'symbol':'1.0-2' }}
           </p>
           <p class="text-xs text-es-muted mt-0.5">{{ summary()!.totalPayouts }} payout{{ summary()!.totalPayouts !== 1 ? 's' : '' }}</p>
         </div>
@@ -27,7 +169,7 @@
         <div>
           <p class="text-xs text-es-muted font-medium mb-0.5">Pending Payout</p>
           <p class="text-[22px] font-bold text-es-text leading-tight">
-            ₹{{ (summary()!.totalPending | number:'1.0-0') }}
+            {{ summary()!.totalPending | currency:(balance()?.currency ?? 'USD'):'symbol':'1.0-2' }}
           </p>
           <p class="text-xs text-es-muted mt-0.5">In Stripe balance</p>
         </div>
@@ -43,7 +185,7 @@
           <p class="text-xs text-es-muted font-medium mb-0.5">Last Payout</p>
           @if (summary()!.lastPayoutDate) {
             <p class="text-[22px] font-bold text-es-text leading-tight">
-              ₹{{ (summary()!.lastPayoutAmount! | number:'1.0-0') }}
+              {{ summary()!.lastPayoutAmount! | currency:(balance()?.currency ?? 'USD'):'symbol':'1.0-2' }}
             </p>
             <p class="text-xs text-es-muted mt-0.5">{{ summary()!.lastPayoutDate | date:'d MMM yyyy' }}</p>
           } @else {
@@ -110,7 +252,7 @@
                 <span class="text-es-muted font-mono text-xs">{{ item.stripePayoutId }}</span>
               </td>
               <td class="px-6 py-4 font-semibold text-es-text">
-                ₹{{ (item.amount | number:'1.0-0') }}
+                {{ item.amount | currency:item.currency:'symbol':'1.2-2' }}
                 <span class="text-xs font-normal text-es-muted ml-1 uppercase">{{ item.currency }}</span>
               </td>
               <td class="px-6 py-4">

@@ -17,5 +17,6 @@ public interface IKycService
     Task SubmitAsync(Guid userId, Guid kycId, SubmitKycRequest request, CancellationToken ct);
     Task<IEnumerable<KycVerificationResponse>> GetByUserIdAsync(Guid userId, CancellationToken ct);
     Task<PagedResponse<KycVerificationResponse>> GetPagedAsync(string? status, int page, int limit, CancellationToken ct);
+    Task<KycVerificationResponse> GetByIdForAdminAsync(Guid kycId, CancellationToken ct);
     Task ReviewAsync(Guid kycId, Guid reviewerId, string status, string remarks, CancellationToken ct);
 }

@@ -36,6 +36,27 @@ public class KycVerificationRepository : BaseRepository<KycVerification>, IKycVe
             .ToListAsync();
     }
 
+    public async Task<(IEnumerable<KycVerification> Items, int Total)> GetPagedForListAsync(string? status, int page, int limit)
+    {
+        var query = _dbSet.AsNoTracking()
+            .Include(r => r.User)
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<ApprovalStatus>(status, true, out var parsedStatus))
+        {
+            query = query.Where(r => r.Status == parsedStatus);
+        }
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(r => r.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToListAsync();
+
+        return (items, total);
+    }
+
     public async Task<(IEnumerable<KycVerification> Items, int Total)> GetPagedAsync(string? status, int page, int limit)
     {
         var query = _dbSet.AsNoTracking()

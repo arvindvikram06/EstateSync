@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
-import { LeaseBillResponse, OwnerEarningsSummaryResponse, OwnerSettlementResponse } from '../models/lease-bill.model';
+import { LeaseBillResponse, OwnerAvailableBalance, OwnerEarningsSummaryResponse, OwnerSettlementResponse, RequestPayoutResult } from '../models/lease-bill.model';
 import { PagedResponse } from '../models/api-response.model';
 
 @Injectable({ providedIn: 'root' })
@@ -39,5 +39,13 @@ export class PaymentService {
 
   getOwnerEarningsSummary(): Observable<ApiResponse<OwnerEarningsSummaryResponse>> {
     return this.http.get<ApiResponse<OwnerEarningsSummaryResponse>>(`${this.baseUrl}/owner/earnings-summary`);
+  }
+
+  getOwnerAvailableBalance(): Observable<ApiResponse<OwnerAvailableBalance>> {
+    return this.http.get<ApiResponse<OwnerAvailableBalance>>(`${this.baseUrl}/owner/available-balance`);
+  }
+
+  requestPayout(method: 'standard' | 'instant'): Observable<ApiResponse<RequestPayoutResult>> {
+    return this.http.post<ApiResponse<RequestPayoutResult>>(`${this.baseUrl}/owner/request-payout`, { method });
   }
 }

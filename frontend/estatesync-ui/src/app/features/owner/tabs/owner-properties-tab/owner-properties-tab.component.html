@@ -32,9 +32,7 @@
 </div>
 
 @if (loading()) {
-  <div class="flex items-center gap-3 py-8 text-sm text-es-muted">
-    <mat-spinner diameter="24" /><span>Loading…</span>
-  </div>
+  <app-skeleton-loader type="card" [rows]="4" />
 } @else if (filtered().length === 0) {
   <app-empty-state icon="home_work" title="No properties"
     subtitle="Add your first property to start listing.">
@@ -48,9 +46,15 @@
   <div class="flex flex-col gap-3">
     @for (prop of filtered(); track prop.propertyId) {
       <div class="prop-card">
-        <div class="prop-icon">
-          <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:var(--mat-sys-primary)">home_work</mat-icon>
-        </div>
+        @if (prop.primaryImage) {
+          <img [src]="prop.primaryImage" alt=""
+               class="w-12 h-12 rounded-xl object-cover shrink-0"
+               style="border:1px solid #EBEBEB" />
+        } @else {
+          <div class="prop-icon">
+            <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:var(--mat-sys-primary)">home_work</mat-icon>
+          </div>
+        }
 
         <div class="flex-1 min-w-0">
           <div style="font-size:14px;font-weight:600;color:#222" class="truncate">{{ prop.title }}</div>
@@ -112,9 +116,7 @@
             }
 
             @if (prop.status === 'PendingApproval') {
-              <span style="font-size:12px;color:#B45309;background:#FEF3C7;padding:4px 10px;border-radius:20px;font-weight:600">
-                Under review
-              </span>
+              <span class="es-badge es-badge--pending">Under review</span>
             }
           </div>
         </div>

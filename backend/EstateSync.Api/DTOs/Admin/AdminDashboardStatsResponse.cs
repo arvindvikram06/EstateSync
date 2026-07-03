@@ -30,6 +30,11 @@ public record AdminDashboardStatsResponse
     public Dictionary<string, int> ComplaintStatusBreakdown { get; init; } = new();
     public Dictionary<string, int> KycStatusBreakdown { get; init; } = new();
 
+    // Payment breakdown charts
+    public Dictionary<string, int>     BillStatusBreakdown   { get; init; } = new();
+    public Dictionary<string, decimal> RevenueByBillType     { get; init; } = new();
+    public Dictionary<string, int>     PayoutStatusBreakdown { get; init; } = new();
+
     // Time series — last 30 days (for area/line charts)
     public List<TimeSeriesPoint> NewUsersTimeSeries { get; init; } = new();
     public List<TimeSeriesPoint> PaymentsTimeSeries { get; init; } = new();

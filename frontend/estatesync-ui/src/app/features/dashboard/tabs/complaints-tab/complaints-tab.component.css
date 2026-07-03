@@ -3,6 +3,12 @@
   border: 1px solid #EBEBEB;
   border-radius: 12px;
   padding: 18px 20px;
+  transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+.complaint-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+  border-color: #D4C9F0;
 }
 
 .complaint-type-chip {

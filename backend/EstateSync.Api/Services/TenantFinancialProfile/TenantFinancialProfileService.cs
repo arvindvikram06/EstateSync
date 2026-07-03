@@ -196,7 +196,7 @@ public class TenantFinancialProfileService : ITenantFinancialProfileService
 
     public async Task<PagedResponse<TenantFinancialProfileResponse>> GetPagedAsync(string? status, int page, int limit, CancellationToken ct)
     {
-        var (items, total) = await _profileRepo.GetPagedAsync(status, page, limit);
+        var (items, total) = await _profileRepo.GetPagedForListAsync(status, page, limit);
         return new PagedResponse<TenantFinancialProfileResponse>
         {
             Success = true,
@@ -205,6 +205,13 @@ public class TenantFinancialProfileService : ITenantFinancialProfileService
             Limit = limit,
             Total = total
         };
+    }
+
+    public async Task<TenantFinancialProfileResponse> GetByIdForAdminAsync(Guid profileId, CancellationToken ct)
+    {
+        var profile = await _profileRepo.GetWithDetailsByIdAsync(profileId)
+            ?? throw new NotFoundException("TenantFinancialProfile", profileId);
+        return _mapper.MapToFinancialProfileResponse(profile);
     }
 
     public async Task ReviewAsync(Guid profileId, Guid reviewerId, string status, string remarks, CancellationToken ct)

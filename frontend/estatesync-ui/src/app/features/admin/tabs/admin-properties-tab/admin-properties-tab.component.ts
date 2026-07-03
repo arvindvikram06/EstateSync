@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SlicePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { AdminService } from '../../../../core/services/admin.service';
 import { PropertySummaryResponse } from '../../../../core/models/admin.model';
 import { AdminReviewDialogComponent, AdminReviewDialogData } from '../../dialogs/admin-review-dialog.component';
@@ -15,7 +16,7 @@ import { AdminReviewDialogComponent, AdminReviewDialogData } from '../../dialogs
 @Component({
   selector: 'app-admin-properties-tab',
   standalone: true,
-  imports: [SlicePipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule, EmptyStateComponent],
+  imports: [SlicePipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule, EmptyStateComponent, SkeletonLoaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-properties-tab.component.html',
   styleUrl: '../admin-kyc-tab/admin-kyc-tab.component.css',

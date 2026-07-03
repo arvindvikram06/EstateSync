@@ -22,4 +22,7 @@ public interface IStatisticsRepository
     Task<Dictionary<string, int>> GetKycStatusBreakdownAsync(CancellationToken ct = default);
     Task<List<TimeSeriesPoint>> GetNewUsersTimeSeriesAsync(int days, CancellationToken ct = default);
     Task<List<TimeSeriesPoint>> GetPaymentsTimeSeriesAsync(int days, CancellationToken ct = default);
+    Task<Dictionary<string, int>>     GetBillStatusBreakdownAsync(CancellationToken ct = default);
+    Task<Dictionary<string, decimal>> GetRevenueByBillTypeAsync(CancellationToken ct = default);
+    Task<Dictionary<string, int>>     GetPayoutStatusBreakdownAsync(CancellationToken ct = default);
 }

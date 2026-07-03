@@ -28,10 +28,13 @@ export class AdminOverviewTabComponent implements OnInit {
   readonly stats   = signal<AdminDashboardStats | null>(null);
 
   // Computed chart data
-  readonly propertyDonut = computed(() => this.buildDonut(this.stats()?.propertyStatusBreakdown ?? {}));
-  readonly leaseDonut    = computed(() => this.buildDonut(this.stats()?.leaseStatusBreakdown ?? {}));
-  readonly usersArea     = computed(() => this.buildArea(this.stats()?.newUsersTimeSeries ?? [], 'New Users'));
-  readonly paymentsArea  = computed(() => this.buildArea(this.stats()?.paymentsTimeSeries ?? [], 'Revenue (₹)'));
+  readonly propertyDonut    = computed(() => this.buildDonut(this.stats()?.propertyStatusBreakdown ?? {}));
+  readonly leaseDonut       = computed(() => this.buildDonut(this.stats()?.leaseStatusBreakdown ?? {}));
+  readonly billStatusDonut  = computed(() => this.buildDonut(this.stats()?.billStatusBreakdown ?? {}));
+  readonly revenueTypeDonut = computed(() => this.buildDonut(this.stats()?.revenueByBillType ?? {}));
+  readonly payoutDonut      = computed(() => this.buildDonut(this.stats()?.payoutStatusBreakdown ?? {}));
+  readonly usersArea        = computed(() => this.buildArea(this.stats()?.newUsersTimeSeries ?? [], 'New Users'));
+  readonly paymentsArea     = computed(() => this.buildArea(this.stats()?.paymentsTimeSeries ?? [], 'Revenue (₹)'));
 
   readonly donutColors = ['#6750A4','#059669','#D97706','#DC2626','#0284C7','#7C3AED','#0891B2'];
 
@@ -51,6 +54,31 @@ export class AdminOverviewTabComponent implements OnInit {
   readonly paymentsTooltip: ApexTooltip = {
     theme: 'light',
     y: { formatter: (val: number) => '₹' + val.toLocaleString('en-IN') },
+  };
+
+  readonly revenueTooltip: ApexTooltip = {
+    theme: 'light',
+    y: { formatter: (val: number) => '₹' + Math.round(val).toLocaleString('en-IN') },
+  };
+
+  readonly revenuePlotOptions: ApexPlotOptions = {
+    pie: {
+      donut: {
+        size: '60%',
+        labels: {
+          show: true,
+          total: {
+            show: true,
+            label: 'Total',
+            fontSize: '13px',
+            formatter: (w: { globals: { seriesTotals: number[] } }) => {
+              const sum = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+              return '₹' + Math.round(sum).toLocaleString('en-IN');
+            },
+          },
+        },
+      },
+    },
   };
 
   ngOnInit(): void {

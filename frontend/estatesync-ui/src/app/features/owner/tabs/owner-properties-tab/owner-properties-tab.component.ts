@@ -13,6 +13,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { PropertySummaryResponse } from '../../../../core/models/property.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { AlertBannerComponent } from '../../../../shared/components/alert-banner/alert-banner.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { formatCurrency } from '../../../../core/utils/format.utils';
@@ -29,7 +30,7 @@ type PropFilter = 'All' | 'Draft' | 'PendingApproval' | 'Active' | 'Rejected';
     MatProgressSpinnerModule,
     MatTooltipModule,
     StatusBadgeComponent,
-    EmptyStateComponent,
+    EmptyStateComponent, SkeletonLoaderComponent,
     AlertBannerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

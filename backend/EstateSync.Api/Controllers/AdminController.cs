@@ -74,6 +74,14 @@ public class AdminController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("kyc-requests/{id:guid}")]
+    [Authorize(Roles = "Admin,Verifier")]
+    public async Task<ActionResult<ApiResponse<KycVerificationResponse>>> GetKycRequestById(Guid id, CancellationToken ct)
+    {
+        var result = await _kycService.GetByIdForAdminAsync(id, ct);
+        return Ok(new ApiResponse<KycVerificationResponse> { Data = result });
+    }
+
     [HttpPut("kyc-requests/{id:guid}/review")]
     [Authorize(Roles = "Admin,Verifier")]
     public async Task<ActionResult<ApiResponse<object>>> ReviewKycRequest(
@@ -95,6 +103,14 @@ public class AdminController : ControllerBase
     {
         var result = await _financialProfileService.GetPagedAsync(status, page, limit, ct);
         return Ok(result);
+    }
+
+    [HttpGet("financial-profiles/{id:guid}")]
+    [Authorize(Roles = "Admin,Verifier")]
+    public async Task<ActionResult<ApiResponse<TenantFinancialProfileResponse>>> GetFinancialProfileById(Guid id, CancellationToken ct)
+    {
+        var result = await _financialProfileService.GetByIdForAdminAsync(id, ct);
+        return Ok(new ApiResponse<TenantFinancialProfileResponse> { Data = result });
     }
 
     [HttpPut("financial-profiles/{id:guid}/review")]

@@ -13,9 +13,7 @@
 </div>
 
 @if (loading()) {
-  <div class="flex items-center gap-3 py-8 text-sm text-es-muted">
-    <mat-spinner diameter="24" /><span>Loading…</span>
-  </div>
+  <app-skeleton-loader type="card" [rows]="3" />
 } @else if (filtered().length === 0) {
   <app-empty-state icon="description" title="No applications"
     subtitle="Your rental applications will appear here.">
