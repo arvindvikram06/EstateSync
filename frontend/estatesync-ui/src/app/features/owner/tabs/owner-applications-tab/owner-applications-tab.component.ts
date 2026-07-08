@@ -2,25 +2,26 @@ import {
   Component, ChangeDetectionStrategy, inject, signal, computed, output, OnInit, DestroyRef
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
-import { RentalApplicationService } from '../../../../core/services/rental-application.service';
+import { RentalApplicationService } from '@core/services/leasing/rental-application.service';
 import { OwnerApplicationResponse } from '../../../../core/models/rental-application.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { ReviewApplicationDialogComponent, ReviewApplicationDialogData } from './review-application-dialog.component';
 import { CreateLeaseDialogComponent, CreateLeaseDialogData } from './create-lease-dialog.component';
-import { formatDate } from '../../../../core/utils/format.utils';
+import { formatDate, getInitials } from '../../../../core/utils/format.utils';
 
 type AppFilter = 'All' | 'Pending' | 'Approved' | 'Rejected';
 
 @Component({
   selector: 'app-owner-applications-tab',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent, SkeletonLoaderComponent],
+  imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent, SkeletonLoaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './owner-applications-tab.component.html',
   styleUrl: './owner-applications-tab.component.css',
@@ -40,8 +41,12 @@ export class OwnerApplicationsTabComponent implements OnInit {
 
   readonly filtered = computed(() => {
     const f = this.activeFilter();
-    if (f === 'All') return this.all();
-    return this.all().filter(a => a.status === f);
+    const list = f === 'All' ? this.all() : this.all().filter(a => a.status === f);
+    // liveLease: a lease exists for the application and hasn't reached a terminal state
+    return list.map(a => ({
+      ...a,
+      liveLease: !!a.leaseStatus && !['Voided', 'Expired', 'Terminated'].includes(a.leaseStatus),
+    }));
   });
 
   readonly pendingCount = computed(() => this.all().filter(a => a.status === 'Pending').length);
@@ -91,7 +96,5 @@ export class OwnerApplicationsTabComponent implements OnInit {
     });
   }
 
-  initials(name: string): string {
-    return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  }
+  readonly initials = getInitials;
 }

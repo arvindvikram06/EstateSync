@@ -14,13 +14,13 @@
     [style.top.px]="topOffset"
     [style.height]="'calc(100vh - ' + topOffset + 'px)'">
 
-    <div class="px-5 border-b border-[#EBEBEB] flex items-center"
+    <div class="px-5 border-b border-es-border-light flex items-center"
          [style.height.px]="topOffset === 0 ? 56 : null"
          [class.py-5]="topOffset !== 0">
       @if (topOffset === 0) {
         <!-- Staff dashboards: logo — same 56px height as sticky top bar -->
         <a href="/" class="flex items-center gap-2 no-underline font-bold text-[18px] tracking-tight">
-          <mat-icon style="color:#FF385C;font-size:22px;width:22px;height:22px">home_work</mat-icon>
+          <mat-icon class="text-brand !text-[22px] !w-[22px] !h-[22px]">home_work</mat-icon>
           <span class="text-brand">EstateSync</span>
         </a>
       } @else {
@@ -35,10 +35,10 @@
     <nav class="py-2.5 flex-1 overflow-y-auto">
       @for (item of navItems(); track item.id) {
         <button
-          class="dash-nav-btn flex items-center gap-3 w-full px-5 py-[11px] border-r-[3px] border-r-transparent border-t-0 border-b-0 border-l-0 bg-transparent cursor-pointer text-sm text-[#444] font-normal text-left transition-colors hover:bg-[#F7F7F7]"
+          class="dash-nav-btn flex items-center gap-3 w-full px-5 py-[11px] border-r-[3px] border-r-transparent border-t-0 border-b-0 border-l-0 bg-transparent cursor-pointer text-sm text-es-soft font-normal text-left transition-colors hover:bg-es-bg"
           [class.dash-nav-item--active]="activeTab() === item.id"
           (click)="onNavClick(item.id)" type="button">
-          <mat-icon class="dash-nav-icon text-es-muted shrink-0" style="font-size: 20px; width: 20px; height: 20px;">{{ item.icon }}</mat-icon>
+          <mat-icon class="dash-nav-icon text-es-muted shrink-0 !text-[20px] !w-[20px] !h-[20px]">{{ item.icon }}</mat-icon>
           <span class="flex-1">{{ item.label }}</span>
           @if (item.badge) {
             <span class="bg-[var(--mat-sys-primary)] text-white rounded-[10px] px-1.5 py-px text-[11px] font-semibold min-w-[18px] text-center">{{ item.badge }}</span>
@@ -47,15 +47,26 @@
       }
     </nav>
 
+    @if (showLogout()) {
+      <div class="border-t border-es-border-light p-3">
+        <button
+          class="flex items-center gap-3 w-full px-4 py-[10px] rounded-xl border-0 bg-transparent cursor-pointer text-sm text-es-danger font-medium text-left transition-colors hover:bg-es-danger-bg"
+          (click)="logout.emit()" type="button">
+          <mat-icon class="!text-[20px] !w-[20px] !h-[20px] text-es-danger">logout</mat-icon>
+          Sign out
+        </button>
+      </div>
+    }
+
   </aside>
 
   <!-- ── Main content ─────────────────────────────────────────── -->
-  <main class="flex-1 bg-[#F7F7F7] min-w-0" [style.minHeight]="'calc(100vh - ' + topOffset + 'px)'">
+  <main class="flex-1 bg-es-bg min-w-0" [style.minHeight]="'calc(100vh - ' + topOffset + 'px)'">
 
     <!-- Sticky top bar with hamburger (all screen sizes) -->
-    <div class="sticky z-20 bg-white border-b border-[#EBEBEB] px-4 py-[10px] flex items-center gap-3" [style.top.px]="topOffset">
+    <div class="sticky z-20 bg-white border-b border-es-border-light px-4 py-[10px] flex items-center gap-3" [style.top.px]="topOffset">
       <button mat-icon-button (click)="toggleSidebar()" aria-label="Toggle sidebar" class="shrink-0 !w-9 !h-9">
-        <mat-icon style="font-size:22px;width:22px;height:22px;color:#444">menu</mat-icon>
+        <mat-icon class="!text-[22px] !w-[22px] !h-[22px] text-es-soft">menu</mat-icon>
       </button>
       <span class="text-[15px] font-semibold text-es-text leading-none">{{ title() }}</span>
       @if (subtitle()) {

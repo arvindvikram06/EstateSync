@@ -6,8 +6,8 @@ import { forkJoin } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AdminService } from '../../../../core/services/admin.service';
-import { AuthService } from '../../../../core/services/auth.service';
+import { AdminService } from '@core/services/admin/admin.service';
+import { AuthService } from '@core/services/auth/auth.service';
 
 @Component({
   selector: 'app-verifier-overview-tab',

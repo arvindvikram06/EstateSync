@@ -51,10 +51,10 @@ public class AdminFinancialService : IAdminFinancialService
     {
         var (paid, pending, failed)   = await _settlementRepo.GetTotalsAsync(ct);
         var (volume, platformFees)    = await _paymentRepo.GetAllTimeTotalsAsync(ct);
-        var total                     = await _settlementRepo.GetPagedAsync(null, null, null, null, 1, 1, ct);
+        var totalPayouts              = await _settlementRepo.CountAsync(ct);
 
         return new SettlementSummaryResponse(
-            paid, pending, failed, total.Total, platformFees, volume);
+            paid, pending, failed, totalPayouts, platformFees, volume);
     }
 
     public async Task<PagedResponse<ConnectedAccountResponse>> GetConnectedAccountsAsync(
@@ -71,7 +71,7 @@ public class AdminFinancialService : IAdminFinancialService
 
     public async Task<ConnectedAccountResponse> SyncConnectedAccountAsync(Guid accountDbId, CancellationToken ct = default)
     {
-        var record = await _connectedAccountRepo.GetByIdAsync(accountDbId)
+        var record = await _connectedAccountRepo.GetByIdWithOwnerAsync(accountDbId, ct)
             ?? throw new NotFoundException("StripeConnectedAccount", accountDbId);
 
         var stripeService = new AccountService();

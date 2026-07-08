@@ -3,16 +3,14 @@ import {
 } from '@angular/core';
 import { SlicePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
-import { AdminService } from '../../../../core/services/admin.service';
+import { AdminService } from '@core/services/admin/admin.service';
 import { AuditLogResponse } from '../../../../core/models/admin.model';
 
 @Component({
@@ -20,7 +18,7 @@ import { AuditLogResponse } from '../../../../core/models/admin.model';
   standalone: true,
   imports: [
     SlicePipe, ReactiveFormsModule, MatButtonModule, MatIconModule,
-    MatSelectModule, MatInputModule, MatFormFieldModule, MatProgressSpinnerModule,
+    MatMenuModule, MatProgressSpinnerModule,
     EmptyStateComponent, SkeletonLoaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +37,10 @@ export class AdminAuditLogsTabComponent implements OnInit {
 
   readonly entityTypeFilter = new FormControl<string>('');
   readonly actionFilter     = new FormControl<string>('');
+  private readonly entityTypeValue = toSignal(this.entityTypeFilter.valueChanges, { initialValue: this.entityTypeFilter.value });
+  private readonly actionValue     = toSignal(this.actionFilter.valueChanges,     { initialValue: this.actionFilter.value });
+  readonly entityTypeLabel = computed(() => this.entityTypeValue() || 'All types');
+  readonly actionLabel     = computed(() => this.actionValue()     || 'All actions');
 
   readonly totalPages = computed(() => Math.ceil(this.total() / this.limit) || 1);
 

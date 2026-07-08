@@ -54,10 +54,9 @@
 
       <!-- Show all photos button -->
       @if (p.images.length > 0) {
-        <button 
+        <button
           (click)="openImageGallery()"
-          class="photo-grid__all-btn" 
-          style="position:absolute;bottom:16px;right:16px;background:white;border:1.5px solid #222;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+          class="photo-grid__all-btn">
           <mat-icon class="!text-[16px]">grid_on</mat-icon>
           Show all {{ p.images.length }} photos
         </button>
@@ -71,11 +70,11 @@
       <div>
 
         <!-- Section 1: Property type & basics -->
-        <div style="padding-bottom:24px;border-bottom:1px solid #EBEBEB">
-          <h2 style="font-size:22px;font-weight:700;color:#222;margin-bottom:6px">
+        <div class="pb-6 border-0 border-b border-solid border-es-border-light">
+          <h2 class="text-[22px] font-bold text-es-text mb-1.5">
             Entire {{ p.propertyType === 'Villa' ? 'villa' : 'house' }}
           </h2>
-          <p style="font-size:15px;color:#717171">
+          <p class="text-[15px] text-es-muted">
             {{ p.bedrooms }} bedroom{{ p.bedrooms !== 1 ? 's' : '' }} ·
             {{ p.bathrooms }} bathroom{{ p.bathrooms !== 1 ? 's' : '' }} ·
             {{ p.city }}
@@ -83,44 +82,44 @@
         </div>
 
         <!-- Section 2: Key specs grid -->
-        <div style="padding:24px 0;border-bottom:1px solid #EBEBEB">
+        <div class="py-6 border-0 border-b border-solid border-es-border-light">
           <div class="specs-grid">
             <div class="spec-row">
-              <mat-icon class="!text-[28px] !w-[28px] !h-[28px]" style="color:var(--mat-sys-primary)">bed</mat-icon>
-              <span style="font-size:14px;color:#444">{{ p.bedrooms }} bedroom{{ p.bedrooms !== 1 ? 's' : '' }}</span>
+              <mat-icon class="!text-[28px] !w-[28px] !h-[28px] es-text-primary">bed</mat-icon>
+              <span class="es-text-body-lg">{{ p.bedrooms }} bedroom{{ p.bedrooms !== 1 ? 's' : '' }}</span>
             </div>
             <div class="spec-row">
-              <mat-icon class="!text-[28px] !w-[28px] !h-[28px]" style="color:var(--mat-sys-primary)">bathtub</mat-icon>
-              <span style="font-size:14px;color:#444">{{ p.bathrooms }} bathroom{{ p.bathrooms !== 1 ? 's' : '' }}</span>
+              <mat-icon class="!text-[28px] !w-[28px] !h-[28px] es-text-primary">bathtub</mat-icon>
+              <span class="es-text-body-lg">{{ p.bathrooms }} bathroom{{ p.bathrooms !== 1 ? 's' : '' }}</span>
             </div>
             <div class="spec-row">
-              <mat-icon class="!text-[28px] !w-[28px] !h-[28px]" style="color:var(--mat-sys-primary)">category</mat-icon>
-              <span style="font-size:14px;color:#444">{{ p.propertyType === 'Villa' ? 'Villa' : 'Independent house' }}</span>
+              <mat-icon class="!text-[28px] !w-[28px] !h-[28px] es-text-primary">category</mat-icon>
+              <span class="es-text-body-lg">{{ p.propertyType === 'Villa' ? 'Villa' : 'Independent house' }}</span>
             </div>
             <div class="spec-row">
-              <mat-icon class="!text-[28px] !w-[28px] !h-[28px]" style="color:var(--mat-sys-primary)">savings</mat-icon>
-              <span style="font-size:14px;color:#444">{{ formatCurrency(p.securityDeposit) }} deposit</span>
+              <mat-icon class="!text-[28px] !w-[28px] !h-[28px] es-text-primary">savings</mat-icon>
+              <span class="es-text-body-lg">{{ formatCurrency(p.securityDeposit) }} deposit</span>
             </div>
           </div>
         </div>
 
         <!-- Section 3: Description -->
         @if (p.description) {
-          <div style="padding:24px 0;border-bottom:1px solid #EBEBEB">
-            <h2 style="font-size:18px;font-weight:700;color:#222;margin-bottom:12px">About this property</h2>
-            <p style="font-size:14px;color:#444;line-height:1.7;white-space:pre-wrap">{{ p.description }}</p>
+          <div class="py-6 border-0 border-b border-solid border-es-border-light">
+            <h2 class="text-[18px] font-bold text-es-text mb-3">About this property</h2>
+            <p class="text-sm text-es-soft leading-[1.7] whitespace-pre-wrap">{{ p.description }}</p>
           </div>
         }
 
         <!-- Section 4: Amenities -->
         @if (p.amenities.length > 0) {
-          <div style="padding:24px 0;border-bottom:1px solid #EBEBEB">
-            <h2 style="font-size:18px;font-weight:700;color:#222;margin-bottom:16px">What this place offers</h2>
+          <div class="py-6 border-0 border-b border-solid border-es-border-light">
+            <h2 class="text-[18px] font-bold text-es-text mb-4">What this place offers</h2>
             <div class="amenities-grid">
               @for (amenity of p.amenities; track amenity) {
                 <div class="flex items-center gap-3">
-                  <mat-icon class="!text-[20px] !w-[20px] !h-[20px]" style="color:var(--mat-sys-primary)">check_circle</mat-icon>
-                  <span style="font-size:14px;color:#444">{{ amenity }}</span>
+                  <mat-icon class="!text-[20px] !w-[20px] !h-[20px] es-text-primary">check_circle</mat-icon>
+                  <span class="es-text-body-lg">{{ amenity }}</span>
                 </div>
               }
             </div>
@@ -128,31 +127,31 @@
         }
 
         <!-- Section 5: Location -->
-        <div style="padding-top:24px">
-          <h2 style="font-size:18px;font-weight:700;color:#222;margin-bottom:8px">Where you'll be</h2>
-          <div class="flex items-center gap-1 mb-4" style="font-size:14px;color:#717171">
+        <div class="pt-6">
+          <h2 class="text-[18px] font-bold text-es-text mb-2">Where you'll be</h2>
+          <div class="flex items-center gap-1 mb-4 text-sm text-es-muted">
             <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">location_on</mat-icon>
             {{ p.addressLine }} · {{ p.city }}, {{ p.state }}
           </div>
-          <div #mapEl class="map-container" style="height: 350px; width: 100%; border-radius: 12px; z-index: 1;"></div>
+          <div #mapEl class="map-container"></div>
         </div>
 
       </div>
 
       <!-- RIGHT column: sticky pricing card -->
-      <div style="position:sticky;top:88px;align-self:start">
+      <div class="pricing-sticky">
         <div class="pricing-card">
 
           <!-- Price -->
           <div class="flex items-baseline gap-2 mb-1">
-            <span style="font-size:22px;font-weight:800;color:#222">{{ formatCurrency(p.monthlyRent) }}</span>
-            <span style="font-size:14px;color:#717171">/ month</span>
+            <span class="text-[22px] font-extrabold text-es-text">{{ formatCurrency(p.monthlyRent) }}</span>
+            <span class="text-sm text-es-muted">/ month</span>
           </div>
-          <p style="font-size:13px;color:#717171;margin-bottom:20px">
+          <p class="text-[13px] text-es-muted mb-5">
             {{ formatCurrency(p.securityDeposit) }} security deposit
           </p>
 
-          <hr style="border:none;border-top:1px solid #EBEBEB;margin:0 0 20px" />
+          <hr class="pricing-divider" />
 
           <!-- Detail grid -->
           <div class="pricing-detail-grid">
@@ -177,15 +176,13 @@
           @if (isMyProperty()) {
             <!-- Owner view: edit / manage buttons -->
             <a mat-flat-button color="primary"
-              class="w-full !h-12 !text-[15px] !font-bold"
-              style="border-radius:12px"
+              class="w-full !h-12 !text-[15px] !font-bold !rounded-xl"
               [routerLink]="['/properties', property()!.propertyId, 'edit']">
               <mat-icon class="!text-[18px] mr-1">edit</mat-icon>
               Edit property
             </a>
             <a mat-stroked-button
-              class="w-full !h-10 !text-[13px] !mt-3"
-              style="border-radius:12px"
+              class="w-full !h-10 !text-[13px] !mt-3 !rounded-xl"
               routerLink="/owner/dashboard"
               [queryParams]="{ tab: 'properties' }">
               Back to my properties
@@ -193,7 +190,7 @@
           } @else {
             <!-- Tenant / public view -->
             @if (ctaState() === 'kyc') {
-              <p style="font-size:12px;color:#717171;margin-bottom:10px;text-align:center">
+              <p class="text-[12px] text-es-muted mb-2.5 text-center">
                 Complete identity verification to apply for this property.
               </p>
             }
@@ -201,8 +198,7 @@
             <button
               mat-flat-button
               color="primary"
-              class="w-full !h-12 !text-[15px] !font-bold"
-              style="border-radius:12px"
+              class="w-full !h-12 !text-[15px] !font-bold !rounded-xl"
               [disabled]="ctaState() === 'applied'"
               (click)="onCta()">
               @switch (ctaState()) {
@@ -214,19 +210,19 @@
             </button>
 
             @if (ctaState() === 'login') {
-              <p style="font-size:12px;color:#717171;margin-top:10px;text-align:center">
+              <p class="text-[12px] text-es-muted mt-2.5 text-center">
                 Don't have an account? <a routerLink="/auth/register" class="text-es-text font-medium hover:underline">Sign up</a>
               </p>
             }
 
-            <p style="font-size:12px;color:#AAAAAA;text-align:center;margin-top:14px">You won't be charged yet</p>
+            <p class="text-[12px] text-es-faint text-center mt-3.5">You won't be charged yet</p>
           }
         </div>
 
         <!-- Owner verified badge -->
-        <div style="margin-top:16px;padding:16px 0;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px">
-          <mat-icon class="!text-[20px] !w-[20px] !h-[20px]" style="color:#059669">verified_user</mat-icon>
-          <span style="font-size:13px;color:#717171">Owner verified · KYC checked</span>
+        <div class="mt-4 py-4 flex items-center justify-center gap-1.5">
+          <mat-icon class="!text-[20px] !w-[20px] !h-[20px] es-text-success">verified_user</mat-icon>
+          <span class="es-text-sm">Owner verified · KYC checked</span>
         </div>
       </div>
 

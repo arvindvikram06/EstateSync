@@ -6,14 +6,35 @@ module.exports = {
   },
   theme: {
     extend: {
+      // All colors reference the CSS custom properties defined in
+      // src/styles.css :root — single source of truth for the palette.
       colors: {
-        brand:        '#FF385C',
-        'brand-dark': '#D4145A',
+        brand:        'rgb(var(--es-brand-rgb) / <alpha-value>)',
+        'brand-dark': 'var(--es-brand-dark)',
+        'brand-deep': 'var(--es-brand-deep)',
+        primary:      'var(--mat-sys-primary)',
+        hero: {
+          start: 'var(--es-hero-start)',
+          mid:   'var(--es-hero-mid)',
+          end:   'var(--es-hero-end)',
+        },
         es: {
-          bg:     '#F7F7F7',
-          border: '#DDDDDD',
-          text:   '#222222',
-          muted:  '#717171',
+          bg:             'var(--es-bg)',
+          subtle:         'var(--es-bg-subtle)',
+          border:         'var(--es-border)',
+          'border-light': 'var(--es-border-light)',
+          'border-strong':'var(--es-border-strong)',
+          divider:        'var(--es-divider)',
+          text:           'var(--es-text)',
+          muted:          'var(--es-text-secondary)',
+          soft:           'var(--es-text-soft)',
+          faint:          'var(--es-text-muted)',
+          success:        'var(--es-success)',
+          danger:         'var(--es-danger)',
+          'danger-bg':    'var(--es-red-wash)',
+          warning:        'var(--es-warning)',
+          warn:           'var(--es-warning-deep)',
+          sky:            'var(--es-sky)',
         },
       },
       borderRadius: {
@@ -25,5 +46,4 @@ module.exports = {
       },
     },
   },
-  plugins: [],
 };

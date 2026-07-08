@@ -9,6 +9,7 @@ using EstateSync.Api.Common;
 using EstateSync.Api.DTOs.TenantFinancialProfile;
 using EstateSync.Api.DTOs.Users;
 using EstateSync.Api.Exceptions;
+using EstateSync.Api.Interfaces.Services.Documents;
 using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Interfaces.Services.Storage;
 using EstateSync.Api.Interfaces.Services.TenantFinancialProfile;
@@ -33,6 +34,7 @@ public class TenantFinancialProfileService : ITenantFinancialProfileService
     private readonly IUserRepository _userRepo;
     private readonly INotificationSender _notificationSender;
     private readonly IFileStorageService _fileStorageService;
+    private readonly IDocumentUploadService _documentUpload;
     private readonly IUnitOfWork _unitOfWork;
     private readonly UserMapper _mapper;
     private readonly ILogger<TenantFinancialProfileService> _logger;
@@ -43,6 +45,7 @@ public class TenantFinancialProfileService : ITenantFinancialProfileService
         IUserRepository userRepo,
         INotificationSender notificationSender,
         IFileStorageService fileStorageService,
+        IDocumentUploadService documentUpload,
         IUnitOfWork unitOfWork,
         UserMapper mapper,
         ILogger<TenantFinancialProfileService> logger)
@@ -52,6 +55,7 @@ public class TenantFinancialProfileService : ITenantFinancialProfileService
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
         _notificationSender = notificationSender ?? throw new ArgumentNullException(nameof(notificationSender));
         _fileStorageService = fileStorageService ?? throw new ArgumentNullException(nameof(fileStorageService));
+        _documentUpload = documentUpload ?? throw new ArgumentNullException(nameof(documentUpload));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -67,8 +71,8 @@ public class TenantFinancialProfileService : ITenantFinancialProfileService
 
         var existing = await _profileRepo.GetByTenantIdAsync(tenantId);
 
-        if (existing.Any(p => p.Status == ApprovalStatus.Pending || p.Status == ApprovalStatus.Approved))
-            throw new ConflictException("You already have an active or approved financial profile.");
+        if (existing.Any(p => p.Status == ApprovalStatus.Pending))
+            throw new ConflictException("You already have a financial profile pending review. Please wait for it to be reviewed before submitting a new one.");
 
         var draft = existing.FirstOrDefault(p => p.Status == ApprovalStatus.Draft);
         if (draft != null)
@@ -108,49 +112,14 @@ public class TenantFinancialProfileService : ITenantFinancialProfileService
         if (profile.Status != ApprovalStatus.Draft)
             throw new ConflictException("Documents can only be uploaded to a draft profile.");
 
-        if (file == null || file.Length == 0)
-            throw new BadRequestException("No file was uploaded.");
-
-        var isPdf = file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase) ||
-                    Path.GetExtension(file.FileName).Equals(".pdf", StringComparison.OrdinalIgnoreCase);
-        if (!isPdf)
-            throw new BadRequestException("Only PDF documents are allowed.");
+        FileValidation.EnsurePdf(file);
 
         var existingLink = profile.TenantFinancialDocuments.FirstOrDefault(d => d.Document?.DocumentType == documentType);
-        Document doc;
+        var doc = await _documentUpload.SaveOrReplaceAsync(
+            existingLink?.Document, file, documentType, tenantId, $"users/{tenantId}/financial-profile", ct);
 
-        if (existingLink?.Document != null)
+        if (existingLink == null)
         {
-            doc = existingLink.Document;
-            if (!string.IsNullOrEmpty(doc.DocumentUrl))
-                await _fileStorageService.DeleteFileAsync(doc.DocumentUrl);
-
-            doc.DocumentUrl = await _fileStorageService.SaveFileAsync(file, $"users/{tenantId}/financial-profile", ct);
-            doc.OriginalFileName = file.FileName;
-            doc.MimeType = file.ContentType;
-            doc.FileSize = file.Length;
-            doc.UploadedAt = DateTime.UtcNow;
-            doc.ReviewStatus = ApprovalStatus.Pending;
-            doc.UpdatedAt = DateTime.UtcNow;
-        }
-        else
-        {
-            var filePath = await _fileStorageService.SaveFileAsync(file, $"users/{tenantId}/financial-profile", ct);
-            doc = new Document
-            {
-                DocumentId = Guid.NewGuid(),
-                DocumentType = documentType,
-                DocumentUrl = filePath,
-                OriginalFileName = file.FileName,
-                MimeType = file.ContentType,
-                FileSize = file.Length,
-                UploadedById = tenantId,
-                UploadedAt = DateTime.UtcNow,
-                ReviewStatus = ApprovalStatus.Pending,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _documentRepo.AddAsync(doc);
             profile.TenantFinancialDocuments.Add(new TenantFinancialDocument
             {
                 ProfileId = profileId,

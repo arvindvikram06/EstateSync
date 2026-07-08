@@ -17,8 +17,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { IState, ICity } from 'country-state-city';
-import { PropertyService } from '../../../core/services/property.service';
-import { LocationService } from '../../../core/services/location.service';
+import { PropertyService } from '@core/services/property/property.service';
+import { LocationService } from '@core/services/shared/location.service';
 import { PropertyDetailResponse, PropertyImageResponse, DocumentResponse } from '../../../core/models/property.model';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import * as L from 'leaflet';
@@ -359,7 +359,10 @@ export class PropertyEditComponent implements OnInit {
     }
   }
 
-  onStateSelected(state: IState): void {
+  onStateSelected(stateName: string): void {
+    const state = this.states().find(s => s.name === stateName);
+    if (!state) return;
+  
     this.stateCode.set(state.isoCode);
     this.stateDisplay.set(state.name);
     this.form.patchValue({ state: state.name, city: '' });
@@ -374,9 +377,9 @@ export class PropertyEditComponent implements OnInit {
     }
   }
 
-  onCitySelected(city: ICity): void {
-    this.cityDisplay.set(city.name);
-    this.form.patchValue({ city: city.name });
+  onCitySelected(cityName: string): void {
+    this.cityDisplay.set(cityName);
+    this.form.patchValue({ city: cityName });
   }
 
   // ── Amenities ────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 <ng-template #btnContent>
   <span class="flex items-center justify-center gap-2 w-full h-full">
-    @if (loading()) { <mat-spinner diameter="18" class="shrink-0 [&_circle]:!stroke-white" style="--mdc-circular-progress-active-indicator-color: white;"></mat-spinner> }
+    @if (loading()) { <mat-spinner diameter="18" class="shrink-0 [&_circle]:!stroke-white"></mat-spinner> }
     <ng-content></ng-content>
   </span>
 </ng-template>

@@ -5,34 +5,38 @@
   </div>
 </div>
 
-<div class="filter-row">
-  <mat-form-field appearance="outline" style="width:160px">
-    <mat-label>Status</mat-label>
-    <mat-icon matPrefix class="mr-1">filter_list</mat-icon>
-    <mat-select [formControl]="statusFilter">
-      <mat-option value="">All</mat-option>
-      <mat-option value="Open">Open</mat-option>
-      <mat-option value="InProgress">In Progress</mat-option>
-      <mat-option value="Resolved">Resolved</mat-option>
-      <mat-option value="Closed">Closed</mat-option>
-    </mat-select>
-  </mat-form-field>
+<div class="filter-bar mb-5">
+  <button class="filter-pill-btn" [class.filter-pill-btn--active]="!!statusFilter.value"
+    [matMenuTriggerFor]="statusMenu" type="button">
+    <mat-icon>filter_list</mat-icon>
+    {{ statusLabel() }}
+    <mat-icon>expand_more</mat-icon>
+  </button>
+  <mat-menu #statusMenu>
+    <button mat-menu-item (click)="statusFilter.setValue('')">All statuses</button>
+    <button mat-menu-item (click)="statusFilter.setValue('Open')">Open</button>
+    <button mat-menu-item (click)="statusFilter.setValue('InProgress')">In Progress</button>
+    <button mat-menu-item (click)="statusFilter.setValue('Resolved')">Resolved</button>
+    <button mat-menu-item (click)="statusFilter.setValue('Closed')">Closed</button>
+  </mat-menu>
 
-  <mat-form-field appearance="outline" style="width:160px">
-    <mat-label>Priority</mat-label>
-    <mat-icon matPrefix class="mr-1">priority_high</mat-icon>
-    <mat-select [formControl]="priorityFilter">
-      <mat-option value="">All</mat-option>
-      <mat-option value="Critical">Critical</mat-option>
-      <mat-option value="High">High</mat-option>
-      <mat-option value="Medium">Medium</mat-option>
-      <mat-option value="Low">Low</mat-option>
-    </mat-select>
-  </mat-form-field>
+  <button class="filter-pill-btn" [class.filter-pill-btn--active]="!!priorityFilter.value"
+    [matMenuTriggerFor]="priorityMenu" type="button">
+    <mat-icon>priority_high</mat-icon>
+    {{ priorityLabel() }}
+    <mat-icon>expand_more</mat-icon>
+  </button>
+  <mat-menu #priorityMenu>
+    <button mat-menu-item (click)="priorityFilter.setValue('')">Any priority</button>
+    <button mat-menu-item (click)="priorityFilter.setValue('Critical')">Critical</button>
+    <button mat-menu-item (click)="priorityFilter.setValue('High')">High</button>
+    <button mat-menu-item (click)="priorityFilter.setValue('Medium')">Medium</button>
+    <button mat-menu-item (click)="priorityFilter.setValue('Low')">Low</button>
+  </mat-menu>
 </div>
 
 @if (loading()) {
-  <div class="flex items-center gap-3 py-12" style="color:#717171;font-size:14px">
+  <div class="flex items-center gap-3 py-12 text-sm text-es-muted">
     <mat-spinner diameter="24" /><span>Loading…</span>
   </div>
 } @else if (items().length === 0) {
@@ -47,7 +51,7 @@
           <th>Priority</th>
           <th>Status</th>
           <th>Raised</th>
-          <th style="text-align:right">Action</th>
+          <th class="text">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -55,15 +59,15 @@
           <tr>
             <td>
               <div class="user-name">{{ item.title }}</div>
-              <div style="font-size:12px;color:#717171">{{ item.propertyTitle }}</div>
+              <div class="es-text-xs">{{ item.propertyTitle }}</div>
             </td>
-            <td style="font-size:13px;color:#717171">{{ item.complaintType }}</td>
+            <td class="es-text-sm">{{ item.complaintType }}</td>
             <td>
               <span class="es-badge" [class]="priorityClass(item.priority)">{{ item.priority }}</span>
             </td>
             <td><app-status-badge [status]="item.status" /></td>
-            <td style="font-size:13px;color:#717171">{{ item.createdAt | slice:0:10 }}</td>
-            <td style="text-align:right">
+            <td class="es-text-sm">{{ item.createdAt | slice:0:10 }}</td>
+            <td class="text">
               <button mat-stroked-button class="!rounded-full !text-xs !h-8"
                 [disabled]="item.status === 'Closed'"
                 (click)="openUpdateStatus(item)">
@@ -77,7 +81,7 @@
   </div>
 
   <div class="pagination">
-    <span style="font-size:13px;color:#717171">Page {{ page() }} of {{ totalPages() }} · {{ total() }} total</span>
+    <span class="es-text-sm">Page {{ page() }} of {{ totalPages() }} · {{ total() }} total</span>
     <div class="flex gap-2">
       <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="page() === 1" (click)="prevPage()">
         <mat-icon>chevron_left</mat-icon>

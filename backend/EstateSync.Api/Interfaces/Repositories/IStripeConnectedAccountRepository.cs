@@ -10,6 +10,7 @@ public interface IStripeConnectedAccountRepository : IRepository<StripeConnected
 {
     Task<StripeConnectedAccount?> GetByOwnerIdAsync(Guid ownerId);
     Task<StripeConnectedAccount?> GetByStripeAccountIdAsync(string stripeAccountId);
+    Task<StripeConnectedAccount?> GetByIdWithOwnerAsync(Guid id, CancellationToken ct = default);
     Task<(IEnumerable<StripeConnectedAccount> Items, int Total)> GetPagedWithOwnerAsync(
         int page, int limit, CancellationToken ct = default);
 }

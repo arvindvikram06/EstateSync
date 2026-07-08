@@ -36,9 +36,21 @@ export const routes: Routes = [
     loadComponent: () => import('./features/admin/admin-dashboard.component').then(m => m.AdminDashboardComponent)
   },
   {
+    path: 'admin/leases/:id',
+    canActivate: [roleGuard('Admin')],
+    loadComponent: () => import('./features/leases/lease-detail/lease-detail.component').then(m => m.LeaseDetailComponent)
+  },
+  {
     path: 'verifier/dashboard',
     canActivate: [roleGuard('Admin', 'Verifier')],
     loadComponent: () => import('./features/verifier/verifier-dashboard.component').then(m => m.VerifierDashboardComponent)
+  },
+
+  // ── Property creation wizard — standalone, no public navbar ─────────────
+  {
+    path: 'properties/create',
+    canActivate: [roleGuard('Owner')],
+    loadComponent: () => import('./features/properties/property-create/property-create.component').then(m => m.PropertyCreateComponent)
   },
 
   // ── Public + Tenant/Owner zone — main layout with navbar ────────────────
@@ -57,6 +69,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
       {
+        path: 'profile',
+        canActivate: [roleGuard('Tenant', 'Owner', 'Admin', 'Verifier')],
+        loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
+      },
+      {
         path: 'kyc',
         canActivate: [roleGuard('Tenant', 'Owner')],
         loadComponent: () => import('./features/kyc/kyc-wizard.component').then(m => m.KycWizardComponent)
@@ -65,11 +82,6 @@ export const routes: Routes = [
         path: 'owner/dashboard',
         canActivate: [roleGuard('Owner')],
         loadComponent: () => import('./features/owner/owner-dashboard.component').then(m => m.OwnerDashboardComponent)
-      },
-      {
-        path: 'properties/create',
-        canActivate: [roleGuard('Owner')],
-        loadComponent: () => import('./features/properties/property-create/property-create.component').then(m => m.PropertyCreateComponent)
       },
       {
         path: 'properties/:id/edit',
@@ -87,7 +99,7 @@ export const routes: Routes = [
       },
       {
         path: 'leases/:id',
-        canActivate: [roleGuard('Tenant', 'Owner')],
+        canActivate: [roleGuard('Tenant', 'Owner', 'Admin')],
         loadComponent: () => import('./features/leases/lease-detail/lease-detail.component').then(m => m.LeaseDetailComponent)
       },
       {

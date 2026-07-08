@@ -9,7 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { LeaseService } from '../../../../core/services/lease.service';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { LeaseService } from '@core/services/leasing/lease.service';
 
 export interface TerminateLeaseDialogData {
   leaseId: string;
@@ -27,13 +28,14 @@ export interface TerminateLeaseDialogData {
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatCheckboxModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="p-7" style="min-width:400px;max-width:460px">
+    <div class="p-7">
       <div class="flex items-center gap-3 mb-4">
         <div class="flex items-center justify-center w-10 h-10 rounded-full bg-red-50">
-          <mat-icon class="!text-[20px]" style="color:#DC2626">gavel</mat-icon>
+          <mat-icon class="!text-[20px] es-text-danger">gavel</mat-icon>
         </div>
         <h2 class="text-[18px] font-bold text-es-text m-0">Terminate Lease</h2>
       </div>
@@ -54,6 +56,13 @@ export interface TerminateLeaseDialogData {
           }
         </mat-form-field>
 
+        <mat-checkbox formControlName="forfeitDeposit" class="mb-2">
+          Forfeit the security deposit
+        </mat-checkbox>
+        <p class="text-[12px] text-es-muted mb-3 mt-0.5">
+          Untick if the deposit will be returned to the tenant — the notification wording changes accordingly.
+        </p>
+
         @if (error()) {
           <p class="text-sm text-red-600 mb-3">{{ error() }}</p>
         }
@@ -61,11 +70,10 @@ export interface TerminateLeaseDialogData {
         <div class="flex gap-3 justify-end mt-3">
           <button type="button" mat-stroked-button class="!rounded-full !px-6" mat-dialog-close>Cancel</button>
           <button type="submit" mat-flat-button
-            class="!rounded-full !px-6 !font-semibold"
-            style="background:#DC2626;color:white"
+            class="!rounded-full !px-6 !font-semibold es-btn-danger-solid"
             [disabled]="form.invalid || submitting()">
             @if (submitting()) {
-              <mat-spinner diameter="16" style="display:inline-block;margin-right:6px" />
+              <mat-spinner diameter="16" class="inline-block mr-1.5" />
             }
             Terminate Lease
           </button>
@@ -86,13 +94,14 @@ export class TerminateLeaseDialogComponent {
 
   readonly form = this.fb.nonNullable.group({
     reason: ['', Validators.required],
+    forfeitDeposit: [true],
   });
 
   submit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.submitting.set(true);
     this.error.set(null);
-    this.leaseSvc.terminateLease(this.data.leaseId, { reason: this.form.getRawValue().reason })
+    this.leaseSvc.terminateLease(this.data.leaseId, this.form.getRawValue())
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => { this.submitting.set(false); this.dialogRef.close(true); },
       error: err => {

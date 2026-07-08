@@ -27,10 +27,10 @@ export interface PayoutConfirmData {
           </mat-icon>
         </div>
         <div>
-          <div style="font-size:16px;font-weight:700;color:#222">
+          <div class="text-[16px] font-bold text-es-text">
             Confirm {{ data.method === 'instant' ? 'Instant' : 'Standard' }} Payout
           </div>
-          <div style="font-size:12px;color:#717171">
+          <div class="es-text-xs">
             {{ data.method === 'instant' ? 'Arrives in minutes' : '1–2 business days' }}
           </div>
         </div>
@@ -39,34 +39,34 @@ export interface PayoutConfirmData {
       <!-- Breakdown -->
       <div class="rounded-xl overflow-hidden mb-5" style="border:1px solid #EBEBEB">
         <div class="flex items-center justify-between px-4 py-3" style="background:#FAFAFA">
-          <span style="font-size:13px;color:#717171">Payout amount</span>
-          <span style="font-size:13px;font-weight:600;color:#222">
+          <span class="es-text-sm">Payout amount</span>
+          <span class="es-text-strong">
             {{ data.amount | currency:data.currency:'symbol':'1.2-2' }}
           </span>
         </div>
 
         @if (data.method === 'instant') {
           <div class="flex items-center justify-between px-4 py-3" style="border-top:1px solid #EBEBEB">
-            <span style="font-size:13px;color:#717171">Stripe 1% fee</span>
-            <span style="font-size:13px;font-weight:600;color:#DC2626">
+            <span class="es-text-sm">Stripe 1% fee</span>
+            <span class="es-text-strong es-text-danger">
               − {{ fee | currency:data.currency:'symbol':'1.2-2' }}
             </span>
           </div>
           <div class="flex items-center justify-between px-4 py-3"
                style="border-top:1px solid #EBEBEB;background:color-mix(in srgb,var(--mat-sys-primary) 4%,white)">
-            <span style="font-size:13px;font-weight:700;color:#222">You receive</span>
+            <span class="text-[13px] font-bold text-es-text">You receive</span>
             <span style="font-size:15px;font-weight:800;color:var(--mat-sys-primary)">
               {{ net | currency:data.currency:'symbol':'1.2-2' }}
             </span>
           </div>
         } @else {
           <div class="flex items-center justify-between px-4 py-3" style="border-top:1px solid #EBEBEB">
-            <span style="font-size:13px;color:#717171">Fee</span>
-            <span class="es-badge es-badge--approved" style="font-size:11px">Free</span>
+            <span class="es-text-sm">Fee</span>
+            <span class="es-badge es-badge--approved text-[11px]">Free</span>
           </div>
           <div class="flex items-center justify-between px-4 py-3"
                style="border-top:1px solid #EBEBEB;background:color-mix(in srgb,var(--mat-sys-primary) 4%,white)">
-            <span style="font-size:13px;font-weight:700;color:#222">You receive</span>
+            <span class="text-[13px] font-bold text-es-text">You receive</span>
             <span style="font-size:15px;font-weight:800;color:var(--mat-sys-primary)">
               {{ data.amount | currency:data.currency:'symbol':'1.2-2' }}
             </span>
@@ -75,7 +75,7 @@ export interface PayoutConfirmData {
       </div>
 
       <!-- Info note -->
-      <div class="flex items-start gap-2 mb-6" style="font-size:12px;color:#717171">
+      <div class="flex items-start gap-2 mb-6 es-text-xs">
         <mat-icon style="font-size:14px;width:14px;height:14px;margin-top:1px;flex-shrink:0;color:#717171">info</mat-icon>
         @if (data.method === 'instant') {
           Funds will arrive in your bank within minutes. The 1% fee is charged by Stripe and deducted from the payout amount.

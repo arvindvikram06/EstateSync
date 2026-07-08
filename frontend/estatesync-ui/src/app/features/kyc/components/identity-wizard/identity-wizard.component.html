@@ -85,7 +85,7 @@
           <div class="doc-grid">
             @for (slot of DOC_SLOTS; track slot.type) {
               <input #fileInput type="file" [id]="'file-' + slot.type" [accept]="slot.accept"
-                style="display:none" (change)="onFileSelected($event, slot.type)" />
+                class="!hidden" (change)="onFileSelected($event, slot.type)" />
               <div class="doc-slot" [class.doc-slot--done]="store.uploadedDocs()[slot.type]">
                 <div class="doc-slot__icon">
                   <mat-icon>
@@ -155,7 +155,7 @@
               <mat-label>PAN number</mat-label>
               <mat-icon matPrefix>assignment_ind</mat-icon>
               <input matInput formControlName="panNumber" placeholder="ABCDE1234F"
-                maxlength="10" style="text-transform:uppercase" class="mono-input" />
+                maxlength="10" class="uppercase mono-input" />
               <mat-hint>10-character ID from your PAN card</mat-hint>
             </mat-form-field>
           </form>

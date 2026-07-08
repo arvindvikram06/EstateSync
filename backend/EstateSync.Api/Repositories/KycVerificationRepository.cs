@@ -79,4 +79,20 @@ public class KycVerificationRepository : BaseRepository<KycVerification>, IKycVe
 
         return (items, total);
     }
+
+    public async Task<bool> IsAadhaarApprovedAsync(string aadhaarNumber, Guid excludeUserId)
+    {
+        return await _dbSet.AnyAsync(k =>
+            k.AadhaarNumber == aadhaarNumber &&
+            k.Status == ApprovalStatus.Approved &&
+            k.UserId != excludeUserId);
+    }
+
+    public async Task<bool> IsPanApprovedAsync(string panNumber, Guid excludeUserId)
+    {
+        return await _dbSet.AnyAsync(k =>
+            k.PanNumber == panNumber &&
+            k.Status == ApprovalStatus.Approved &&
+            k.UserId != excludeUserId);
+    }
 }

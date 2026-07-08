@@ -6,50 +6,26 @@
   margin-bottom: 24px;
 }
 
-.summary-card {
-  background: white;
-  border: 1px solid #EBEBEB;
-  border-radius: 14px;
-  padding: 18px 20px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.04);
-}
-
+/* Base card styles come from the shared metric-card block in styles.css;
+   only the bills-specific overrides live here. */
 .summary-card__icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
   background: color-mix(in srgb, var(--mat-sys-primary) 12%, white);
   color: var(--mat-sys-primary);
 }
 
 .summary-card__icon--amber {
-  background: #FEF3C7;
-  color: #D97706;
+  background: var(--es-amber-bg);
+  color: var(--es-warning);
 }
 
 .summary-card__icon--green {
-  background: #D1FAE5;
-  color: #059669;
-}
-
-.summary-card__label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #717171;
-  margin-bottom: 2px;
+  background: var(--es-green-bg);
+  color: var(--es-success);
 }
 
 .summary-card__value {
   font-size: 18px;
   font-weight: 800;
-  color: #222;
   letter-spacing: -0.3px;
 }
 
@@ -66,7 +42,7 @@
 .status-tabs {
   display: flex;
   gap: 6px;
-  background: #F3F4F6;
+  background: var(--es-grey-bg);
   border-radius: 12px;
   padding: 4px;
 }
@@ -81,7 +57,7 @@
   background: transparent;
   font-size: 13px;
   font-weight: 500;
-  color: #717171;
+  color: var(--es-text-secondary);
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
@@ -89,14 +65,14 @@
 
 .status-tab:hover {
   background: white;
-  color: #222;
+  color: var(--es-text);
 }
 
 .status-tab--active {
   background: white;
   color: var(--mat-sys-primary);
   font-weight: 700;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+  box-shadow: 0 1px 4px rgb(0,0,0,0.10);
 }
 
 .status-tab__badge {
@@ -113,7 +89,7 @@
 /* ── Bill cards ──────────────────────────────── */
 .bill-card {
   background: white;
-  border: 1px solid #EBEBEB;
+  border: 1px solid var(--es-border-light);
   border-radius: 14px;
   padding: 18px 20px;
   display: flex;
@@ -124,8 +100,8 @@
 }
 
 .bill-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  border-color: #DDDDDD;
+  box-shadow: 0 4px 16px rgb(0,0,0,0.08);
+  border-color: var(--es-border);
   transform: translateY(-1px);
 }
 
@@ -150,8 +126,8 @@
 .bill-due-chip {
   font-size: 11px;
   font-weight: 600;
-  background: #FEF3C7;
-  color: #92400E;
+  background: var(--es-amber-bg);
+  color: var(--es-status-amber);
   border-radius: 20px;
   padding: 2px 8px;
 }
@@ -159,13 +135,14 @@
 .bill-overdue-chip {
   font-size: 11px;
   font-weight: 600;
-  background: #FEE2E2;
-  color: #991B1B;
+  background: var(--es-red-bg);
+  color: var(--es-status-red);
   border-radius: 20px;
   padding: 2px 8px;
 }
 
-@media (max-width: 600px) {
+
+@media (width <= 600px) {
   .summary-row { grid-template-columns: 1fr; }
   .filter-bar  { flex-direction: column; align-items: stretch; }
 }

@@ -15,4 +15,6 @@ public interface IPaymentRepository : IRepository<Payment>
     Task<(decimal TotalVolume, decimal TotalPlatformFees)> GetAllTimeTotalsAsync(CancellationToken ct = default);
 
     Task<Payment?> GetByTransactionIdAsync(string transactionId, CancellationToken ct = default);
+
+    Task<IEnumerable<Payment>> GetByLeaseIdAsync(Guid leaseId, CancellationToken ct = default);
 }

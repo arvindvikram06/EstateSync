@@ -43,6 +43,7 @@ public class PropertyService : IPropertyService
     {
         var offset = (request.Page - 1) * request.Limit;
         var (items, total) = await _propertyRepo.SearchAsync(
+            request.Search,
             request.State,
             request.PropertyType,
             request.Bedrooms,
@@ -99,13 +100,10 @@ public class PropertyService : IPropertyService
 
         _logger.LogInformation("Property {PropertyId} created successfully in Draft status by owner {OwnerId}", property.PropertyId, ownerId);
 
-        var createdProperty = await _propertyRepo.GetWithDetailsByIdAsync(property.PropertyId);
-        if (createdProperty == null)
-        {
-            throw new NotFoundException("Property", property.PropertyId);
-        }
-
-        return _mapper.MapToDetailResponse(createdProperty);
+        // The tracked entity is complete for a fresh Draft (no images/amenities
+        // yet); only the Owner navigation needs populating for the response.
+        property.Owner ??= await _userRepo.GetByIdAsync(ownerId);
+        return _mapper.MapToDetailResponse(property);
     }
 
     public async Task<PropertyDetailResponse> UpdateAsync(Guid id, UpdatePropertyRequest request, Guid ownerId, CancellationToken ct)
@@ -155,6 +153,72 @@ public class PropertyService : IPropertyService
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Property {PropertyId} deleted by user {UserId}. Admin: {IsAdmin}", id, userId, isAdmin);
+    }
+
+    public async Task<PropertyDetailResponse> CreateWizardDraftAsync(CreatePropertyDraftRequest request, Guid ownerId, CancellationToken ct)
+    {
+        var isVerified = await _userRepo.IsUserVerifiedOwnerAsync(ownerId);
+        if (!isVerified)
+        {
+            throw new ForbiddenException("Owner must be verified (Stripe onboarded) before creating a property listing.");
+        }
+
+        var property = new Property
+        {
+            PropertyId  = Guid.NewGuid(),
+            OwnerId     = ownerId,
+            PropertyType = request.PropertyType,
+            Status      = PropertyStatus.Draft,
+            // Required DB columns — placeholder values; completion validated on submit
+            Title       = string.Empty,
+            Description = string.Empty,
+            AddressLine = string.Empty,
+            CreatedAt   = DateTime.UtcNow,
+        };
+
+        await _propertyRepo.AddAsync(property);
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        _logger.LogInformation("Wizard draft property {PropertyId} created by owner {OwnerId}", property.PropertyId, ownerId);
+
+        var created = await _propertyRepo.GetWithDetailsByIdAsync(property.PropertyId);
+        return _mapper.MapToDetailResponse(created!);
+    }
+
+    public async Task<PropertyDetailResponse> PatchWizardDraftAsync(Guid id, PatchPropertyDraftRequest request, Guid ownerId, CancellationToken ct)
+    {
+        var property = await _propertyRepo.GetWithDetailsByIdAsync(id);
+        if (property == null)
+        {
+            throw new NotFoundException("Property", id);
+        }
+
+        if (property.OwnerId != ownerId)
+        {
+            throw new ForbiddenException("You do not own this property.");
+        }
+
+        if (property.Status != PropertyStatus.Draft)
+        {
+            throw new ConflictException("Only Draft properties can be updated via the wizard.");
+        }
+
+        var changed = _mapper.ApplyPatchToEntity(request, property);
+        if (changed)
+        {
+            property.UpdatedAt = DateTime.UtcNow;
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+
+        _logger.LogInformation("Wizard draft {PropertyId} patched by owner {OwnerId}", id, ownerId);
+
+        return _mapper.MapToDetailResponse(property);
+    }
+
+    public async Task<PropertyDetailResponse?> GetMyActiveDraftAsync(Guid ownerId, CancellationToken ct)
+    {
+        var draft = await _propertyRepo.GetActiveDraftByOwnerIdAsync(ownerId);
+        return draft == null ? null : _mapper.MapToDetailResponse(draft);
     }
 
     public async Task<PagedResponse<ReviewResponse>> GetReviewsAsync(Guid id, int page, int limit, CancellationToken ct)

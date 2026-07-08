@@ -1,12 +1,12 @@
 .summary-box {
-  background: #F9FAFB;
-  border: 1px solid #EBEBEB;
+  background: var(--es-bg-faint);
+  border: 1px solid var(--es-border-light);
   border-radius: 12px;
   padding: 16px 20px;
 }
 
 .canvas-wrapper {
-  border: 2px dashed #DDDDDD;
+  border: 2px dashed var(--es-border);
   border-radius: 12px;
   height: 180px;
   overflow: hidden;

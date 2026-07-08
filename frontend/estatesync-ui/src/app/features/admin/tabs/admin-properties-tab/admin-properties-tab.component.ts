@@ -9,7 +9,8 @@ import { SlicePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
-import { AdminService } from '../../../../core/services/admin.service';
+import { AdminService } from '@core/services/admin/admin.service';
+import { formatCurrency } from '../../../../core/utils/format.utils';
 import { PropertySummaryResponse } from '../../../../core/models/admin.model';
 import { AdminReviewDialogComponent, AdminReviewDialogData } from '../../dialogs/admin-review-dialog.component';
 
@@ -30,7 +31,8 @@ export class AdminPropertiesTabComponent implements OnInit {
   readonly items      = signal<PropertySummaryResponse[]>([]);
   readonly totalCount = signal(0);
   readonly page       = signal(1);
-  readonly limit      = 20;
+  readonly limit          = 20;
+  readonly formatCurrency = formatCurrency;
 
   ngOnInit(): void { this.load(); }
 

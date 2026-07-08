@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LeaseBillResponse } from '../../../../core/models/lease-bill.model';
-import { PaymentService } from '../../../../core/services/payment.service';
+import { PaymentService } from '@core/services/payment/payment.service';
 
 const BILL_ICONS: Record<string, string> = {
   Rent: 'home',
@@ -60,7 +60,7 @@ const BILL_COLORS: Record<string, string> = {
               {{ (bill.status === 'Paid' ? bill.amount : bill.pendingAmount) | currency:'INR':'symbol':'1.0-0' }}
             </div>
             @if (bill.status === 'Pending' && bill.amount !== bill.pendingAmount) {
-              <div style="font-size:12px;color:#717171;margin-top:2px">
+              <div class="es-text-xs mt-0.5">
                 Total billed: {{ bill.amount | currency:'INR':'symbol':'1.0-0' }}
               </div>
             }
@@ -82,41 +82,41 @@ const BILL_COLORS: Record<string, string> = {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
 
           <div>
-            <div style="font-size:11px;font-weight:600;color:#AAAAAA;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Bill Type</div>
+            <div class="es-label-upper mb-1">Bill Type</div>
             <div class="flex items-center gap-1.5">
               <mat-icon class="!text-[14px] !w-[14px] !h-[14px]" [style.color]="billColor(bill.billType)">{{ billIcon(bill.billType) }}</mat-icon>
-              <span style="font-size:13px;font-weight:600;color:#222">{{ bill.billType }}</span>
+              <span class="es-text-strong">{{ bill.billType }}</span>
             </div>
           </div>
 
           <div>
-            <div style="font-size:11px;font-weight:600;color:#AAAAAA;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Due Date</div>
+            <div class="es-label-upper mb-1">Due Date</div>
             <div class="flex items-center gap-1.5">
-              <mat-icon class="!text-[14px] !w-[14px] !h-[14px]" style="color:#717171">calendar_today</mat-icon>
-              <span style="font-size:13px;font-weight:600;color:#222">{{ bill.dueDate | date:'d MMM yyyy' }}</span>
+              <mat-icon class="!text-[14px] !w-[14px] !h-[14px] text-es-muted">calendar_today</mat-icon>
+              <span class="es-text-strong">{{ bill.dueDate | date:'d MMM yyyy' }}</span>
             </div>
           </div>
 
           @if (bill.paidAt) {
             <div>
-              <div style="font-size:11px;font-weight:600;color:#AAAAAA;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Paid On</div>
+              <div class="es-label-upper mb-1">Paid On</div>
               <div class="flex items-center gap-1.5">
-                <mat-icon class="!text-[14px] !w-[14px] !h-[14px]" style="color:#059669">check_circle</mat-icon>
-                <span style="font-size:13px;font-weight:600;color:#059669">{{ bill.paidAt | date:'d MMM yyyy, h:mm a' }}</span>
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] es-text-success">check_circle</mat-icon>
+                <span class="es-text-strong es-text-success">{{ bill.paidAt | date:'d MMM yyyy, h:mm a' }}</span>
               </div>
             </div>
           }
 
           <div>
-            <div style="font-size:11px;font-weight:600;color:#AAAAAA;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Property</div>
+            <div class="es-label-upper mb-1">Property</div>
             <div class="flex items-center gap-1.5">
-              <mat-icon class="!text-[14px] !w-[14px] !h-[14px]" style="color:#717171">apartment</mat-icon>
+              <mat-icon class="!text-[14px] !w-[14px] !h-[14px] text-es-muted">apartment</mat-icon>
               <span style="font-size:13px;color:#444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ bill.propertyTitle }}</span>
             </div>
           </div>
 
           <div>
-            <div style="font-size:11px;font-weight:600;color:#AAAAAA;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Lease Reference</div>
+            <div class="es-label-upper mb-1">Lease Reference</div>
             <div style="font-size:12px;color:#717171;font-family:'Roboto Mono',monospace;letter-spacing:.3px">
               #{{ bill.leaseId | slice:0:8 }}…
             </div>
@@ -128,7 +128,7 @@ const BILL_COLORS: Record<string, string> = {
         @if (bill.status === 'Pending') {
           <div class="flex items-start gap-3 mt-5 rounded-xl p-3"
             style="background:#FFFBEB;border:1px solid #FDE68A">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mt-[1px] flex-shrink-0" style="color:#D97706">schedule</mat-icon>
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mt-[1px] flex-shrink-0 es-text-warning">schedule</mat-icon>
             <div style="font-size:12px;color:#92400E;line-height:1.5">
               Payment is due by <strong>{{ bill.dueDate | date:'d MMM yyyy' }}</strong>. You will be redirected to Stripe to complete the payment securely.
             </div>
@@ -138,7 +138,7 @@ const BILL_COLORS: Record<string, string> = {
         @if (bill.status === 'Paid') {
           <div class="flex items-start gap-3 mt-5 rounded-xl p-3"
             style="background:#F0FDF4;border:1px solid #BBF7D0">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mt-[1px] flex-shrink-0" style="color:#059669">verified</mat-icon>
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mt-[1px] flex-shrink-0 es-text-success">verified</mat-icon>
             <div style="font-size:12px;color:#065F46;line-height:1.5">
               Payment received and confirmed. Your receipt will be available through Stripe.
             </div>
@@ -146,7 +146,7 @@ const BILL_COLORS: Record<string, string> = {
         }
 
         @if (error()) {
-          <div class="mt-3" style="font-size:12px;color:#DC2626">{{ error() }}</div>
+          <div class="mt-3 es-text-xs es-text-danger">{{ error() }}</div>
         }
       </div>
 
@@ -158,7 +158,7 @@ const BILL_COLORS: Record<string, string> = {
             [disabled]="paying()"
             (click)="pay()">
             @if (paying()) {
-              <mat-spinner diameter="16" style="display:inline-block;margin-right:6px" />
+              <mat-spinner diameter="16" class="inline-block mr-1.5" />
             } @else {
               <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mr-1">payment</mat-icon>
             }

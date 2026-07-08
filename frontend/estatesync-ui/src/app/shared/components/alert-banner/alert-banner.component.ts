@@ -16,9 +16,7 @@ const ICON_MAP: Record<AlertType, string> = {
   standalone: true,
   imports: [NgClass, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './alert-banner.component.html',
-  styleUrl: './alert-banner.component.css'
-})
+  templateUrl: './alert-banner.component.html',})
 export class AlertBannerComponent {
   readonly message = input.required<string>();
   readonly type    = input<AlertType>('error');

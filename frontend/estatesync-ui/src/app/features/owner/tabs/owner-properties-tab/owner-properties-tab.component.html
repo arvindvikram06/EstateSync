@@ -1,5 +1,5 @@
 <div class="tab-header">
-  <h2 style="font-size:20px;font-weight:700;color:#222">My Properties</h2>
+  <h2 class="es-title">My Properties</h2>
   <button
     mat-flat-button color="primary"
     class="!rounded-full !h-9 !px-5 !text-sm !font-semibold"
@@ -12,7 +12,7 @@
 </div>
 
 @if (!isOnboarded()) {
-  <div style="margin-bottom:20px">
+  <div class="mb-5">
     <app-alert-banner
       message="Connect your Stripe account before listing properties. Complete onboarding from the Overview tab."
       type="warning" />
@@ -48,21 +48,34 @@
       <div class="prop-card">
         @if (prop.primaryImage) {
           <img [src]="prop.primaryImage" alt=""
-               class="w-12 h-12 rounded-xl object-cover shrink-0"
-               style="border:1px solid #EBEBEB" />
+               class="w-12 h-12 rounded-xl object-cover shrink-0 border border-solid border-es-border-light" />
         } @else {
           <div class="prop-icon">
-            <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:var(--mat-sys-primary)">home_work</mat-icon>
+            <mat-icon class="!text-[22px] !w-[22px] !h-[22px] es-text-primary">home_work</mat-icon>
           </div>
         }
 
         <div class="flex-1 min-w-0">
-          <div style="font-size:14px;font-weight:600;color:#222" class="truncate">{{ prop.title }}</div>
-          <div style="font-size:12px;color:#717171;margin-top:2px" class="truncate">
-            {{ prop.addressLine }}, {{ prop.state }}
+          @if (prop.title) {
+            <div class="es-detail-value truncate">{{ prop.title }}</div>
+          } @else {
+            <div class="truncate text-sm font-semibold text-es-muted italic">
+              Complete your property listing
+            </div>
+          }
+          <div class="es-text-xs mt-0.5 truncate">
+            @if (prop.city || prop.state) {
+              {{ prop.city }}@if (prop.city && prop.state) {, }{{ prop.state }}
+            } @else {
+              No location set yet
+            }
           </div>
-          <div style="font-size:13px;font-weight:700;color:#222;margin-top:4px">
-            {{ formatCurrency(prop.monthlyRent) }}<span style="font-size:11px;font-weight:400;color:#717171">/mo</span>
+          <div class="text-[13px] font-bold text-es-text mt-1">
+            @if (prop.monthlyRent > 0) {
+              {{ formatCurrency(prop.monthlyRent) }}<span class="text-[11px] font-normal text-es-muted">/mo</span>
+            } @else {
+              <span class="text-[12px] font-normal text-es-muted">Rent not set</span>
+            }
           </div>
         </div>
 
@@ -70,7 +83,14 @@
           <app-status-badge [status]="prop.status" />
           <div class="flex gap-2 flex-wrap justify-end">
             <!-- Edit always available (except Leased/AvailableSoon/PendingApproval which are locked) -->
-            @if (prop.status === 'Draft' || prop.status === 'Rejected') {
+            @if (prop.status === 'Draft') {
+              <button mat-stroked-button class="!rounded-full !h-8 !text-xs !px-3"
+                (click)="resumeWizardDraft(prop)">
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] mr-1">edit</mat-icon>
+                Continue
+              </button>
+            }
+            @if (prop.status === 'Rejected') {
               <a mat-stroked-button class="!rounded-full !h-8 !text-xs !px-3"
                 [routerLink]="['/properties', prop.propertyId, 'edit']">
                 <mat-icon class="!text-[14px] !w-[14px] !h-[14px] mr-1">edit</mat-icon>
@@ -98,7 +118,7 @@
                 [disabled]="submittingId() === prop.propertyId"
                 (click)="submitForApproval(prop)">
                 @if (submittingId() === prop.propertyId) {
-                  <mat-spinner diameter="14" style="display:inline-block" />
+                  <mat-spinner diameter="14" class="inline-block" />
                 } @else {
                   Submit for review
                 }

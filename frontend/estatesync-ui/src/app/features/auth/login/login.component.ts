@@ -10,8 +10,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { AlertBannerComponent } from '../../../shared/components/alert-banner/alert-banner.component';
 import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
-import { AuthService } from '../../../core/services/auth.service';
-import { TokenService } from '../../../core/services/token.service';
+import { AuthService } from '@core/services/auth/auth.service';
+import { TokenService } from '@core/services/auth/token.service';
 import { getRoleHome } from '../../../core/guards/role-home.util';
 
 @Component({
@@ -24,9 +24,7 @@ import { getRoleHome } from '../../../core/guards/role-home.util';
     AlertBannerComponent, LoadingButtonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
-})
+  templateUrl: './login.component.html',})
 export class LoginComponent {
   private readonly authService  = inject(AuthService);
   private readonly tokenService = inject(TokenService);
@@ -35,6 +33,8 @@ export class LoginComponent {
 
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly needsVerification = signal(false);
+  readonly resendState = signal<'idle' | 'sending' | 'sent'>('idle');
   readonly passwordVisible = signal(false);
 
   readonly loginForm = new FormGroup({
@@ -92,7 +92,18 @@ export class LoginComponent {
         this.isLoading.set(false);
         const detail = err.error?.detail ?? err.error?.message ?? 'Invalid email or password.';
         this.errorMessage.set(detail);
+        this.needsVerification.set(err.status === 403 && `${detail}`.toLowerCase().includes('verify'));
       }
+    });
+  }
+
+  resendVerification(): void {
+    const email = this.loginForm.getRawValue().email;
+    if (!email || this.resendState() === 'sending') return;
+    this.resendState.set('sending');
+    this.authService.resendVerification(email).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => this.resendState.set('sent'),
+      error: () => this.resendState.set('idle'),
     });
   }
 }

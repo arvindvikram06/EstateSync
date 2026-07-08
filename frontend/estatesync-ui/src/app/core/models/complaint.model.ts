@@ -1,20 +1,27 @@
+export interface ComplaintImageResponse {
+  complaintImageId: string;
+  imageUrl: string;
+}
+
 export interface ComplaintResponse {
   complaintId: string;
-  propertyId: string;
-  propertyTitle: string;
+  leaseId: string;
+  propertyTitle: string | null;
   title: string;
   description: string;
-  type: 'Maintenance' | 'Billing' | 'Noise' | 'Safety' | 'Cleanliness' | 'Other';
+  complaintType: 'Maintenance' | 'Billing' | 'Noise' | 'Safety' | 'Cleanliness' | 'Other';
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   status: 'Open' | 'InProgress' | 'Resolved' | 'Closed';
+  reviewRemarks: string | null;
   createdAt: string;
-  updatedAt: string;
+  updatedAt: string | null;
+  images: ComplaintImageResponse[];
 }
 
 export interface CreateComplaintRequest {
-  propertyId: string;
+  leaseId: string;
   title: string;
   description: string;
-  type: ComplaintResponse['type'];
+  complaintType: ComplaintResponse['complaintType'];
   priority: ComplaintResponse['priority'];
 }

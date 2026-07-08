@@ -2,17 +2,17 @@
 <p class="text-sm text-es-muted mb-7">Manage your Identity and Financial verification status.</p>
 
 <!-- Identity Verification Card -->
-<div class="border border-[#EBEBEB] rounded-xl p-5 bg-white mb-4 flex items-center justify-between shadow-sm">
+<div class="border border-es-border-light rounded-xl p-5 bg-white mb-4 flex items-center justify-between shadow-sm">
   <div>
     <h3 class="font-semibold text-[15px] mb-1">Identity Verification</h3>
     <p class="text-sm text-es-muted m-0">
       Status:&nbsp;
       @if (kycStore.kyc()?.status === 'Approved') {
-        <strong class="text-[#059669]">Approved</strong>
+        <strong class="text-es-success">Approved</strong>
       } @else if (kycStore.kyc()?.status === 'Pending') {
-        <strong class="text-[#B45309]">Pending Review</strong>
+        <strong class="text-es-warn">Pending Review</strong>
       } @else if (kycStore.kyc()?.status === 'Rejected') {
-        <strong class="text-[#DC2626]">Rejected</strong>
+        <strong class="text-es-danger">Rejected</strong>
       } @else {
         <strong class="text-es-muted">Not started</strong>
       }
@@ -27,7 +27,7 @@
 
 <!-- Financial Profile Card (only shown after KYC approved) -->
 @if (kycStore.kyc()?.status === 'Approved') {
-  <div class="border border-[#EBEBEB] rounded-xl p-5 bg-white flex items-center justify-between shadow-sm">
+  <div class="border border-es-border-light rounded-xl p-5 bg-white flex items-center justify-between shadow-sm">
     <div>
       <h3 class="font-semibold text-[15px] mb-1">Financial Profile</h3>
       <p class="text-sm text-es-muted m-0">
@@ -35,19 +35,21 @@
         @if (finStore.step() === 'loading') {
           <strong class="text-es-muted">Loading…</strong>
         } @else if (finStore.step() === 'approved') {
-          <strong class="text-[#059669]">Approved</strong>
+          <strong class="text-es-success">Approved</strong>
         } @else if (finStore.step() === 'pending') {
-          <strong class="text-[#B45309]">Pending Review</strong>
+          <strong class="text-es-warn">Pending Review</strong>
         } @else if (finStore.step() === 'rejected') {
-          <strong class="text-[#DC2626]">Rejected</strong>
+          <strong class="text-es-danger">Rejected</strong>
         } @else {
           <strong class="text-es-muted">Not started</strong>
         }
       </p>
     </div>
-    @if (finStore.step() !== 'approved' && finStore.step() !== 'pending' && finStore.step() !== 'loading') {
-      <a mat-flat-button color="primary" routerLink="/kyc">
-        {{ finStore.step() === 'rejected' ? 'Retry Financial Profile' : 'Complete Financial Profile' }}
+    @if (finStore.step() !== 'pending' && finStore.step() !== 'loading') {
+      <a mat-stroked-button [color]="finStore.step() === 'approved' ? '' : 'primary'" routerLink="/kyc">
+        @if (finStore.step() === 'approved') { Update Financial Profile }
+        @else if (finStore.step() === 'rejected') { Retry Financial Profile }
+        @else { Complete Financial Profile }
       </a>
     }
   </div>

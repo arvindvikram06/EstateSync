@@ -4,7 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { NotificationResponse } from '../../../core/models/notification.model';
-import { NotificationService } from '../../../core/services/notification.service';
+import { NotificationService } from '@core/services/shared/notification.service';
 
 export interface NotificationDetailDialogData {
   notification: NotificationResponse;
@@ -50,8 +50,6 @@ export interface NotificationDetailDialogData {
   styles: [`
     .notif-dialog {
       padding: 28px 28px 20px;
-      min-width: 360px;
-      max-width: 460px;
     }
 
     .notif-dialog__header {
@@ -119,6 +117,8 @@ export class NotificationDetailDialogComponent {
   private readonly notificationService = inject(NotificationService);
   private readonly router = inject(Router);
 
+  // markOneRead is deliberately fire-and-forget: the dialog closes immediately,
+  // and the request must not be cancelled by the dialog's destruction.
   dismiss(): void {
     this.notificationService.markOneRead(this.data.notification.notificationId).subscribe();
     this.dialogRef.close();

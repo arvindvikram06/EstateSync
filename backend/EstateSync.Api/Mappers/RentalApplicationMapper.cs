@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using EstateSync.Api.DTOs.RentalApplications;
 using EstateSync.Api.Models;
 
@@ -8,6 +9,7 @@ public class RentalApplicationMapper
 {
     public RentalApplicationResponse MapToResponse(RentalApplication app)
     {
+        var latestLease = app.Leases?.OrderByDescending(l => l.CreatedAt).FirstOrDefault();
         return new RentalApplicationResponse
         {
             ApplicationId = app.ApplicationId,
@@ -20,6 +22,8 @@ public class RentalApplicationMapper
             DurationMonths = app.DurationMonths,
             CommuteDistance = app.CommuteDistance,
             Status = app.Status.ToString(),
+            LeaseId = latestLease?.LeaseId,
+            LeaseStatus = latestLease?.Status.ToString(),
             ReviewRemarks = app.ReviewRemarks,
             ReviewedAt = app.ReviewedAt,
             CreatedAt = app.CreatedAt

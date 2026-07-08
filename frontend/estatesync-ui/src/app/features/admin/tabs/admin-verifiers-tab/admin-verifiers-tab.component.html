@@ -9,7 +9,7 @@
 </div>
 
 @if (loading()) {
-  <div class="flex items-center gap-3 py-12" style="color:#717171;font-size:14px">
+  <div class="flex items-center gap-3 py-12 text-sm text-es-muted">
     <mat-spinner diameter="24" /><span>Loading…</span>
   </div>
 } @else if (items().length === 0) {
@@ -24,34 +24,34 @@
           <th>Phone</th>
           <th>Status</th>
           <th>Created</th>
-          <th style="text-align:right">Action</th>
+          <th class="!text-right">Action</th>
         </tr>
       </thead>
       <tbody>
         @for (item of items(); track item.userId) {
           <tr>
             <td><span class="user-name">{{ item.fullName }}</span></td>
-            <td style="font-size:13px;color:#717171">{{ item.email }}</td>
-            <td style="font-size:13px;color:#717171">{{ item.phoneNumber || '—' }}</td>
+            <td class="es-text-sm">{{ item.email }}</td>
+            <td class="es-text-sm">{{ item.phoneNumber || '—' }}</td>
             <td>
               <span class="es-badge" [class]="item.isActive ? 'es-badge--approved' : 'es-badge--draft'">
                 {{ item.isActive ? 'Active' : 'Deactivated' }}
               </span>
             </td>
-            <td style="font-size:13px;color:#717171">{{ item.createdAt | slice:0:10 }}</td>
-            <td style="text-align:right">
+            <td class="es-text-sm">{{ item.createdAt | slice:0:10 }}</td>
+            <td class="text-right">
               @if (item.isActive) {
-                <button mat-stroked-button class="!rounded-full !text-xs !h-8"
-                  style="color:#DC2626;border-color:#FECACA"
+                <button mat-stroked-button class="!rounded-full !text-xs !h-8 es-btn-danger"
+                 
                   [disabled]="deactivating() === item.userId"
                   (click)="deactivate(item.userId)">
                   @if (deactivating() === item.userId) {
-                    <mat-spinner diameter="14" style="display:inline-block;margin-right:4px" />
+                    <mat-spinner diameter="14" class="inline-block mr-1" />
                   }
                   Deactivate
                 </button>
               } @else {
-                <span style="font-size:12px;color:#AAAAAA">Deactivated</span>
+                <span class="text-[12px] text-es-faint">Deactivated</span>
               }
             </td>
           </tr>

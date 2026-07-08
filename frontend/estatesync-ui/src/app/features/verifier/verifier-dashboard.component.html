@@ -4,7 +4,9 @@
   [navItems]="navItems"
   [activeTab]="activeTab()"
   [topOffset]="0"
-  (tabChange)="setTab($event)">
+  [showLogout]="true"
+  (tabChange)="setTab($event)"
+  (logout)="onLogout()">
 
   @if (activeTab() === 'overview') {
     <app-verifier-overview-tab (tabSwitch)="setTab($event)" />

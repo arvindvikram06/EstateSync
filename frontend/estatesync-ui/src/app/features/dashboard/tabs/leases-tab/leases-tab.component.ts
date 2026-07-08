@@ -6,7 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { LeaseService } from '../../../../core/services/lease.service';
+import { LeaseService } from '@core/services/leasing/lease.service';
 import { LeaseSummaryResponse } from '../../../../core/models/lease.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -26,6 +26,7 @@ export class LeasesTabComponent implements OnInit {
 
   readonly leases  = signal<LeaseSummaryResponse[]>([]);
   readonly loading = signal(true);
+  readonly renewingId = signal<string | null>(null);
 
   readonly formatDate     = formatDate;
   readonly formatCurrency = formatCurrency;
@@ -39,5 +40,18 @@ export class LeasesTabComponent implements OnInit {
 
   canSign(lease: LeaseSummaryResponse): boolean {
     return (lease.status === 'PendingApproval' || lease.status === 'PartialSigned') && !lease.tenantSignedAt;
+  }
+
+  requestRenewal(lease: LeaseSummaryResponse): void {
+    this.renewingId.set(lease.leaseId);
+    this.svc.requestRenewal(lease.leaseId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.leases.update(list =>
+          list.map(l => l.leaseId === lease.leaseId ? { ...l, isRenewalRequested: true } : l)
+        );
+        this.renewingId.set(null);
+      },
+      error: () => this.renewingId.set(null),
+    });
   }
 }

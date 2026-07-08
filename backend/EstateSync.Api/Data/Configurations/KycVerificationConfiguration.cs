@@ -16,6 +16,14 @@ public class KycVerificationConfiguration : IEntityTypeConfiguration<KycVerifica
         builder.Property(x => x.AadhaarNumber).HasMaxLength(12);
         builder.Property(x => x.PanNumber).HasMaxLength(10);
 
+        builder.HasIndex(x => x.AadhaarNumber)
+            .IsUnique()
+            .HasFilter("\"Status\" = 'Approved'");
+
+        builder.HasIndex(x => x.PanNumber)
+            .IsUnique()
+            .HasFilter("\"Status\" = 'Approved'");
+
         builder.HasOne(x => x.User)
             .WithMany(u => u.KycVerifications)
             .HasForeignKey(x => x.UserId)

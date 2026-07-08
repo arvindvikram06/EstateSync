@@ -10,20 +10,20 @@
   </div>
 
   <!-- Notification list -->
-  @if (notifications().length > 0) {
+  @if (enriched().length > 0) {
     <ul class="notif-panel__list">
-      @for (n of notifications(); track n.notificationId) {
+      @for (n of enriched(); track n.notificationId) {
         <li class="notif-item" [class.notif-item--read]="n.isRead" (click)="onClickNotification(n, $event)">
           @if (!n.isRead) {
             <span class="notif-item__dot"></span>
           }
           <div class="notif-item__icon-wrap" [class.notif-item__icon-wrap--read]="n.isRead">
-            <mat-icon class="notif-item__icon">{{ iconFor(n.type) }}</mat-icon>
+            <mat-icon class="notif-item__icon">{{ n._icon }}</mat-icon>
           </div>
           <div class="notif-item__body">
             <p class="notif-item__title">{{ n.title }}</p>
             <p class="notif-item__msg">{{ n.message }}</p>
-            <p class="notif-item__time">{{ timeAgo(n.createdAt) }}</p>
+            <p class="notif-item__time">{{ n._timeAgo }}</p>
           </div>
           <mat-icon class="notif-item__chevron">chevron_right</mat-icon>
         </li>

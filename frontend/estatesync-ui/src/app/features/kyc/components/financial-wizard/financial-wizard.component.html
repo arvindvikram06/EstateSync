@@ -6,15 +6,15 @@
   <div class="kyc-flow">
     <!-- Identity Approved Banner -->
     <div class="approved-banner">
-      <mat-icon class="status-icon status-icon--success" style="font-size: 24px; width: 24px; height: 24px; margin-right: 12px;">verified_user</mat-icon>
+      <mat-icon class="status-icon status-icon--success !text-[24px] !w-[24px] !h-[24px] mr-3">verified_user</mat-icon>
       <div>
         <strong>Identity Verified Successfully!</strong>
-        <div style="font-size: 0.85rem; opacity: 0.8;">You may now proceed to Financial Profile Verification.</div>
+        <div class="text-[0.85rem] opacity-80">You may now proceed to Financial Profile Verification.</div>
       </div>
     </div>
 
     <!-- Financial Step indicator -->
-    <div class="kyc-steps" style="margin-top: 2rem;">
+    <div class="kyc-steps mt-8">
       @for (label of finStepperLabels; track $index) {
         <div class="kyc-step" [class.kyc-step--active]="getFinStepIndex(finStore.step()) === $index + 1"
               [class.kyc-step--done]="getFinStepIndex(finStore.step()) > $index + 1">
@@ -76,7 +76,7 @@
               <p class="kyc-card__subtitle">Documents required depend on your employment type</p>
             </div>
           </div>
-          <mat-form-field appearance="outline" class="full-width" style="margin-bottom: 8px;">
+          <mat-form-field appearance="outline" class="full-width mb-2">
             <mat-label>Employment Type</mat-label>
             <mat-icon matPrefix>work</mat-icon>
             <mat-select [formControl]="finDetailsForm.controls.employmentType">
@@ -98,7 +98,7 @@
           <div class="doc-grid">
             @for (slot of requiredDocSlots(); track slot.type) {
               <input #fileInput type="file" [id]="'file-' + slot.type" [accept]="slot.accept"
-                style="display:none" (change)="onFinFileSelected($event, slot.type)" />
+                class="!hidden" (change)="onFinFileSelected($event, slot.type)" />
               <div class="doc-slot" [class.doc-slot--done]="finStore.uploadedDocs()[slot.type]">
                 <div class="doc-slot__icon">
                   <mat-icon>
@@ -239,8 +239,9 @@
         <p class="kyc-card__subtitle">Both your Identity and Financial Profiles are approved. You are ready to rent!</p>
         <app-status-badge status="Approved" />
       </div>
-      <div class="kyc-card__actions">
+      <div class="kyc-card__actions flex flex-col gap-2.5">
         <button mat-flat-button color="primary" class="kyc-cta-btn" (click)="goToDashboard()">Go to Dashboard</button>
+        <button mat-stroked-button class="kyc-cta-btn" (click)="startFin()">Update Financial Profile</button>
       </div>
     </div>
   </div>

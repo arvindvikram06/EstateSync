@@ -53,4 +53,14 @@ public class PaymentRepository : BaseRepository<Payment>, IPaymentRepository
 
     public async Task<Payment?> GetByTransactionIdAsync(string transactionId, CancellationToken ct = default)
         => await _dbSet.FirstOrDefaultAsync(p => p.TransactionId == transactionId, ct);
+
+    public async Task<IEnumerable<Payment>> GetByLeaseIdAsync(Guid leaseId, CancellationToken ct = default)
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Include(p => p.LeaseBill)
+            .Where(p => p.LeaseBill != null && p.LeaseBill.LeaseId == leaseId)
+            .OrderByDescending(p => p.PaidDate)
+            .ToListAsync(ct);
+    }
 }

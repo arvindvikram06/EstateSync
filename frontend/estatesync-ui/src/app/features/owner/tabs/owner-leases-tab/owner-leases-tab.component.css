@@ -1,15 +1,15 @@
 .lease-card {
   background: white;
-  border: 1px solid #EBEBEB;
+  border: 1px solid var(--es-border-light);
   border-radius: 14px;
   padding: 20px 22px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgb(0,0,0,0.04);
   transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
 }
 .lease-card:hover {
-  box-shadow: 0 6px 24px rgba(0,0,0,0.09);
+  box-shadow: 0 6px 24px rgb(0,0,0,0.09);
   transform: translateY(-2px);
-  border-color: #D4C9F0;
+  border-color: var(--es-primary-tint-border);
 }
 
 .lease-header {
@@ -24,12 +24,13 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  background: #F7F7F7;
+  background: var(--es-bg);
   border-radius: 10px;
   padding: 12px 16px;
   margin-bottom: 16px;
 }
-@media (min-width: 640px) {
+
+@media (width >= 640px) {
   .lease-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
@@ -40,13 +41,13 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #AAAAAA;
+  color: var(--es-text-muted);
 }
 
 .detail-value {
   font-size: 13px;
   font-weight: 600;
-  color: #222;
+  color: var(--es-text);
 }
 
 .lease-actions {
@@ -57,6 +58,6 @@
 }
 
 .void-btn {
-  color: #DC2626 !important;
-  border-color: #FECACA !important;
+  color: var(--es-danger) !important;
+  border-color: var(--es-danger-border) !important;
 }

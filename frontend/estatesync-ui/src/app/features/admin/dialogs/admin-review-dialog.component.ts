@@ -1,5 +1,6 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
+import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SlicePipe } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
@@ -11,8 +12,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { forkJoin } from 'rxjs';
 import * as L from 'leaflet';
-import { AdminService } from '../../../core/services/admin.service';
-import { PropertyService } from '../../../core/services/property.service';
+import { AdminService } from '@core/services/admin/admin.service';
+import { PropertyService } from '@core/services/property/property.service';
 import { PropertyDetailResponse, DocumentResponse } from '../../../core/models/property.model';
 import { KycVerificationResponse, KycDocumentSummary, FinancialProfileResponse } from '../../../core/models/admin.model';
 
@@ -24,13 +25,13 @@ import { KycVerificationResponse, KycDocumentSummary, FinancialProfileResponse }
   template: `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px">
       <div>
-        <div style="font-size:15px;font-weight:700;color:#222">{{ data.label }}</div>
+        <div class="text-[15px] font-bold text-es-text">{{ data.label }}</div>
         <div style="font-size:12px;color:#AAAAAA;margin-top:2px">{{ data.fileName }}</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <a [href]="data.url" target="_blank" rel="noopener" mat-stroked-button class="!rounded-full !text-xs !h-8"
           style="display:inline-flex;align-items:center;gap:4px;text-decoration:none;color:#6750A4;border-color:#6750A4">
-          <mat-icon style="font-size:14px;width:14px;height:14px">open_in_new</mat-icon>Open full
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">open_in_new</mat-icon>Open full
         </a>
         <button mat-icon-button mat-dialog-close>
           <mat-icon style="font-size:20px;width:20px;height:20px;color:#717171">close</mat-icon>
@@ -48,7 +49,7 @@ import { KycVerificationResponse, KycDocumentSummary, FinancialProfileResponse }
   `,
 })
 export class DocPreviewDialogComponent {
-  readonly data = inject<{ url: string; safeUrl: any; label: string; fileName: string; isImage: boolean }>(MAT_DIALOG_DATA);
+  readonly data = inject<{ url: string; safeUrl: SafeResourceUrl; label: string; fileName: string; isImage: boolean }>(MAT_DIALOG_DATA);
 }
 
 const DOC_LABELS: Record<string, string> = {
@@ -86,7 +87,7 @@ export interface AdminReviewDialogData {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div mat-dialog-title style="font-size:18px;font-weight:700;color:#222">{{ data.title }}</div>
+    <div mat-dialog-title class="text-[18px] font-bold text-es-text">{{ data.title }}</div>
 
     <mat-dialog-content
       [style.minWidth]="data.type === 'property' ? '780px' : (data.kycItem || data.financialProfileItem ? '580px' : '400px')"
@@ -97,7 +98,7 @@ export interface AdminReviewDialogData {
         <!-- ── Property full detail ─────────────────────────────── -->
         @if (data.type === 'property') {
           @if (propertyLoading()) {
-            <div class="flex items-center gap-3 py-8" style="color:#717171;font-size:14px">
+            <div class="flex items-center gap-3 py-8 text-sm text-es-muted">
               <mat-spinner diameter="24" /><span>Loading property details…</span>
             </div>
           } @else if (property()) {
@@ -122,75 +123,75 @@ export interface AdminReviewDialogData {
             }
 
             <!-- Owner + basic info -->
-            <div style="background:#F7F7F7;border:1px solid #EBEBEB;border-radius:12px;padding:16px">
-              <div style="font-size:11px;font-weight:600;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Owner Details</div>
+            <div class="es-tile">
+              <div class="es-label-upper mb-3">Owner Details</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Owner Name</div>
-                  <div style="font-size:13px;font-weight:600;color:#222">{{ property()!.ownerName }}</div>
+                  <div class="es-text-hint mb-0.5">Owner Name</div>
+                  <div class="es-text-strong">{{ property()!.ownerName }}</div>
                 </div>
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">KYC Verified</div>
-                  <div style="font-size:13px;font-weight:600;color:#059669">Must be verified to list</div>
+                  <div class="es-text-hint mb-0.5">KYC Verified</div>
+                  <div class="es-text-strong es-text-success">Must be verified to list</div>
                 </div>
               </div>
             </div>
 
             <!-- Property specs -->
-            <div style="background:#F7F7F7;border:1px solid #EBEBEB;border-radius:12px;padding:16px">
-              <div style="font-size:11px;font-weight:600;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Property Details</div>
+            <div class="es-tile">
+              <div class="es-label-upper mb-3">Property Details</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Title</div>
-                  <div style="font-size:13px;font-weight:600;color:#222">{{ property()!.title }}</div>
+                  <div class="es-text-hint mb-0.5">Title</div>
+                  <div class="es-text-strong">{{ property()!.title }}</div>
                 </div>
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Type</div>
-                  <div style="font-size:13px;font-weight:600;color:#222">{{ property()!.propertyType }}</div>
+                  <div class="es-text-hint mb-0.5">Type</div>
+                  <div class="es-text-strong">{{ property()!.propertyType }}</div>
                 </div>
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">City</div>
-                  <div style="font-size:13px;color:#444">{{ property()!.city }}</div>
+                  <div class="es-text-hint mb-0.5">City</div>
+                  <div class="es-text-body">{{ property()!.city }}</div>
                 </div>
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">State</div>
-                  <div style="font-size:13px;color:#444">{{ property()!.state }}</div>
+                  <div class="es-text-hint mb-0.5">State</div>
+                  <div class="es-text-body">{{ property()!.state }}</div>
                 </div>
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Pincode</div>
+                  <div class="es-text-hint mb-0.5">Pincode</div>
                   <div style="font-size:13px;color:#444;font-family:'Roboto Mono',monospace;letter-spacing:1px">{{ property()!.pincode }}</div>
                 </div>
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Address</div>
-                  <div style="font-size:13px;color:#444">{{ property()!.addressLine }}</div>
+                  <div class="es-text-hint mb-0.5">Address</div>
+                  <div class="es-text-body">{{ property()!.addressLine }}</div>
                 </div>
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Bedrooms</div>
-                  <div style="font-size:13px;font-weight:600;color:#222">{{ property()!.bedrooms }}</div>
+                  <div class="es-text-hint mb-0.5">Bedrooms</div>
+                  <div class="es-text-strong">{{ property()!.bedrooms }}</div>
                 </div>
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Bathrooms</div>
-                  <div style="font-size:13px;font-weight:600;color:#222">{{ property()!.bathrooms }}</div>
+                  <div class="es-text-hint mb-0.5">Bathrooms</div>
+                  <div class="es-text-strong">{{ property()!.bathrooms }}</div>
                 </div>
                 @if (property()!.landArea) {
                   <div>
-                    <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Land Area</div>
-                    <div style="font-size:13px;color:#444">{{ property()!.landArea }} sq.ft</div>
+                    <div class="es-text-hint mb-0.5">Land Area</div>
+                    <div class="es-text-body">{{ property()!.landArea }} sq.ft</div>
                   </div>
                 }
                 @if (property()!.buildupArea) {
                   <div>
-                    <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Buildup Area</div>
-                    <div style="font-size:13px;color:#444">{{ property()!.buildupArea }} sq.ft</div>
+                    <div class="es-text-hint mb-0.5">Buildup Area</div>
+                    <div class="es-text-body">{{ property()!.buildupArea }} sq.ft</div>
                   </div>
                 }
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Monthly Rent</div>
+                  <div class="es-text-hint mb-0.5">Monthly Rent</div>
                   <div style="font-size:15px;font-weight:700;color:var(--mat-sys-primary)">₹{{ property()!.monthlyRent.toLocaleString('en-IN') }}</div>
                 </div>
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Security Deposit</div>
-                  <div style="font-size:14px;font-weight:600;color:#222">₹{{ property()!.securityDeposit.toLocaleString('en-IN') }}</div>
+                  <div class="es-text-hint mb-0.5">Security Deposit</div>
+                  <div class="es-detail-value">₹{{ property()!.securityDeposit.toLocaleString('en-IN') }}</div>
                 </div>
               </div>
             </div>
@@ -205,7 +206,7 @@ export interface AdminReviewDialogData {
 
             <!-- Description -->
             @if (property()!.description) {
-              <div style="background:#F7F7F7;border:1px solid #EBEBEB;border-radius:12px;padding:16px">
+              <div class="es-tile">
                 <div style="font-size:11px;font-weight:600;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Description</div>
                 <p style="font-size:13px;color:#444;line-height:1.65;margin:0;white-space:pre-wrap">{{ property()!.description }}</p>
               </div>
@@ -213,7 +214,7 @@ export interface AdminReviewDialogData {
 
             <!-- Amenities -->
             @if (property()!.amenities.length > 0) {
-              <div style="background:#F7F7F7;border:1px solid #EBEBEB;border-radius:12px;padding:16px">
+              <div class="es-tile">
                 <div style="font-size:11px;font-weight:600;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Amenities ({{ property()!.amenities.length }})</div>
                 <div class="flex flex-wrap gap-2">
                   @for (a of property()!.amenities; track a) {
@@ -228,8 +229,8 @@ export interface AdminReviewDialogData {
 
             <!-- Property documents -->
             @if (propertyDocs().length > 0) {
-              <div style="background:#F7F7F7;border:1px solid #EBEBEB;border-radius:12px;padding:16px">
-                <div style="font-size:11px;font-weight:600;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Ownership Documents ({{ propertyDocs().length }})</div>
+              <div class="es-tile">
+                <div class="es-label-upper mb-3">Ownership Documents ({{ propertyDocs().length }})</div>
                 <div class="flex flex-col gap-2">
                   @for (doc of propertyDocs(); track doc.documentId) {
                     <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1px solid #EBEBEB;border-radius:8px;padding:10px 12px">
@@ -242,7 +243,7 @@ export interface AdminReviewDialogData {
                       </div>
                       <button type="button" (click)="viewPropertyDoc(doc)"
                         style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#6750A4;background:none;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px;padding:4px 0">
-                        <mat-icon style="font-size:14px;width:14px;height:14px">{{ isDocImage(doc) ? 'image' : 'open_in_new' }}</mat-icon>
+                        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">{{ isDocImage(doc) ? 'image' : 'open_in_new' }}</mat-icon>
                         View
                       </button>
                     </div>
@@ -255,45 +256,45 @@ export interface AdminReviewDialogData {
 
         <!-- ── KYC identity + documents ─────────────────────────── -->
         @if (data.kycItem) {
-          <div style="background:#F7F7F7;border:1px solid #EBEBEB;border-radius:12px;padding:16px">
-            <div style="font-size:11px;font-weight:600;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Identity Details</div>
+          <div class="es-tile">
+            <div class="es-label-upper mb-3">Identity Details</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div>
-                <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Full Name</div>
-                <div style="font-size:13px;font-weight:600;color:#222">{{ data.kycItem.fullName }}</div>
+                <div class="es-text-hint mb-0.5">Full Name</div>
+                <div class="es-text-strong">{{ data.kycItem.fullName }}</div>
               </div>
               <div>
-                <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Email</div>
-                <div style="font-size:13px;color:#444">{{ data.kycItem.email }}</div>
+                <div class="es-text-hint mb-0.5">Email</div>
+                <div class="es-text-body">{{ data.kycItem.email }}</div>
               </div>
               <div>
-                <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Aadhaar Number</div>
+                <div class="es-text-hint mb-0.5">Aadhaar Number</div>
                 <div style="font-size:13px;font-weight:600;color:#222;font-family:'Roboto Mono',monospace;letter-spacing:1px">
                   {{ data.kycItem.aadhaarNumber || '—' }}
                 </div>
               </div>
               <div>
-                <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">PAN Number</div>
+                <div class="es-text-hint mb-0.5">PAN Number</div>
                 <div style="font-size:13px;font-weight:600;color:#222;font-family:'Roboto Mono',monospace;letter-spacing:1px">
                   {{ data.kycItem.panNumber || '—' }}
                 </div>
               </div>
               <div>
-                <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Submitted</div>
-                <div style="font-size:13px;color:#444">{{ data.kycItem.createdAt | slice:0:10 }}</div>
+                <div class="es-text-hint mb-0.5">Submitted</div>
+                <div class="es-text-body">{{ data.kycItem.createdAt | slice:0:10 }}</div>
               </div>
               @if (data.kycItem.reviewedAt) {
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Reviewed</div>
-                  <div style="font-size:13px;color:#444">{{ data.kycItem.reviewedAt | slice:0:10 }}</div>
+                  <div class="es-text-hint mb-0.5">Reviewed</div>
+                  <div class="es-text-body">{{ data.kycItem.reviewedAt | slice:0:10 }}</div>
                 </div>
               }
             </div>
           </div>
 
           @if (data.kycItem.documents.length > 0) {
-            <div style="background:#F7F7F7;border:1px solid #EBEBEB;border-radius:12px;padding:16px">
-              <div style="font-size:11px;font-weight:600;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">
+            <div class="es-tile">
+              <div class="es-label-upper mb-3">
                 Submitted Documents ({{ data.kycItem.documents.length }})
               </div>
               <div class="flex flex-col gap-2">
@@ -308,7 +309,7 @@ export interface AdminReviewDialogData {
                     </div>
                     <button type="button" (click)="viewDoc(doc)"
                       style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#6750A4;background:none;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px;padding:4px 0">
-                      <mat-icon style="font-size:14px;width:14px;height:14px">{{ isImage(doc) ? 'image' : 'open_in_new' }}</mat-icon>
+                      <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">{{ isImage(doc) ? 'image' : 'open_in_new' }}</mat-icon>
                       View
                     </button>
                   </div>
@@ -322,49 +323,49 @@ export interface AdminReviewDialogData {
 
         <!-- ── Financial profile details + documents ─────────────── -->
         @if (data.financialProfileItem) {
-          <div style="background:#F7F7F7;border:1px solid #EBEBEB;border-radius:12px;padding:16px">
-            <div style="font-size:11px;font-weight:600;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Profile Details</div>
+          <div class="es-tile">
+            <div class="es-label-upper mb-3">Profile Details</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div>
-                <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Tenant</div>
-                <div style="font-size:13px;font-weight:600;color:#222">{{ data.financialProfileItem.tenantName }}</div>
+                <div class="es-text-hint mb-0.5">Tenant</div>
+                <div class="es-text-strong">{{ data.financialProfileItem.tenantName }}</div>
               </div>
               <div>
-                <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Email</div>
-                <div style="font-size:13px;color:#444">{{ data.financialProfileItem.tenantEmail }}</div>
+                <div class="es-text-hint mb-0.5">Email</div>
+                <div class="es-text-body">{{ data.financialProfileItem.tenantEmail }}</div>
               </div>
               <div>
-                <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Employment Type</div>
-                <div style="font-size:13px;font-weight:600;color:#222">{{ data.financialProfileItem.employmentType }}</div>
+                <div class="es-text-hint mb-0.5">Employment Type</div>
+                <div class="es-text-strong">{{ data.financialProfileItem.employmentType }}</div>
               </div>
               @if (data.financialProfileItem.employerName) {
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Employer</div>
-                  <div style="font-size:13px;color:#444">{{ data.financialProfileItem.employerName }}</div>
+                  <div class="es-text-hint mb-0.5">Employer</div>
+                  <div class="es-text-body">{{ data.financialProfileItem.employerName }}</div>
                 </div>
               }
               <div>
-                <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Declared Monthly Income</div>
+                <div class="es-text-hint mb-0.5">Declared Monthly Income</div>
                 <div style="font-size:14px;font-weight:700;color:#222">
                   {{ data.financialProfileItem.declaredMonthlyIncome > 0 ? '₹' + data.financialProfileItem.declaredMonthlyIncome.toLocaleString('en-IN') : '—' }}
                 </div>
               </div>
               <div>
-                <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Submitted</div>
-                <div style="font-size:13px;color:#444">{{ data.financialProfileItem.createdAt | slice:0:10 }}</div>
+                <div class="es-text-hint mb-0.5">Submitted</div>
+                <div class="es-text-body">{{ data.financialProfileItem.createdAt | slice:0:10 }}</div>
               </div>
               @if (data.financialProfileItem.reviewedAt) {
                 <div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-bottom:2px">Reviewed</div>
-                  <div style="font-size:13px;color:#444">{{ data.financialProfileItem.reviewedAt | slice:0:10 }}</div>
+                  <div class="es-text-hint mb-0.5">Reviewed</div>
+                  <div class="es-text-body">{{ data.financialProfileItem.reviewedAt | slice:0:10 }}</div>
                 </div>
               }
             </div>
           </div>
 
           @if (data.financialProfileItem.documents.length > 0) {
-            <div style="background:#F7F7F7;border:1px solid #EBEBEB;border-radius:12px;padding:16px">
-              <div style="font-size:11px;font-weight:600;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">
+            <div class="es-tile">
+              <div class="es-label-upper mb-3">
                 Submitted Documents ({{ data.financialProfileItem.documents.length }})
               </div>
               <div class="flex flex-col gap-2">
@@ -379,7 +380,7 @@ export interface AdminReviewDialogData {
                     </div>
                     <button type="button" (click)="viewDoc(doc)"
                       style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#6750A4;background:none;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px;padding:4px 0">
-                      <mat-icon style="font-size:14px;width:14px;height:14px">{{ isImage(doc) ? 'image' : 'open_in_new' }}</mat-icon>
+                      <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">{{ isImage(doc) ? 'image' : 'open_in_new' }}</mat-icon>
                       View
                     </button>
                   </div>
@@ -393,7 +394,7 @@ export interface AdminReviewDialogData {
 
         <!-- ── Decision (read-only or editable) ─────────────────── -->
         @if (data.readOnly) {
-          <div style="background:#F7F7F7;border:1px solid #EBEBEB;border-radius:12px;padding:16px">
+          <div class="es-tile">
             <div style="font-size:11px;font-weight:600;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Decision</div>
             <div class="flex items-center gap-2">
               @if (data.currentStatus === 'Approved') {
@@ -412,7 +413,7 @@ export interface AdminReviewDialogData {
           </div>
         } @else {
           <div style="border-top:1px solid #EBEBEB;padding-top:16px">
-            <div style="font-size:11px;font-weight:600;color:#717171;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Review Decision</div>
+            <div class="es-label-upper mb-3">Review Decision</div>
             <form [formGroup]="form" class="flex flex-col gap-3">
 
               @if (data.type === 'property') {
@@ -425,7 +426,7 @@ export interface AdminReviewDialogData {
                   </mat-select>
                 </mat-form-field>
               } @else if (data.type === 'lease') {
-                <div style="font-size:13px;color:#717171">Choose whether to activate this lease or void it.</div>
+                <div class="es-text-sm">Choose whether to activate this lease or void it.</div>
                 <div class="flex gap-3">
                   <button mat-stroked-button type="button" (click)="setApprove(true)"
                     [style.border-color]="approveVal() === true ? '#059669' : ''"
@@ -458,7 +459,7 @@ export interface AdminReviewDialogData {
               </mat-form-field>
 
               @if (error()) {
-                <div style="font-size:12px;color:#DC2626">{{ error() }}</div>
+                <div class="es-text-xs es-text-danger">{{ error() }}</div>
               }
             </form>
           </div>
@@ -492,6 +493,7 @@ export class AdminReviewDialogComponent implements OnInit, OnDestroy {
   private readonly propService   = inject(PropertyService);
   private readonly dialog        = inject(MatDialog);
   private readonly sanitizer     = inject(DomSanitizer);
+  private readonly destroyRef    = inject(DestroyRef);
 
   @ViewChild('mapEl') mapElRef!: ElementRef<HTMLDivElement>;
 
@@ -504,6 +506,8 @@ export class AdminReviewDialogComponent implements OnInit, OnDestroy {
   readonly activeImage     = signal<string>('');
 
   private map?: L.Map;
+  private mapInitTimer?: ReturnType<typeof setTimeout>;
+  private mapResizeTimer?: ReturnType<typeof setTimeout>;
 
   readonly form = new FormGroup({
     status:  new FormControl('', Validators.required),
@@ -516,14 +520,14 @@ export class AdminReviewDialogComponent implements OnInit, OnDestroy {
       forkJoin({
         detail: this.propService.getProperty(this.data.entityId),
         docs:   this.propService.getDocuments(this.data.entityId),
-      }).subscribe({
+      }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: ({ detail, docs }) => {
           this.property.set(detail.data);
           this.propertyDocs.set(docs.data ?? []);
           const primary = detail.data.images.find(i => i.isPrimary) ?? detail.data.images[0];
           if (primary) this.activeImage.set(this.imgSrc(primary.image));
           this.propertyLoading.set(false);
-          setTimeout(() => this.initMap(), 50);
+          this.mapInitTimer = setTimeout(() => this.initMap(), 50);
         },
         error: () => this.propertyLoading.set(false),
       });
@@ -531,6 +535,8 @@ export class AdminReviewDialogComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    clearTimeout(this.mapInitTimer);
+    clearTimeout(this.mapResizeTimer);
     this.map?.remove();
     this.map = undefined;
   }
@@ -564,7 +570,7 @@ export class AdminReviewDialogComponent implements OnInit, OnDestroy {
     }
 
     // Force tile reload after dialog finishes animating in
-    setTimeout(() => this.map?.invalidateSize(), 150);
+    this.mapResizeTimer = setTimeout(() => this.map?.invalidateSize(), 150);
   }
 
   imgSrc(path: string): string {
@@ -653,7 +659,7 @@ export class AdminReviewDialogComponent implements OnInit, OnDestroy {
       });
     }
 
-    obs$.subscribe({
+    obs$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => { this.submitting.set(false); this.dialogRef.close(true); },
       error: (e) => { this.submitting.set(false); this.error.set(e?.error?.message ?? 'Something went wrong.'); },
     });

@@ -1,38 +1,35 @@
 <div class="space-y-6">
 
   <!-- Payout Action Panel -->
-  <div class="bg-white border border-[#EBEBEB] rounded-2xl p-6"
-       style="box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+  <div class="es-card p-6">
 
     <!-- Header -->
     <div class="flex items-center gap-3 mb-5">
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-           style="background:color-mix(in srgb,var(--mat-sys-primary) 10%,white)">
-        <mat-icon style="color:var(--mat-sys-primary);font-size:20px;width:20px;height:20px">account_balance_wallet</mat-icon>
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 es-bg-primary-soft">
+        <mat-icon class="es-text-primary !text-[20px] !w-[20px] !h-[20px]">account_balance_wallet</mat-icon>
       </div>
       <div>
-        <div style="font-size:15px;font-weight:700;color:#222">Withdraw Funds</div>
-        <div style="font-size:12px;color:#717171">Choose payout speed — funds are transferred from your Stripe balance to your bank.</div>
+        <div class="text-[15px] font-bold text-es-text">Withdraw Funds</div>
+        <div class="es-text-xs">Choose payout speed — funds are transferred from your Stripe balance to your bank.</div>
       </div>
     </div>
 
     @if (balanceLoading()) {
-      <div class="flex items-center gap-2 py-4" style="color:#717171;font-size:13px">
+      <div class="flex items-center gap-2 py-4 es-text-sm">
         <mat-spinner diameter="16" /><span>Loading balance…</span>
       </div>
     } @else if (balance()) {
 
       @if (!balance()!.payoutsEnabled) {
-        <div class="flex items-start gap-3 rounded-xl px-4 py-3 mb-4"
-             style="background:#FFFBEB;border:1px solid #FDE68A">
-          <mat-icon style="color:#D97706;font-size:16px;width:16px;height:16px;margin-top:1px;flex-shrink:0">warning</mat-icon>
-          <div style="font-size:12px;color:#92400E">Payouts not enabled — complete your Stripe onboarding first.</div>
+        <div class="es-info-banner es-info-banner--warning mb-4">
+          <mat-icon class="text-es-warning !text-[16px] !w-[16px] !h-[16px] mt-px shrink-0">warning</mat-icon>
+          <div class="text-[12px] es-text-amber-deep">Payouts not enabled — complete your Stripe onboarding first.</div>
         </div>
       }
 
       @if (balance()!.pending > 0) {
-        <div class="flex items-center gap-2 mb-4" style="font-size:12px;color:#D97706">
-          <mat-icon style="font-size:14px;width:14px;height:14px;color:#D97706">schedule</mat-icon>
+        <div class="flex items-center gap-2 mb-4 text-[12px] text-es-warning">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px] text-es-warning">schedule</mat-icon>
           {{ balance()!.pending | currency:balance()!.currency:'symbol':'1.0-2' }} still processing (will appear soon)
         </div>
       }
@@ -41,19 +38,19 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
         <!-- Standard -->
-        <div class="rounded-xl p-4 flex flex-col gap-3" style="border:1px solid #EBEBEB;background:#FAFAFA">
+        <div class="rounded-xl p-4 flex flex-col gap-3 payout-card">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <mat-icon style="color:#6750A4;font-size:18px;width:18px;height:18px">account_balance</mat-icon>
-              <span style="font-size:13px;font-weight:700;color:#222">Standard Payout</span>
+              <mat-icon class="es-text-primary !text-[18px] !w-[18px] !h-[18px]">account_balance</mat-icon>
+              <span class="text-[13px] font-bold text-es-text">Standard Payout</span>
             </div>
-            <span class="es-badge es-badge--approved" style="font-size:11px">Free</span>
+            <span class="es-badge es-badge--approved text-[11px]">Free</span>
           </div>
           <div>
-            <div style="font-size:22px;font-weight:800;color:#222;letter-spacing:-.3px">
+            <div class="text-[22px] font-extrabold text-es-text tracking-[-0.3px]">
               {{ balance()!.available | currency:balance()!.currency:'symbol':'1.0-2' }}
             </div>
-            <div style="font-size:11px;color:#717171;margin-top:2px">
+            <div class="es-text-hint mt-0.5">
               @if (balance()!.available > 0) {
                 Ready to withdraw now
               } @else if (balance()!.instantAvailable > 0) {
@@ -63,32 +60,31 @@
               }
             </div>
           </div>
-          <div style="font-size:11px;color:#717171">1–2 business days · No fee</div>
+          <div class="text-[11px] text-es-muted">1–2 business days · No fee</div>
           <button mat-stroked-button color="primary" class="!rounded-full !text-xs !h-9 !font-semibold"
             [disabled]="requestingPayout() !== null || balance()!.available <= 0 || !balance()!.payoutsEnabled"
             (click)="requestPayout('standard')">
             @if (requestingPayout() === 'standard') {
-              <mat-spinner diameter="14" style="display:inline-block;margin-right:4px" />
+              <mat-spinner diameter="14" class="inline-block mr-1" />
             }
             {{ requestingPayout() === 'standard' ? 'Initiating…' : 'Withdraw Standard' }}
           </button>
         </div>
 
         <!-- Instant -->
-        <div class="rounded-xl p-4 flex flex-col gap-3"
-             style="border:1px solid color-mix(in srgb,var(--mat-sys-primary) 20%,white);background:color-mix(in srgb,var(--mat-sys-primary) 4%,white)">
+        <div class="rounded-xl p-4 flex flex-col gap-3 payout-card--instant">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <mat-icon style="color:#6750A4;font-size:18px;width:18px;height:18px">bolt</mat-icon>
-              <span style="font-size:13px;font-weight:700;color:#222">Instant Payout</span>
+              <mat-icon class="es-text-primary !text-[18px] !w-[18px] !h-[18px]">bolt</mat-icon>
+              <span class="text-[13px] font-bold text-es-text">Instant Payout</span>
             </div>
-            <span class="es-badge es-badge--pending" style="font-size:11px">1% fee</span>
+            <span class="es-badge es-badge--pending text-[11px]">1% fee</span>
           </div>
           <div>
-            <div style="font-size:22px;font-weight:800;color:#222;letter-spacing:-.3px">
+            <div class="text-[22px] font-extrabold text-es-text tracking-[-0.3px]">
               {{ balance()!.instantAvailable | currency:balance()!.currency:'symbol':'1.0-2' }}
             </div>
-            <div style="font-size:11px;color:#717171;margin-top:2px">
+            <div class="es-text-hint mt-0.5">
               @if (balance()!.instantAvailable > 0) {
                 Available for instant payout now
               } @else {
@@ -96,12 +92,12 @@
               }
             </div>
           </div>
-          <div style="font-size:11px;color:#717171">Arrives in minutes · Stripe charges 1%</div>
+          <div class="text-[11px] text-es-muted">Arrives in minutes · Stripe charges 1%</div>
           <button mat-flat-button color="primary" class="!rounded-full !text-xs !h-9 !font-semibold"
             [disabled]="requestingPayout() !== null || balance()!.instantAvailable <= 0 || !balance()!.payoutsEnabled"
             (click)="requestPayout('instant')">
             @if (requestingPayout() === 'instant') {
-              <mat-spinner diameter="14" style="display:inline-block;margin-right:4px" />
+              <mat-spinner diameter="14" class="inline-block mr-1" />
             }
             {{ requestingPayout() === 'instant' ? 'Initiating…' : 'Withdraw Instant' }}
           </button>
@@ -109,20 +105,19 @@
 
       </div>
     } @else {
-      <p style="font-size:13px;color:#717171">Balance unavailable</p>
+      <p class="es-text-sm">Balance unavailable</p>
     }
   </div>
 
   <!-- Success / Error banners -->
   @if (payoutSuccess()) {
-    <div class="flex items-start gap-3 rounded-xl px-5 py-4"
-         style="background:#F0FDF4;border:1px solid #BBF7D0">
-      <mat-icon style="color:#059669;font-size:20px;width:20px;height:20px;margin-top:1px;flex-shrink:0">check_circle</mat-icon>
+    <div class="es-info-banner es-info-banner--success !px-5 !py-4">
+      <mat-icon class="text-es-success !text-[20px] !w-[20px] !h-[20px] mt-px shrink-0">check_circle</mat-icon>
       <div>
-        <div style="font-size:14px;font-weight:600;color:#065F46">
+        <div class="text-[14px] font-semibold">
           {{ payoutSuccess()!.method === 'instant' ? 'Instant payout' : 'Standard payout' }} initiated!
         </div>
-        <div style="font-size:13px;color:#065F46;margin-top:2px">
+        <div class="text-[13px] mt-0.5">
           {{ payoutSuccess()!.amount | currency:payoutSuccess()!.currency:'symbol':'1.0-2' }} is on its way to your bank.
           @if (payoutSuccess()!.method === 'instant') {
             Expected arrival: within minutes.
@@ -135,21 +130,18 @@
     </div>
   }
   @if (payoutError()) {
-    <div class="flex items-start gap-3 rounded-xl px-5 py-4"
-         style="background:#FEF2F2;border:1px solid #FECACA">
-      <mat-icon style="color:#DC2626;font-size:20px;width:20px;height:20px;margin-top:1px;flex-shrink:0">error_outline</mat-icon>
-      <div style="font-size:13px;color:#991B1B">{{ payoutError() }}</div>
+    <div class="es-info-banner es-info-banner--error !px-5 !py-4">
+      <mat-icon class="text-es-danger !text-[20px] !w-[20px] !h-[20px] mt-px shrink-0">error_outline</mat-icon>
+      <div class="text-[13px]">{{ payoutError() }}</div>
     </div>
   }
 
   <!-- Summary Cards -->
   @if (summary()) {
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div class="bg-white border border-[#EBEBEB] rounded-2xl p-6 flex items-start gap-4"
-           style="box-shadow:0 2px 12px rgba(0,0,0,0.06)">
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-             style="background:color-mix(in srgb,var(--mat-sys-primary) 10%,white)">
-          <mat-icon style="color:var(--mat-sys-primary);font-size:22px;width:22px;height:22px">payments</mat-icon>
+      <div class="es-card p-6 flex items-start gap-4">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 es-bg-primary-soft">
+          <mat-icon class="es-text-primary !text-[22px] !w-[22px] !h-[22px]">payments</mat-icon>
         </div>
         <div>
           <p class="text-xs text-es-muted font-medium mb-0.5">Total Earned</p>
@@ -160,11 +152,9 @@
         </div>
       </div>
 
-      <div class="bg-white border border-[#EBEBEB] rounded-2xl p-6 flex items-start gap-4"
-           style="box-shadow:0 2px 12px rgba(0,0,0,0.06)">
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-             style="background:#FEF3C7">
-          <mat-icon style="color:#92400E;font-size:22px;width:22px;height:22px">pending</mat-icon>
+      <div class="es-card p-6 flex items-start gap-4">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 es-bg-amber">
+          <mat-icon class="es-text-amber-deep !text-[22px] !w-[22px] !h-[22px]">pending</mat-icon>
         </div>
         <div>
           <p class="text-xs text-es-muted font-medium mb-0.5">Pending Payout</p>
@@ -175,11 +165,9 @@
         </div>
       </div>
 
-      <div class="bg-white border border-[#EBEBEB] rounded-2xl p-6 flex items-start gap-4"
-           style="box-shadow:0 2px 12px rgba(0,0,0,0.06)">
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-             style="background:#D1FAE5">
-          <mat-icon style="color:#065F46;font-size:22px;width:22px;height:22px">account_balance</mat-icon>
+      <div class="es-card p-6 flex items-start gap-4">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 es-bg-green">
+          <mat-icon class="es-text-green-deep !text-[22px] !w-[22px] !h-[22px]">account_balance</mat-icon>
         </div>
         <div>
           <p class="text-xs text-es-muted font-medium mb-0.5">Last Payout</p>
@@ -219,8 +207,7 @@
   </div>
 
   <!-- Settlement List -->
-  <div class="bg-white border border-[#EBEBEB] rounded-2xl overflow-hidden"
-       style="box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+  <div class="es-card overflow-hidden">
 
     @if (isLoading()) {
       <div class="flex justify-center py-12">
@@ -233,38 +220,40 @@
           subtitle="Payouts from Stripe will appear here once your first rent payment is processed." />
       </div>
     } @else {
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="border-b border-[#EBEBEB]">
-            <th class="text-left px-6 py-3.5 text-xs font-semibold text-es-muted uppercase tracking-wider">Date</th>
-            <th class="text-left px-6 py-3.5 text-xs font-semibold text-es-muted uppercase tracking-wider">Payout ID</th>
-            <th class="text-left px-6 py-3.5 text-xs font-semibold text-es-muted uppercase tracking-wider">Amount</th>
-            <th class="text-left px-6 py-3.5 text-xs font-semibold text-es-muted uppercase tracking-wider">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of settlements(); track item.ownerSettlementId) {
-            <tr class="border-b border-[#F5F5F5] hover:bg-[#FAFAFA] transition-colors">
-              <td class="px-6 py-4 text-es-text">
-                {{ item.arrivalDate | date:'d MMM yyyy' }}
-              </td>
-              <td class="px-6 py-4">
-                <span class="text-es-muted font-mono text-xs">{{ item.stripePayoutId }}</span>
-              </td>
-              <td class="px-6 py-4 font-semibold text-es-text">
-                {{ item.amount | currency:item.currency:'symbol':'1.2-2' }}
-                <span class="text-xs font-normal text-es-muted ml-1 uppercase">{{ item.currency }}</span>
-              </td>
-              <td class="px-6 py-4">
-                <span class="es-badge" [class]="getBadgeClass(item.status)">{{ item.status }}</span>
-              </td>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[480px]">
+          <thead>
+            <tr class="border-b border-es-border-light">
+              <th class="text-left px-6 py-3.5 text-xs font-semibold text-es-muted uppercase tracking-wider">Date</th>
+              <th class="text-left px-6 py-3.5 text-xs font-semibold text-es-muted uppercase tracking-wider">Payout ID</th>
+              <th class="text-left px-6 py-3.5 text-xs font-semibold text-es-muted uppercase tracking-wider">Amount</th>
+              <th class="text-left px-6 py-3.5 text-xs font-semibold text-es-muted uppercase tracking-wider">Status</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (item of settlements(); track item.ownerSettlementId) {
+              <tr class="border-b border-es-divider hover:bg-es-subtle transition-colors">
+                <td class="px-6 py-4 text-es-text">
+                  {{ item.arrivalDate | date:'d MMM yyyy' }}
+                </td>
+                <td class="px-6 py-4">
+                  <span class="text-es-muted font-mono text-xs">{{ item.stripePayoutId }}</span>
+                </td>
+                <td class="px-6 py-4 font-semibold text-es-text">
+                  {{ item.amount | currency:item.currency:'symbol':'1.2-2' }}
+                  <span class="text-xs font-normal text-es-muted ml-1 uppercase">{{ item.currency }}</span>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="es-badge" [class]="getBadgeClass(item.status)">{{ item.status }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
 
       @if (total() > limit()) {
-        <div class="px-4 py-2 border-t border-[#EBEBEB]">
+        <div class="px-4 py-2 border-t border-es-border-light">
           <mat-paginator
             [length]="total()"
             [pageSize]="limit()"

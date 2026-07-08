@@ -4,7 +4,8 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { KycStore } from '../../core/stores/kyc.store';
 import { FinancialStore } from '../../core/stores/financial.store';
-import { PaymentService } from '../../core/services/payment.service';
+import { PaymentService } from '@core/services/payment/payment.service';
+import { LeaseBillResponse } from '../../core/models/lease-bill.model';
 import { DashboardLayoutComponent, NavItem } from '../../shared/components/dashboard-layout/dashboard-layout.component';
 import { OverviewTabComponent } from './tabs/overview-tab/overview-tab.component';
 import { ApplicationsTabComponent } from './tabs/applications-tab/applications-tab.component';
@@ -28,9 +29,7 @@ import { VerificationsTabComponent } from './tabs/verifications-tab/verification
     MatButtonModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
-})
+  templateUrl: './dashboard.component.html',})
 export class DashboardComponent implements OnInit {
   readonly kycStore              = inject(KycStore);
   readonly finStore              = inject(FinancialStore);
@@ -55,7 +54,14 @@ export class DashboardComponent implements OnInit {
 
   readonly latestKyc = this.kycStore.kyc;
 
-  private readonly pendingBillCount = signal(0);
+  // Bills are fetched once here and shared with the bills tab, so opening
+  // the tab doesn't refire the same endpoint.
+  readonly bills        = signal<LeaseBillResponse[]>([]);
+  readonly billsLoading = signal(true);
+
+  private readonly pendingBillCount = computed(
+    () => this.bills().filter(b => b.status === 'Pending').length
+  );
 
   readonly navItems = computed<NavItem[]>(() => {
     const pendingBills = this.pendingBillCount();
@@ -74,16 +80,16 @@ export class DashboardComponent implements OnInit {
   readonly kycIsLoading = computed(() => this.kycStore.step() === 'loading');
 
   ngOnInit(): void {
-    if (this.kycStore.step() === 'loading') {
-      this.kycStore.loadExisting();
-    }
+    this.finStore.reset();
+    this.kycStore.loadExisting();
     this.paymentService.getTenantBills()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: res => {
-          const pending = (res.data ?? []).filter(b => b.status === 'Pending').length;
-          this.pendingBillCount.set(pending);
+          this.bills.set(res.data ?? []);
+          this.billsLoading.set(false);
         },
+        error: () => this.billsLoading.set(false),
       });
   }
 
@@ -99,10 +105,6 @@ export class DashboardComponent implements OnInit {
       queryParams: { tab: id },
       queryParamsHandling: 'merge'
     });
-  }
-
-  updateBillsBadge(count: number): void {
-    this.pendingBillCount.set(count);
   }
 
 }

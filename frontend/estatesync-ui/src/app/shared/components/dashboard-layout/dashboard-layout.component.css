@@ -8,7 +8,7 @@
   height: calc(100vh - 64px);   /* overridden by [style.height] binding */
   width: 240px;
   background: white;
-  border-right: 1px solid #EBEBEB;
+  border-right: 1px solid var(--es-border-light);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -20,11 +20,11 @@
 
 .sidebar-panel--open {
   transform: translateX(0);
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 4px 0 24px rgb(0, 0, 0, 0.12);
 }
 
 /* ── Sidebar — desktop: in-flow, width transition ─────────────── */
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .sidebar-panel {
     position: sticky;
     top: 64px;   /* overridden by [style.top.px] binding */
@@ -51,7 +51,7 @@
   position: fixed;
   inset: 0;
   top: 64px;   /* overridden by [style.top.px] binding */
-  background: rgba(0, 0, 0, 0.35);
+  background: rgb(0, 0, 0, 0.35);
   z-index: 39;
   animation: backdrop-in 0.2s ease;
 }

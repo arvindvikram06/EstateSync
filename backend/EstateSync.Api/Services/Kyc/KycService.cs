@@ -9,6 +9,7 @@ using EstateSync.Api.Common;
 using EstateSync.Api.DTOs.Kyc;
 using EstateSync.Api.DTOs.Users;
 using EstateSync.Api.Exceptions;
+using EstateSync.Api.Interfaces.Services.Documents;
 using EstateSync.Api.Interfaces.Services.Kyc;
 using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Interfaces.Services.Storage;
@@ -33,6 +34,7 @@ public class KycService : IKycService
     private readonly IUserRepository _userRepo;
     private readonly INotificationSender _notificationSender;
     private readonly IFileStorageService _fileStorageService;
+    private readonly IDocumentUploadService _documentUpload;
     private readonly IUnitOfWork _unitOfWork;
     private readonly UserMapper _mapper;
     private readonly ILogger<KycService> _logger;
@@ -43,6 +45,7 @@ public class KycService : IKycService
         IUserRepository userRepo,
         INotificationSender notificationSender,
         IFileStorageService fileStorageService,
+        IDocumentUploadService documentUpload,
         IUnitOfWork unitOfWork,
         UserMapper mapper,
         ILogger<KycService> logger)
@@ -52,6 +55,7 @@ public class KycService : IKycService
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
         _notificationSender = notificationSender ?? throw new ArgumentNullException(nameof(notificationSender));
         _fileStorageService = fileStorageService ?? throw new ArgumentNullException(nameof(fileStorageService));
+        _documentUpload = documentUpload ?? throw new ArgumentNullException(nameof(documentUpload));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -108,49 +112,14 @@ public class KycService : IKycService
         if (kyc.Status != ApprovalStatus.Draft)
             throw new ConflictException("Documents can only be uploaded to a draft KYC request.");
 
-        if (file == null || file.Length == 0)
-            throw new BadRequestException("No file was uploaded.");
-
-        var isPdf = file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase) ||
-                    Path.GetExtension(file.FileName).Equals(".pdf", StringComparison.OrdinalIgnoreCase);
-        if (!isPdf)
-            throw new BadRequestException("Only PDF documents are allowed.");
+        FileValidation.EnsurePdf(file);
 
         var existingLink = kyc.KycDocuments.FirstOrDefault(d => d.Document?.DocumentType == documentType);
-        Document doc;
+        var doc = await _documentUpload.SaveOrReplaceAsync(
+            existingLink?.Document, file, documentType, userId, $"users/{userId}/kyc", ct);
 
-        if (existingLink?.Document != null)
+        if (existingLink == null)
         {
-            doc = existingLink.Document;
-            if (!string.IsNullOrEmpty(doc.DocumentUrl))
-                await _fileStorageService.DeleteFileAsync(doc.DocumentUrl);
-
-            doc.DocumentUrl = await _fileStorageService.SaveFileAsync(file, $"users/{userId}/kyc", ct);
-            doc.OriginalFileName = file.FileName;
-            doc.MimeType = file.ContentType;
-            doc.FileSize = file.Length;
-            doc.UploadedAt = DateTime.UtcNow;
-            doc.ReviewStatus = ApprovalStatus.Pending;
-            doc.UpdatedAt = DateTime.UtcNow;
-        }
-        else
-        {
-            var filePath = await _fileStorageService.SaveFileAsync(file, $"users/{userId}/kyc", ct);
-            doc = new Document
-            {
-                DocumentId = Guid.NewGuid(),
-                DocumentType = documentType,
-                DocumentUrl = filePath,
-                OriginalFileName = file.FileName,
-                MimeType = file.ContentType,
-                FileSize = file.Length,
-                UploadedById = userId,
-                UploadedAt = DateTime.UtcNow,
-                ReviewStatus = ApprovalStatus.Pending,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _documentRepo.AddAsync(doc);
             kyc.KycDocuments.Add(new KycDocument
             {
                 KycVerificationId = kycId,
@@ -176,10 +145,10 @@ public class KycService : IKycService
         if (kyc.Status != ApprovalStatus.Draft)
             throw new ConflictException("Only draft KYC requests can be submitted.");
 
-        if (await _userRepo.IsAadhaarInUseAsync(request.AadhaarNumber, userId))
+        if (await _kycRepo.IsAadhaarApprovedAsync(request.AadhaarNumber, userId))
             throw new ConflictException("This Aadhaar number is already associated with another account.");
 
-        if (await _userRepo.IsPanInUseAsync(request.PanNumber, userId))
+        if (await _kycRepo.IsPanApprovedAsync(request.PanNumber, userId))
             throw new ConflictException("This PAN number is already associated with another account.");
 
         ValidateRequiredDocuments(kyc);
@@ -251,8 +220,6 @@ public class KycService : IKycService
             if (user != null)
             {
                 user.IsKycVerified = true;
-                user.AadhaarNumber = kyc.AadhaarNumber;
-                user.PanNumber = kyc.PanNumber;
                 user.UpdatedAt = DateTime.UtcNow;
             }
         }

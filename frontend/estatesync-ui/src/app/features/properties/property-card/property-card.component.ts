@@ -4,7 +4,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { PropertySummaryResponse } from '../../../core/models/property.model';
-import { PropertyService } from '../../../core/services/property.service';
+import { PropertyService } from '@core/services/property/property.service';
+import { formatCurrency } from '../../../core/utils/format.utils';
 
 const GRADIENTS = [
   'linear-gradient(135deg, #52B69A 0%, #1A759F 100%)',
@@ -28,9 +29,7 @@ function hashCode(s: string): number {
   standalone: true,
   imports: [RouterLink, MatCardModule, MatChipsModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './property-card.component.html',
-  styleUrl: './property-card.component.css'
-})
+  templateUrl: './property-card.component.html',})
 export class PropertyCardComponent {
   readonly property = input.required<PropertySummaryResponse>();
   readonly propertyService = inject(PropertyService);
@@ -39,7 +38,5 @@ export class PropertyCardComponent {
     GRADIENTS[hashCode(this.property().propertyId) % GRADIENTS.length]
   );
 
-  formatRent(amount: number): string {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
-  }
+  readonly formatRent = formatCurrency;
 }

@@ -8,8 +8,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
-import { PropertyService } from '../../../../core/services/property.service';
-import { AuthService } from '../../../../core/services/auth.service';
+import { PropertyService } from '@core/services/property/property.service';
+import { AuthService } from '@core/services/auth/auth.service';
 import { PropertySummaryResponse } from '../../../../core/models/property.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -44,7 +44,7 @@ export class OwnerPropertiesTabComponent implements OnInit {
   private readonly dialog      = inject(MatDialog);
   private readonly destroyRef  = inject(DestroyRef);
 
-  readonly isOnboarded   = computed(() => this.authService.currentUser()?.isOwnerVerified ?? false);
+  readonly isOnboarded   = this.authService.isOwnerVerified;
   readonly all           = signal<PropertySummaryResponse[]>([]);
   readonly loading       = signal(true);
   readonly activeFilter  = signal<PropFilter>('All');
@@ -78,6 +78,17 @@ export class OwnerPropertiesTabComponent implements OnInit {
 
   openAddProperty(): void {
     if (!this.isOnboarded()) return;
+    // Clear any stale wizard state so a fresh wizard starts at step 1
+    localStorage.removeItem('es_wizard_property_id');
+    localStorage.removeItem('es_wizard_step');
+    this.router.navigate(['/properties/create']);
+  }
+
+  resumeWizardDraft(prop: PropertySummaryResponse): void {
+    // Seed the property ID so the wizard restores this specific draft.
+    // Do NOT set es_wizard_step — the wizard will infer it from the property data.
+    localStorage.setItem('es_wizard_property_id', prop.propertyId);
+    localStorage.removeItem('es_wizard_step');
     this.router.navigate(['/properties/create']);
   }
 

@@ -1,4 +1,5 @@
 using System;
+using EstateSync.Api.Common;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,12 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     {
         return await _dbSet
             .FirstOrDefaultAsync(u => u.Email == email);
+    }
+
+    public async Task<User?> GetByEmailVerificationTokenAsync(string token)
+    {
+        return await _dbSet
+            .FirstOrDefaultAsync(u => u.EmailVerificationToken == token);
     }
 
     public async Task<User?> GetByEmailWithRolesAsync(string email)
@@ -45,7 +52,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
 
         if (user == null) return false;
 
-        var hasOwnerRole = user.UserRoles.Any(ur => ur.Role?.Name == "Owner");
+        var hasOwnerRole = user.UserRoles.Any(ur => ur.Role?.Name == Roles.Owner);
         return hasOwnerRole && user.IsKycVerified && user.IsOwnerVerified;
     }
 
@@ -57,13 +64,11 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .FirstOrDefaultAsync(u => u.UserId == userId);
     }
 
-    public async Task<bool> IsAadhaarInUseAsync(string aadhaarNumber, Guid? excludeUserId = null)
+    public async Task<User?> GetByIdWithProfileAsync(Guid userId)
     {
-        return await _dbSet.AnyAsync(u => u.AadhaarNumber == aadhaarNumber && u.UserId != excludeUserId);
+        return await _dbSet
+            .Include(u => u.OwnerProfile)
+            .FirstOrDefaultAsync(u => u.UserId == userId);
     }
 
-    public async Task<bool> IsPanInUseAsync(string panNumber, Guid? excludeUserId = null)
-    {
-        return await _dbSet.AnyAsync(u => u.PanNumber == panNumber && u.UserId != excludeUserId);
-    }
 }

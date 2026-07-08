@@ -7,8 +7,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { interval, switchMap, takeWhile, tap, catchError, of } from 'rxjs';
-import { AuthService } from '../../../core/services/auth.service';
-import { PaymentService } from '../../../core/services/payment.service';
+import { AuthService } from '@core/services/auth/auth.service';
+import { PaymentService } from '@core/services/payment/payment.service';
 
 @Component({
   selector: 'app-payment-success',
@@ -29,7 +29,7 @@ import { PaymentService } from '../../../core/services/payment.service';
 
         @if (isOnboarding()) {
           @if (confirmed()) {
-            <mat-icon class="!text-[64px] !w-[64px] !h-[64px]" style="color:#059669">check_circle</mat-icon>
+            <mat-icon class="!text-[64px] !w-[64px] !h-[64px] es-text-success">check_circle</mat-icon>
             <h1 class="text-2xl font-bold text-es-text">Stripe Account Connected!</h1>
             <p class="text-sm text-es-muted text-center max-w-sm">
               Your Stripe account is now linked. You can start listing properties and receiving rent payments.
@@ -53,14 +53,14 @@ import { PaymentService } from '../../../core/services/payment.service';
         } @else {
           <!-- Rent payment result -->
           @if (confirmed()) {
-            <mat-icon class="!text-[64px] !w-[64px] !h-[64px]" style="color:#059669">check_circle</mat-icon>
+            <mat-icon class="!text-[64px] !w-[64px] !h-[64px] es-text-success">check_circle</mat-icon>
             <h1 class="text-2xl font-bold text-es-text">Payment Confirmed!</h1>
             <p class="text-sm text-es-muted text-center max-w-sm">
               Your payment has been processed and your bill is now marked as paid.
             </p>
           } @else {
             <!-- Webhook not yet processed after polling timeout — give soft reassurance -->
-            <mat-icon class="!text-[64px] !w-[64px] !h-[64px]" style="color:#059669">check_circle</mat-icon>
+            <mat-icon class="!text-[64px] !w-[64px] !h-[64px] es-text-success">check_circle</mat-icon>
             <h1 class="text-2xl font-bold text-es-text">Payment Successful!</h1>
             <p class="text-sm text-es-muted text-center max-w-sm">
               Your payment was accepted by Stripe. It may take a minute or two to reflect in your bills.
@@ -97,15 +97,16 @@ export class PaymentSuccessComponent implements OnInit {
     if (type === 'onboarding') {
       this.isOnboarding.set(true);
       this.verifying.set(true);
-      this.authService.refreshToken()
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: () => {
-            this.confirmed.set(this.authService.currentUser()?.isOwnerVerified ?? false);
-            this.verifying.set(false);
-          },
-          error: () => this.verifying.set(false),
-        });
+      this.authService.refreshToken().pipe(
+        switchMap(() => this.authService.syncProfile()),
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: () => {
+          this.confirmed.set(this.authService.isOwnerVerified());
+          this.verifying.set(false);
+        },
+        error: () => this.verifying.set(false),
+      });
       return;
     }
 

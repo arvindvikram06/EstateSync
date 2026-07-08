@@ -7,12 +7,12 @@ import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AuthService } from '../../../../core/services/auth.service';
-import { PropertyService } from '../../../../core/services/property.service';
-import { RentalApplicationService } from '../../../../core/services/rental-application.service';
-import { LeaseService } from '../../../../core/services/lease.service';
-import { ComplaintService } from '../../../../core/services/complaint.service';
-import { PaymentService } from '../../../../core/services/payment.service';
+import { AuthService } from '@core/services/auth/auth.service';
+import { PropertyService } from '@core/services/property/property.service';
+import { RentalApplicationService } from '@core/services/leasing/rental-application.service';
+import { LeaseService } from '@core/services/leasing/lease.service';
+import { ComplaintService } from '@core/services/complaint/complaint.service';
+import { PaymentService } from '@core/services/payment/payment.service';
 import { PropertySummaryResponse } from '../../../../core/models/property.model';
 import { OwnerApplicationResponse } from '../../../../core/models/rental-application.model';
 import { OwnerLeaseSummaryResponse } from '../../../../core/models/lease.model';
@@ -41,7 +41,7 @@ export class OwnerOverviewTabComponent implements OnInit {
   private readonly destroyRef        = inject(DestroyRef);
 
   readonly user                = this.authService.currentUser;
-  readonly isOnboarded         = computed(() => this.authService.currentUser()?.isOwnerVerified ?? false);
+  readonly isOnboarded         = this.authService.isOwnerVerified;
   readonly onboardLoading      = signal(false);
   readonly stripeCallbackState = signal<'none' | 'checking' | 'done'>('none');
 
@@ -56,6 +56,7 @@ export class OwnerOverviewTabComponent implements OnInit {
   readonly activeLeases     = computed(() => this.leases().filter(l => l.status === 'Active').length);
   readonly openComplaints   = computed(() => this.complaints().filter(c => c.status === 'Open').length);
   readonly recentPendingApps = computed(() => this.apps().filter(a => a.status === 'Pending').slice(0, 3));
+  readonly firstName = computed(() => this.user()?.fullName?.split(' ')?.[0] ?? 'Owner');
 
   readonly formatDate = formatDate;
 
@@ -71,7 +72,7 @@ export class OwnerOverviewTabComponent implements OnInit {
           error: () => this.stripeCallbackState.set('none'),
         });
     } else if (!this.isOnboarded()) {
-      // Silent sync to catch stale isOwnerVerified in localStorage (uses JWT, no cookie needed)
+      // Verification state may not be populated yet if the post-login profile fetch is still in flight
       this.authService.syncProfile()
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe();
@@ -81,7 +82,7 @@ export class OwnerOverviewTabComponent implements OnInit {
       props:      this.propertySvc.getMyProperties(),
       apps:       this.applicationSvc.getOwnerApplications(),
       leases:     this.leaseSvc.getOwnerLeases(),
-      complaints: this.complaintSvc.getOwnerComplaints(),
+      complaints: this.complaintSvc.getComplaints(),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ props, apps, leases, complaints }) => {
         this.properties.set(props.data ?? []);

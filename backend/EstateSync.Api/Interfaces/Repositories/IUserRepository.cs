@@ -8,10 +8,10 @@ namespace EstateSync.Api.Repositories.Interfaces;
 public interface IUserRepository : IRepository<User>
 {
     Task<User?> GetByEmailAsync(string email);
+    Task<User?> GetByEmailVerificationTokenAsync(string token);
     Task<User?> GetByEmailWithRolesAsync(string email);
     Task<IEnumerable<User>> GetUsersByRoleAsync(string roleName);
     Task<bool> IsUserVerifiedOwnerAsync(Guid userId);
     Task<User?> GetByIdWithRolesAsync(Guid userId);
-    Task<bool> IsAadhaarInUseAsync(string aadhaarNumber, Guid? excludeUserId = null);
-    Task<bool> IsPanInUseAsync(string panNumber, Guid? excludeUserId = null);
+    Task<User?> GetByIdWithProfileAsync(Guid userId);
 }

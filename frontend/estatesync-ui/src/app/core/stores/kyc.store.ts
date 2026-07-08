@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
-import { KycService } from '../services/kyc.service';
+import { KycService } from '@core/services/verification/kyc.service';
 import { KycVerificationResponse, DocumentResponse, KycDocumentType, REQUIRED_KYC_DOCS } from '../models/kyc.model';
 import { catchError, map, of, tap, pipe, switchMap, exhaustMap, concatMap } from 'rxjs';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';

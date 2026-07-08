@@ -23,7 +23,6 @@ import { OwnerEarningsTabComponent } from './tabs/owner-earnings-tab/owner-earni
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './owner-dashboard.component.html',
-  styleUrl: './owner-dashboard.component.css',
 })
 export class OwnerDashboardComponent {
   private readonly route  = inject(ActivatedRoute);

@@ -2,7 +2,7 @@
 
   <!-- ── Left hero ─────────────────────────────────────────── -->
   <div class="flex-1 relative overflow-hidden hidden md:flex items-center justify-center p-14
-              bg-gradient-to-br from-brand via-brand-dark to-[#8B003A] text-white">
+              bg-gradient-to-br from-brand via-brand-dark to-brand-deep text-white">
     <!-- Decorative circles -->
     <div class="absolute -top-32 -right-32 w-[480px] h-[480px] rounded-full bg-white/[0.07] pointer-events-none"></div>
     <div class="absolute -bottom-24 -left-20 w-[360px] h-[360px] rounded-full bg-white/[0.05] pointer-events-none">
@@ -47,6 +47,20 @@
 
       @if (errorMessage()) {
       <app-alert-banner [message]="errorMessage()!" />
+      @if (needsVerification()) {
+        <div class="mt-2 mb-1 text-[13px]">
+          @if (resendState() === 'sent') {
+            <span class="es-text-success">Verification email sent — check your inbox.</span>
+          } @else {
+            <button type="button"
+              class="text-brand font-semibold underline bg-transparent border-none cursor-pointer p-0"
+              [disabled]="resendState() === 'sending'"
+              (click)="resendVerification()">
+              {{ resendState() === 'sending' ? 'Sending…' : 'Resend verification email' }}
+            </button>
+          }
+        </div>
+      }
       }
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate class="flex flex-col gap-1">
@@ -85,13 +99,13 @@
       </form>
 
       <!-- Demo box -->
-      <div class="mt-6 p-4 bg-es-bg rounded-xl border border-[#EBEBEB] text-[13px]">
+      <div class="mt-6 p-4 bg-es-bg rounded-xl border border-es-border-light text-[13px]">
         <div class="text-[11px] font-bold uppercase tracking-[0.8px] text-gray-400 mb-2.5">Demo accounts</div>
-        <div class="text-[#555] mb-1"><span
+        <div class="text-es-soft mb-1"><span
             class="font-semibold text-brand mr-1.5">Tenant</span>tenant&#64;estatesync.com · Password123!</div>
-        <div class="text-[#555] mb-1"><span class="font-semibold text-brand mr-1.5">Owner</span>owner&#64;estatesync.com
+        <div class="text-es-soft mb-1"><span class="font-semibold text-brand mr-1.5">Owner</span>owner&#64;estatesync.com
           · Password123!</div>
-        <div class="text-[#555]"><span class="font-semibold text-brand mr-1.5">Admin</span>admin&#64;estatesync.com ·
+        <div class="text-es-soft"><span class="font-semibold text-brand mr-1.5">Admin</span>admin&#64;estatesync.com ·
           Password123!</div>
       </div>
 

@@ -7,6 +7,6 @@ namespace EstateSync.Api.Interfaces.Services.Users;
 
 public interface IUserService
 {
-    Task<string> BecomeOwnerAsync(Guid userId, CancellationToken ct = default);
+    Task<string> BecomeOwnerAsync(Guid userId, BecomeOwnerRequest request, CancellationToken ct = default);
     Task<UserProfileResponse> GetProfileAsync(Guid userId, CancellationToken ct = default);
 }

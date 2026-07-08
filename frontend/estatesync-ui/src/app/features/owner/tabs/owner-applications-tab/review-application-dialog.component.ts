@@ -8,7 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { RentalApplicationService } from '../../../../core/services/rental-application.service';
+import { RentalApplicationService } from '@core/services/leasing/rental-application.service';
 import { OwnerApplicationResponse } from '../../../../core/models/rental-application.model';
 import { LoadingButtonComponent } from '../../../../shared/components/loading-button/loading-button.component';
 
@@ -31,7 +31,7 @@ export interface ReviewApplicationDialogData {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="p-7" style="min-width:420px;max-width:480px">
+    <div class="p-7">
       <div class="flex items-center gap-3 mb-5">
         <div class="flex items-center justify-center w-10 h-10 rounded-full"
           [style.background]="data.action === 'approve' ? '#D1FAE5' : '#FEE2E2'">

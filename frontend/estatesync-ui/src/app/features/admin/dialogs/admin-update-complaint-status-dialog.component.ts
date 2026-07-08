@@ -1,12 +1,11 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AdminService } from '../../../core/services/admin.service';
+import { AdminService } from '@core/services/admin/admin.service';
 
 export interface UpdateComplaintStatusDialogData {
   complaintId: string;
@@ -25,25 +24,23 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   standalone: true,
   imports: [
     ReactiveFormsModule, MatDialogModule, MatButtonModule,
-    MatFormFieldModule, MatSelectModule, MatIconModule, MatProgressSpinnerModule,
+    MatIconModule, MatProgressSpinnerModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div mat-dialog-title style="font-size:18px;font-weight:700;color:#222">Update Complaint Status</div>
+    <div mat-dialog-title class="text-[18px] font-bold text-es-text">Update Complaint Status</div>
     <div style="font-size:13px;color:#717171;margin-bottom:4px">Current: <strong>{{ data.currentStatus }}</strong></div>
 
-    <mat-dialog-content style="padding-top:16px;min-width:360px">
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label>New Status</mat-label>
-        <mat-icon matPrefix class="mr-2">update</mat-icon>
-        <mat-select [formControl]="statusCtrl">
-          @for (s of nextStatuses; track s) {
-            <mat-option [value]="s">{{ s }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+    <mat-dialog-content class="!pt-4">
+      <div class="opt-label">New Status</div>
+      <div class="opt-pills">
+        @for (s of nextStatuses; track s) {
+          <button type="button" class="opt-pill" [class.opt-pill--active]="statusCtrl.value === s"
+            (click)="statusCtrl.setValue(s)">{{ s }}</button>
+        }
+      </div>
       @if (error()) {
-        <div style="font-size:12px;color:#DC2626;margin-top:4px">{{ error() }}</div>
+        <div style="font-size:12px;color:#DC2626;margin-top:8px">{{ error() }}</div>
       }
     </mat-dialog-content>
 
@@ -61,6 +58,7 @@ export class AdminUpdateComplaintStatusDialogComponent {
   readonly data        = inject<UpdateComplaintStatusDialogData>(MAT_DIALOG_DATA);
   private readonly dialogRef    = inject(MatDialogRef<AdminUpdateComplaintStatusDialogComponent>);
   private readonly adminService = inject(AdminService);
+  private readonly destroyRef   = inject(DestroyRef);
 
   readonly submitting = signal(false);
   readonly error      = signal<string | null>(null);
@@ -72,7 +70,9 @@ export class AdminUpdateComplaintStatusDialogComponent {
     if (this.statusCtrl.invalid) return;
     this.submitting.set(true);
     this.error.set(null);
-    this.adminService.updateComplaintStatus(this.data.complaintId, this.statusCtrl.value).subscribe({
+    this.adminService.updateComplaintStatus(this.data.complaintId, this.statusCtrl.value)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => { this.submitting.set(false); this.dialogRef.close(true); },
       error: (e) => { this.submitting.set(false); this.error.set(e?.error?.message ?? 'Something went wrong.'); },
     });

@@ -4,10 +4,12 @@
   [navItems]="navItems()"
   [activeTab]="activeTab()"
   [topOffset]="0"
-  (tabChange)="setTab($event)">
+  [showLogout]="true"
+  (tabChange)="setTab($event)"
+  (logout)="onLogout()">
 
   @if (activeTab() === 'overview') {
-    <app-admin-overview-tab (tabSwitch)="setTab($event)" />
+    <app-admin-overview-tab [stats]="stats()" [loading]="statsLoading()" (tabSwitch)="setTab($event)" />
   }
   @if (activeTab() === 'kyc') {
     <app-admin-kyc-tab />

@@ -2,7 +2,7 @@ import {
   Component, ChangeDetectionStrategy, inject, computed,
   signal, HostListener,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
@@ -12,11 +12,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatDividerModule } from '@angular/material/divider';
-import { AuthService } from '../../../core/services/auth.service';
-import { NotificationService } from '../../../core/services/notification.service';
-import { SignalRService } from '../../../core/services/signalr.service';
+import { AuthService } from '@core/services/auth/auth.service';
+import { NotificationService } from '@core/services/shared/notification.service';
+import { SignalRService } from '@core/services/shared/signalr.service';
 import { NotificationPanelComponent } from '../notification-panel/notification-panel.component';
+import { getInitials } from '../../../core/utils/format.utils';
 
 @Component({
   selector: 'app-navbar',
@@ -24,13 +24,13 @@ import { NotificationPanelComponent } from '../notification-panel/notification-p
   host: { 'style': 'position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: block;' },
   imports: [
     RouterLink,
+    RouterLinkActive,
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
     MatInputModule,
     MatFormFieldModule,
-    MatDividerModule,
     NotificationPanelComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,6 +45,7 @@ export class NavbarComponent {
   private readonly router = inject(Router);
 
   readonly panelOpen = signal(false);
+  readonly mobileMenuOpen = signal(false);
 
   readonly isSearchVisible = toSignal(
     this.router.events.pipe(
@@ -59,11 +60,8 @@ export class NavbarComponent {
 
   readonly user     = this.authService.currentUser;
   readonly isOwner  = this.authService.isOwner;
-  readonly initials = computed(() => {
-    const n = this.authService.currentUser()?.fullName ?? '';
-    return n.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
-  });
-  readonly isKycApproved = computed(() => this.authService.currentUser()?.isKycVerified ?? false);
+  readonly initials = computed(() => getInitials(this.authService.currentUser()?.fullName ?? ''));
+  readonly isKycApproved = this.authService.isKycVerified;
 
   @HostListener('document:click')
   onDocumentClick(): void {
@@ -77,16 +75,27 @@ export class NavbarComponent {
     this.panelOpen.update(v => !v);
   }
 
+  // Fire-and-forget: navbar lives for the app lifetime and the one-shot
+  // HTTP observable completes on its own, so no cleanup operator is needed.
   onMarkAllRead(): void {
     this.notificationService.markAllRead().subscribe();
   }
 
   doSearch(value: string): void {
     const q = value.trim();
-    this.router.navigate(['/properties'], q ? { queryParams: { state: q } } : {});
+    this.router.navigate(['/properties'], q ? { queryParams: { search: q } } : {});
+  }
+
+  toggleMobileMenu(): void { this.mobileMenuOpen.update(v => !v); }
+  closeMobileMenu(): void  { this.mobileMenuOpen.set(false); }
+
+  openMobileNotifications(): void {
+    this.closeMobileMenu();
+    setTimeout(() => this.panelOpen.set(true), 260);
   }
 
   logout() {
+    this.closeMobileMenu();
     this.authService.logout();
   }
 }

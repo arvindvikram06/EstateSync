@@ -2,7 +2,7 @@
 
   <!-- ── Left panel — internal branding ─────────────────────────────────── -->
   <div class="flex-1 relative overflow-hidden hidden md:flex items-center justify-center p-14
-              bg-gradient-to-br from-[#1A1235] via-[#2D1B69] to-[#3B0F6F] text-white">
+              bg-gradient-to-br from-hero-start via-hero-mid to-hero-end text-white">
     <!-- Decorative shapes -->
     <div class="absolute -top-28 -right-28 w-[420px] h-[420px] rounded-full bg-white/[0.05] pointer-events-none"></div>
     <div class="absolute -bottom-20 -left-16 w-[320px] h-[320px] rounded-full bg-white/[0.04] pointer-events-none"></div>
@@ -10,50 +10,50 @@
 
     <div class="relative z-10 max-w-sm">
       <!-- Badge -->
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-8"
-           style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase">
-        <mat-icon style="font-size:14px;width:14px;height:14px">shield</mat-icon>
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-8
+                  bg-white/[0.12] border border-solid border-white/20 text-[11px] font-bold tracking-[1px] uppercase">
+        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">shield</mat-icon>
         Internal Portal
       </div>
 
       <div class="flex items-center gap-2 mb-6">
         <mat-icon class="!text-[32px] !w-8 !h-8">home_work</mat-icon>
-        <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px">EstateSync</span>
+        <span class="text-[22px] font-extrabold tracking-[-0.5px]">EstateSync</span>
       </div>
 
-      <h1 style="font-size:34px;font-weight:700;line-height:1.2;letter-spacing:-0.5px;margin-bottom:14px">
+      <h1 class="text-[34px] font-bold leading-[1.2] tracking-[-0.5px] mb-3.5">
         Staff<br>Operations Portal
       </h1>
-      <p style="font-size:14px;line-height:1.7;opacity:0.75;margin-bottom:36px">
+      <p class="text-sm leading-[1.7] opacity-75 mb-9">
         Restricted access for EstateSync administrators and verification team members.
       </p>
 
       <div class="flex flex-col gap-4">
         <div class="flex items-start gap-3">
-          <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <mat-icon style="font-size:17px;width:17px;height:17px">admin_panel_settings</mat-icon>
+          <div class="w-8 h-8 rounded-lg bg-white/[0.12] flex items-center justify-center shrink-0">
+            <mat-icon class="!text-[17px] !w-[17px] !h-[17px]">admin_panel_settings</mat-icon>
           </div>
           <div>
-            <div style="font-size:13px;font-weight:600;margin-bottom:2px">Admin</div>
-            <div style="font-size:12px;opacity:0.65">Full platform management and oversight</div>
+            <div class="text-[13px] font-semibold mb-0.5">Admin</div>
+            <div class="text-[12px] opacity-[0.65]">Full platform management and oversight</div>
           </div>
         </div>
         <div class="flex items-start gap-3">
-          <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <mat-icon style="font-size:17px;width:17px;height:17px">verified_user</mat-icon>
+          <div class="w-8 h-8 rounded-lg bg-white/[0.12] flex items-center justify-center shrink-0">
+            <mat-icon class="!text-[17px] !w-[17px] !h-[17px]">verified_user</mat-icon>
           </div>
           <div>
-            <div style="font-size:13px;font-weight:600;margin-bottom:2px">Verifier</div>
-            <div style="font-size:12px;opacity:0.65">KYC and financial profile review queue</div>
+            <div class="text-[13px] font-semibold mb-0.5">Verifier</div>
+            <div class="text-[12px] opacity-[0.65]">KYC and financial profile review queue</div>
           </div>
         </div>
         <div class="flex items-start gap-3">
-          <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <mat-icon style="font-size:17px;width:17px;height:17px">task_alt</mat-icon>
+          <div class="w-8 h-8 rounded-lg bg-white/[0.12] flex items-center justify-center shrink-0">
+            <mat-icon class="!text-[17px] !w-[17px] !h-[17px]">task_alt</mat-icon>
           </div>
           <div>
-            <div style="font-size:13px;font-weight:600;margin-bottom:2px">Audit Logged</div>
-            <div style="font-size:12px;opacity:0.65">All actions recorded for compliance</div>
+            <div class="text-[13px] font-semibold mb-0.5">Audit Logged</div>
+            <div class="text-[12px] opacity-[0.65]">All actions recorded for compliance</div>
           </div>
         </div>
       </div>
@@ -66,41 +66,37 @@
 
       <!-- Logo -->
       <div class="flex items-center gap-1.5 mb-8">
-        <mat-icon style="color:var(--mat-sys-primary);font-size:22px;width:22px;height:22px">home_work</mat-icon>
-        <span style="font-size:17px;font-weight:800;color:var(--mat-sys-primary);letter-spacing:-0.3px">EstateSync</span>
-        <span style="font-size:11px;font-weight:700;color:#717171;letter-spacing:0.5px;text-transform:uppercase;margin-left:6px;margin-top:1px">Staff</span>
+        <mat-icon class="es-text-primary !text-[22px] !w-[22px] !h-[22px]">home_work</mat-icon>
+        <span class="text-[17px] font-extrabold es-text-primary tracking-[-0.3px]">EstateSync</span>
+        <span class="text-[11px] font-bold text-es-muted tracking-[0.5px] uppercase ml-1.5 mt-px">Staff</span>
       </div>
 
-      <h2 style="font-size:26px;font-weight:700;letter-spacing:-0.5px;color:#222;margin-bottom:4px">Sign in to your work account</h2>
-      <p style="font-size:13px;color:#717171;margin-bottom:20px">
+      <h2 class="text-[26px] font-bold tracking-[-0.5px] text-es-text mb-1">Sign in to your work account</h2>
+      <p class="text-[13px] text-es-muted mb-5">
         For tenant and owner accounts, use the
-        <a routerLink="/auth/login" style="color:var(--mat-sys-primary);font-weight:600;text-decoration:none">main login page</a>.
+        <a routerLink="/auth/login" class="es-text-primary font-semibold no-underline">main login page</a>.
       </p>
 
       <!-- Role selector -->
-      <div class="flex gap-2 mb-5 p-1 rounded-[12px]" style="background:#F3F4F6">
+      <div class="flex gap-2 mb-5 p-1 rounded-[12px] role-toggle-group">
         <button type="button"
-          class="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-[10px] text-sm font-semibold transition-all cursor-pointer border-none"
-          [style.background]="selectedRole() === 'Admin' ? 'white' : 'transparent'"
-          [style.color]="selectedRole() === 'Admin' ? 'var(--mat-sys-primary)' : '#717171'"
-          [style.boxShadow]="selectedRole() === 'Admin' ? '0 1px 4px rgba(0,0,0,0.12)' : 'none'"
+          class="role-toggle flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-[10px] text-sm font-semibold transition-all cursor-pointer border-none"
+          [class.role-toggle--active]="selectedRole() === 'Admin'"
           (click)="selectRole('Admin')">
-          <mat-icon style="font-size:17px;width:17px;height:17px">admin_panel_settings</mat-icon>
+          <mat-icon class="!text-[17px] !w-[17px] !h-[17px]">admin_panel_settings</mat-icon>
           Admin
         </button>
         <button type="button"
-          class="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-[10px] text-sm font-semibold transition-all cursor-pointer border-none"
-          [style.background]="selectedRole() === 'Verifier' ? 'white' : 'transparent'"
-          [style.color]="selectedRole() === 'Verifier' ? 'var(--mat-sys-primary)' : '#717171'"
-          [style.boxShadow]="selectedRole() === 'Verifier' ? '0 1px 4px rgba(0,0,0,0.12)' : 'none'"
+          class="role-toggle flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-[10px] text-sm font-semibold transition-all cursor-pointer border-none"
+          [class.role-toggle--active]="selectedRole() === 'Verifier'"
           (click)="selectRole('Verifier')">
-          <mat-icon style="font-size:17px;width:17px;height:17px">verified_user</mat-icon>
+          <mat-icon class="!text-[17px] !w-[17px] !h-[17px]">verified_user</mat-icon>
           Verifier
         </button>
       </div>
 
       @if (errorMessage()) {
-        <app-alert-banner [message]="errorMessage()!" style="display:block;margin-bottom:16px" />
+        <app-alert-banner [message]="errorMessage()!" class="block mb-4" />
       }
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate class="flex flex-col gap-1">
@@ -139,9 +135,9 @@
       </form>
 
       <!-- Security notice -->
-      <div class="mt-6 flex items-start gap-2.5" style="padding:14px 16px;background:#F7F7F7;border-radius:10px;border:1px solid #EBEBEB">
-        <mat-icon style="font-size:16px;width:16px;height:16px;color:#717171;margin-top:1px;flex-shrink:0">info</mat-icon>
-        <p style="font-size:12px;color:#717171;line-height:1.5;margin:0">
+      <div class="mt-6 flex items-start gap-2.5 px-4 py-3.5 bg-es-bg rounded-[10px] border border-solid border-es-border-light">
+        <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-muted mt-px shrink-0">info</mat-icon>
+        <p class="text-[12px] text-es-muted leading-normal">
           This portal is restricted to EstateSync staff. All actions are logged for audit and compliance purposes.
         </p>
       </div>

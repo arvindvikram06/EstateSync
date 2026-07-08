@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
-import { AdminService } from '../../../core/services/admin.service';
+import { AdminService } from '@core/services/admin/admin.service';
 
 @Component({
   selector: 'app-admin-create-verifier-dialog',
@@ -17,10 +18,10 @@ import { AdminService } from '../../../core/services/admin.service';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div mat-dialog-title style="font-size:18px;font-weight:700;color:#222">Add Verifier Account</div>
+    <div mat-dialog-title class="text-[18px] font-bold text-es-text">Add Verifier Account</div>
     <div style="font-size:13px;color:#717171;margin-bottom:4px">Create a staff account with Verifier role.</div>
 
-    <mat-dialog-content style="padding-top:16px;min-width:400px">
+    <mat-dialog-content class="!pt-4">
       <form [formGroup]="form" class="flex flex-col gap-4">
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Full Name</mat-label>
@@ -44,7 +45,7 @@ import { AdminService } from '../../../core/services/admin.service';
           <mat-hint>Minimum 8 characters</mat-hint>
         </mat-form-field>
         @if (error()) {
-          <div style="font-size:12px;color:#DC2626">{{ error() }}</div>
+          <div class="es-text-xs es-text-danger">{{ error() }}</div>
         }
       </form>
     </mat-dialog-content>
@@ -62,6 +63,7 @@ import { AdminService } from '../../../core/services/admin.service';
 export class AdminCreateVerifierDialogComponent {
   private readonly dialogRef    = inject(MatDialogRef<AdminCreateVerifierDialogComponent>);
   private readonly adminService = inject(AdminService);
+  private readonly destroyRef   = inject(DestroyRef);
 
   readonly submitting = signal(false);
   readonly error      = signal<string | null>(null);
@@ -77,7 +79,9 @@ export class AdminCreateVerifierDialogComponent {
     if (this.form.invalid) return;
     this.submitting.set(true);
     this.error.set(null);
-    this.adminService.createVerifier(this.form.getRawValue()).subscribe({
+    this.adminService.createVerifier(this.form.getRawValue())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: () => { this.submitting.set(false); this.dialogRef.close(true); },
       error: (e) => { this.submitting.set(false); this.error.set(e?.error?.message ?? 'Something went wrong.'); },
     });

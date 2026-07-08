@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EstateSync.Api.DTOs.Properties;
 using EstateSync.Api.Models;
+using EstateSync.Api.Models.Enums;
 
 namespace EstateSync.Api.Mappers;
 
@@ -23,7 +24,7 @@ public class PropertyMapper
             PrimaryImage = s.PropertyImages.FirstOrDefault(i => i.IsPrimary)?.Image,
             PropertyType = s.PropertyType.ToString(),
             Status = s.Status.ToString(),
-            OwnerName = s.Owner?.FullName ?? string.Empty,
+            OwnerName = ResolveOwnerDisplayName(s.Owner),
             OwnerEmail = s.Owner?.Email ?? string.Empty,
             CreatedAt = s.CreatedAt,
         };
@@ -46,7 +47,7 @@ public class PropertyMapper
         {
             PropertyId = s.PropertyId,
             OwnerId = s.OwnerId,
-            OwnerName = s.Owner != null ? s.Owner.FullName : string.Empty,
+            OwnerName = ResolveOwnerDisplayName(s.Owner),
             Title = s.Title,
             Description = s.Description,
             PropertyType = s.PropertyType.ToString(),
@@ -92,6 +93,14 @@ public class PropertyMapper
         };
     }
 
+    private static string ResolveOwnerDisplayName(User? owner)
+    {
+        if (owner == null) return string.Empty;
+        if (owner.OwnerProfile?.OwnerType == OwnerType.Company && !string.IsNullOrWhiteSpace(owner.OwnerProfile.CompanyName))
+            return owner.OwnerProfile.CompanyName;
+        return owner.FullName;
+    }
+
     public void MapUpdateRequestToEntity(UpdatePropertyRequest request, Property entity)
     {
         entity.Title = request.Title;
@@ -109,5 +118,42 @@ public class PropertyMapper
         entity.SecurityDeposit = request.SecurityDeposit;
         entity.Bedrooms = request.Bedrooms;
         entity.Bathrooms = request.Bathrooms;
+    }
+
+    /// <summary>
+    /// Applies only the non-null fields from a patch request to an existing draft entity.
+    /// Amenities with a non-null list (even empty) fully replace the existing list.
+    /// Returns true if any field was changed.
+    /// </summary>
+    public bool ApplyPatchToEntity(PatchPropertyDraftRequest patch, Property entity)
+    {
+        bool changed = false;
+
+        if (patch.PropertyType.HasValue)  { entity.PropertyType  = patch.PropertyType.Value;  changed = true; }
+        if (patch.State       != null)    { entity.State         = patch.State;                changed = true; }
+        if (patch.City        != null)    { entity.City          = patch.City;                 changed = true; }
+        if (patch.Pincode     != null)    { entity.Pincode       = patch.Pincode;              changed = true; }
+        if (patch.AddressLine != null)    { entity.AddressLine   = patch.AddressLine;          changed = true; }
+        if (patch.Latitude    .HasValue)  { entity.Latitude      = patch.Latitude;             changed = true; }
+        if (patch.Longitude   .HasValue)  { entity.Longitude     = patch.Longitude;            changed = true; }
+        if (patch.Bedrooms    .HasValue)  { entity.Bedrooms      = patch.Bedrooms.Value;       changed = true; }
+        if (patch.Bathrooms   .HasValue)  { entity.Bathrooms     = patch.Bathrooms.Value;      changed = true; }
+        if (patch.LandArea    .HasValue)  { entity.LandArea      = patch.LandArea.Value;       changed = true; }
+        if (patch.BuildupArea .HasValue)  { entity.BuildupArea   = patch.BuildupArea.Value;    changed = true; }
+        if (patch.Title       != null)    { entity.Title         = patch.Title;                changed = true; }
+        if (patch.Description != null)    { entity.Description   = patch.Description;          changed = true; }
+        if (patch.MonthlyRent .HasValue)  { entity.MonthlyRent   = patch.MonthlyRent.Value;    changed = true; }
+        if (patch.SecurityDeposit.HasValue) { entity.SecurityDeposit = patch.SecurityDeposit.Value; changed = true; }
+        if (patch.Amenities   != null)
+        {
+            entity.Amenities = patch.Amenities
+                .Where(a => !string.IsNullOrWhiteSpace(a))
+                .Select(a => a.Replace(" ", "").ToLowerInvariant())
+                .Distinct()
+                .ToList();
+            changed = true;
+        }
+
+        return changed;
     }
 }

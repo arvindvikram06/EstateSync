@@ -1,0 +1,110 @@
+<div class="max-w-[720px] mx-auto px-6 py-10">
+
+  @if (!profile()) {
+    <div class="flex items-center gap-3 py-16 justify-center text-sm text-es-muted">
+      <mat-spinner diameter="24" aria-label="Loading profile" /><span>Loading profile…</span>
+    </div>
+  } @else {
+
+    <!-- Identity card -->
+    <div class="es-card px-8 py-7 mb-6">
+      <div class="flex items-center gap-5">
+        <span class="w-16 h-16 rounded-full es-bg-primary-soft es-text-primary text-[22px] font-bold flex items-center justify-center shrink-0"
+          aria-hidden="true">{{ initials() }}</span>
+        <div class="min-w-0">
+          <h1 class="text-[22px] font-bold text-es-text tracking-tight truncate">{{ profile()!.fullName }}</h1>
+          <div class="flex items-center gap-2 mt-1 flex-wrap">
+            @for (role of roles(); track role) {
+              <span class="es-chip-primary text-[11px] px-2.5 py-[3px] rounded-[20px] font-semibold">{{ role }}</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-7">
+        <div class="es-tile">
+          <div class="es-detail-label mb-1">Email</div>
+          <div class="es-detail-value flex items-center gap-2">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-muted">mail</mat-icon>
+            <span class="truncate">{{ profile()!.email }}</span>
+          </div>
+        </div>
+        <div class="es-tile">
+          <div class="es-detail-label mb-1">Phone</div>
+          <div class="es-detail-value flex items-center gap-2">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-muted">call</mat-icon>
+            {{ profile()!.phoneNumber || '—' }}
+          </div>
+        </div>
+        <div class="es-tile">
+          <div class="es-detail-label mb-1">Member since</div>
+          <div class="es-detail-value flex items-center gap-2">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-muted">calendar_month</mat-icon>
+            {{ formatDate(profile()!.createdAt) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verification card -->
+    <div class="es-card px-8 py-7 mb-6">
+      <h2 class="es-title mb-4">Verifications</h2>
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between py-2 border-0 border-b border-solid border-es-divider">
+          <div class="flex items-center gap-2">
+            <mat-icon class="!text-[20px] !w-[20px] !h-[20px] text-es-muted">verified_user</mat-icon>
+            <span class="text-sm text-es-text">Identity (KYC)</span>
+          </div>
+          <app-status-badge [status]="profile()!.isKycVerified ? 'Verified' : 'Pending'" />
+        </div>
+        <div class="flex items-center justify-between py-2 border-0 border-b border-solid border-es-divider">
+          <div class="flex items-center gap-2">
+            <mat-icon class="!text-[20px] !w-[20px] !h-[20px] text-es-muted">account_balance_wallet</mat-icon>
+            <span class="text-sm text-es-text">Financial profile</span>
+          </div>
+          <app-status-badge [status]="profile()!.isFinanciallyVerified ? 'Verified' : 'Pending'" />
+        </div>
+        <div class="flex items-center justify-between py-2">
+          <div class="flex items-center gap-2">
+            <mat-icon class="!text-[20px] !w-[20px] !h-[20px] text-es-muted">home_work</mat-icon>
+            <span class="text-sm text-es-text">Owner onboarding (Stripe)</span>
+          </div>
+          <app-status-badge [status]="profile()!.isOwnerVerified ? 'Verified' : 'Pending'" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Business details (owners with a company profile) -->
+    @if (profile()!.companyName || profile()!.ownerType) {
+      <div class="es-card px-8 py-7">
+        <h2 class="es-title mb-4">Business details</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          @if (profile()!.ownerType) {
+            <div class="es-tile">
+              <div class="es-detail-label mb-1">Owner type</div>
+              <div class="es-detail-value">{{ profile()!.ownerType }}</div>
+            </div>
+          }
+          @if (profile()!.companyName) {
+            <div class="es-tile">
+              <div class="es-detail-label mb-1">Company</div>
+              <div class="es-detail-value">{{ profile()!.companyName }}</div>
+            </div>
+          }
+          @if (profile()!.companyType) {
+            <div class="es-tile">
+              <div class="es-detail-label mb-1">Company type</div>
+              <div class="es-detail-value">{{ profile()!.companyType }}</div>
+            </div>
+          }
+          @if (profile()!.gstin) {
+            <div class="es-tile">
+              <div class="es-detail-label mb-1">GSTIN</div>
+              <div class="es-detail-value font-mono">{{ profile()!.gstin }}</div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

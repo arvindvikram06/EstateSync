@@ -5,28 +5,32 @@
   </div>
 </div>
 
-<div class="filter-row">
-  <mat-form-field appearance="outline" style="width:200px">
-    <mat-label>Entity Type</mat-label>
-    <mat-icon matPrefix class="mr-1">category</mat-icon>
-    <mat-select [formControl]="entityTypeFilter">
-      <mat-option value="">All</mat-option>
-      @for (e of entityTypes; track e) {
-        <mat-option [value]="e">{{ e }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+<div class="filter-bar mb-5">
+  <button class="filter-pill-btn" [class.filter-pill-btn--active]="!!entityTypeFilter.value"
+    [matMenuTriggerFor]="entityMenu" type="button">
+    <mat-icon>category</mat-icon>
+    {{ entityTypeLabel() }}
+    <mat-icon>expand_more</mat-icon>
+  </button>
+  <mat-menu #entityMenu>
+    <button mat-menu-item (click)="entityTypeFilter.setValue('')">All types</button>
+    @for (e of entityTypes; track e) {
+      <button mat-menu-item (click)="entityTypeFilter.setValue(e)">{{ e }}</button>
+    }
+  </mat-menu>
 
-  <mat-form-field appearance="outline" style="width:180px">
-    <mat-label>Action</mat-label>
-    <mat-icon matPrefix class="mr-1">bolt</mat-icon>
-    <mat-select [formControl]="actionFilter">
-      <mat-option value="">All</mat-option>
-      @for (a of actions; track a) {
-        <mat-option [value]="a">{{ a }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+  <button class="filter-pill-btn" [class.filter-pill-btn--active]="!!actionFilter.value"
+    [matMenuTriggerFor]="actionMenu" type="button">
+    <mat-icon>bolt</mat-icon>
+    {{ actionLabel() }}
+    <mat-icon>expand_more</mat-icon>
+  </button>
+  <mat-menu #actionMenu>
+    <button mat-menu-item (click)="actionFilter.setValue('')">All actions</button>
+    @for (a of actions; track a) {
+      <button mat-menu-item (click)="actionFilter.setValue(a)">{{ a }}</button>
+    }
+  </mat-menu>
 </div>
 
 @if (loading()) {
@@ -49,23 +53,23 @@
       <tbody>
         @for (log of items(); track log.auditLogId) {
           <tr>
-            <td style="font-size:12px;color:#717171;white-space:nowrap;font-family:monospace">
+            <td class="!text-[12px] !text-es-muted whitespace-nowrap font-mono">
               {{ log.createdAt | slice:0:10 }} {{ log.createdAt | slice:11:19 }}
             </td>
             <td>
-              <span class="es-badge es-badge--partial" style="font-size:11px">{{ log.entityType }}</span>
+              <span class="es-badge es-badge--partial text-[11px]">{{ log.entityType }}</span>
               @if (log.entityName) {
-                <div style="font-size:11px;color:#717171;margin-top:2px">{{ log.entityName }}</div>
+                <div class="es-text-hint mt-0.5">{{ log.entityName }}</div>
               }
             </td>
-            <td style="font-size:11px;color:#717171;font-family:monospace;max-width:100px;overflow:hidden;text-overflow:ellipsis">
+            <td class="!text-[11px] !text-es-muted font-mono max-w-[100px] overflow-hidden text-ellipsis">
               {{ log.entityId }}
             </td>
             <td>
               <span class="es-badge" [class]="actionClass(log.action ?? '')">{{ log.action }}</span>
             </td>
-            <td style="font-size:12px;color:#717171;font-family:monospace">{{ log.ipAddress || '—' }}</td>
-            <td style="font-size:12px;color:#717171;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            <td class="!text-[12px] !text-es-muted font-mono">{{ log.ipAddress || '—' }}</td>
+            <td class="!text-[12px] !text-es-muted max-w-[220px] overflow-hidden text-ellipsis whitespace-nowrap">
               @if (log.newValues) {
                 <span title="{{ log.newValues }}">{{ log.newValues | slice:0:60 }}{{ log.newValues.length > 60 ? '…' : '' }}</span>
               } @else {
@@ -79,7 +83,7 @@
   </div>
 
   <div class="pagination">
-    <span style="font-size:13px;color:#717171">Page {{ page() }} of {{ totalPages() }} · {{ total() }} total</span>
+    <span class="es-text-sm">Page {{ page() }} of {{ totalPages() }} · {{ total() }} total</span>
     <div class="flex gap-2">
       <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="page() === 1" (click)="prevPage()">
         <mat-icon>chevron_left</mat-icon>

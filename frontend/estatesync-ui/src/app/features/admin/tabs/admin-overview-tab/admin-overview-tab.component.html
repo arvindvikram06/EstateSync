@@ -1,45 +1,45 @@
 @if (loading()) {
-  <div class="flex items-center gap-3 py-12 text-sm" style="color:#717171">
+  <div class="flex items-center gap-3 py-12 text-sm text-es-muted">
     <mat-spinner diameter="24" /><span>Loading statistics…</span>
   </div>
 } @else if (stats()) {
 
 <!-- ── Page header ─────────────────────────────────────────────────────────── -->
-<h2 style="font-size:24px;font-weight:700;color:#222;margin-bottom:4px">Admin Overview</h2>
-<p style="font-size:14px;color:#717171;margin-bottom:28px">Platform health and pending actions at a glance.</p>
+<h2 class="es-page-title">Admin Overview</h2>
+<p class="es-page-subtitle">Platform health and pending actions at a glance.</p>
 
 <!-- ── Pending action alerts ─────────────────────────────────────────────── -->
 @if ((stats()!.pendingKycCount + stats()!.pendingFinancialProfileCount + stats()!.pendingPropertyApprovalCount + stats()!.pendingLeaseApprovalCount + stats()!.openComplaintsCount) > 0) {
-  <div style="background:white;border:1px solid #EBEBEB;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);padding:20px 24px;margin-bottom:28px">
-    <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:12px">Action required</div>
+  <div class="es-card px-6 py-5 mb-7">
+    <div class="text-sm font-bold text-es-text mb-3">Action required</div>
     <div class="flex flex-wrap gap-3">
       @if (stats()!.pendingKycCount > 0) {
         <button mat-stroked-button class="!rounded-full !text-xs" (click)="tabSwitch.emit('kyc')">
-          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]" style="color:#D97706;margin-right:4px">pending</mat-icon>
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px] es-text-warning mr-1">pending</mat-icon>
           {{ stats()!.pendingKycCount }} KYC pending
         </button>
       }
       @if (stats()!.pendingFinancialProfileCount > 0) {
         <button mat-stroked-button class="!rounded-full !text-xs" (click)="tabSwitch.emit('financial-profiles')">
-          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]" style="color:#D97706;margin-right:4px">account_balance_wallet</mat-icon>
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px] es-text-warning mr-1">account_balance_wallet</mat-icon>
           {{ stats()!.pendingFinancialProfileCount }} financial profiles
         </button>
       }
       @if (stats()!.pendingPropertyApprovalCount > 0) {
         <button mat-stroked-button class="!rounded-full !text-xs" (click)="tabSwitch.emit('properties')">
-          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]" style="color:#D97706;margin-right:4px">home_work</mat-icon>
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px] es-text-warning mr-1">home_work</mat-icon>
           {{ stats()!.pendingPropertyApprovalCount }} properties
         </button>
       }
       @if (stats()!.pendingLeaseApprovalCount > 0) {
         <button mat-stroked-button class="!rounded-full !text-xs" (click)="tabSwitch.emit('leases')">
-          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]" style="color:#D97706;margin-right:4px">article</mat-icon>
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px] es-text-warning mr-1">article</mat-icon>
           {{ stats()!.pendingLeaseApprovalCount }} lease approvals
         </button>
       }
       @if (stats()!.openComplaintsCount > 0) {
         <button mat-stroked-button class="!rounded-full !text-xs" (click)="tabSwitch.emit('complaints')">
-          <mat-icon class="!text-[16px] !w-[16px] !h-[16px]" style="color:#DC2626;margin-right:4px">report_problem</mat-icon>
+          <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-danger mr-1">report_problem</mat-icon>
           {{ stats()!.openComplaintsCount }} open complaints
         </button>
       }
@@ -51,8 +51,8 @@
 <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
   <!-- Total users -->
   <div class="kpi-card">
-    <div class="kpi-icon" style="background:rgba(103,80,164,0.08)">
-      <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#6750A4">people</mat-icon>
+    <div class="kpi-icon stat-icon--primary">
+      <mat-icon class="!text-[22px] !w-[22px] !h-[22px] es-text-primary">people</mat-icon>
     </div>
     <div class="kpi-value">{{ stats()!.totalUsers }}</div>
     <div class="kpi-label">Total users</div>
@@ -61,8 +61,8 @@
 
   <!-- Active leases -->
   <div class="kpi-card">
-    <div class="kpi-icon" style="background:rgba(5,150,105,0.08)">
-      <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#059669">article</mat-icon>
+    <div class="kpi-icon stat-icon--success">
+      <mat-icon class="!text-[22px] !w-[22px] !h-[22px] es-text-success">article</mat-icon>
     </div>
     <div class="kpi-value">{{ stats()!.activeLeasesCount }}</div>
     <div class="kpi-label">Active leases</div>
@@ -71,22 +71,22 @@
 
   <!-- Revenue this month -->
   <div class="kpi-card">
-    <div class="kpi-icon" style="background:rgba(2,132,199,0.08)">
-      <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#0284C7">currency_rupee</mat-icon>
+    <div class="kpi-icon stat-icon--sky">
+      <mat-icon class="!text-[22px] !w-[22px] !h-[22px] es-text-sky">currency_rupee</mat-icon>
     </div>
-    <div class="kpi-value" style="font-size:18px">{{ formatCurrency(stats()!.totalRevenueThisMonth) }}</div>
+    <div class="kpi-value !text-[18px]">{{ formatCurrency(stats()!.totalRevenueThisMonth) }}</div>
     <div class="kpi-label">Revenue this month</div>
     <div class="kpi-sub">{{ formatCurrency(stats()!.totalPlatformFeesThisMonth) }} platform fees</div>
   </div>
 
   <!-- Open complaints -->
   <div class="kpi-card">
-    <div class="kpi-icon" style="background:rgba(220,38,38,0.08)">
-      <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#DC2626">report_problem</mat-icon>
+    <div class="kpi-icon stat-icon--danger">
+      <mat-icon class="!text-[22px] !w-[22px] !h-[22px] es-text-danger">report_problem</mat-icon>
     </div>
     <div class="kpi-value">{{ stats()!.openComplaintsCount }}</div>
     <div class="kpi-label">Open complaints</div>
-    <div class="kpi-sub" style="cursor:pointer;color:var(--mat-sys-primary)" (click)="tabSwitch.emit('complaints')">View all →</div>
+    <div class="kpi-sub kpi-sub--link" (click)="tabSwitch.emit('complaints')">View all →</div>
   </div>
 </div>
 
@@ -109,7 +109,7 @@
         [grid]="{ borderColor: '#F3F4F6', strokeDashArray: 4 }"
       />
     } @else {
-      <div style="height:220px;display:flex;align-items:center;justify-content:center;color:#AAAAAA;font-size:13px">No data yet</div>
+      <div class="h-[220px] flex items-center justify-center text-es-faint text-[13px]">No data yet</div>
     }
   </div>
 
@@ -129,7 +129,7 @@
         [grid]="{ borderColor: '#F3F4F6', strokeDashArray: 4 }"
       />
     } @else {
-      <div style="height:220px;display:flex;align-items:center;justify-content:center;color:#AAAAAA;font-size:13px">No data yet</div>
+      <div class="h-[220px] flex items-center justify-center text-es-faint text-[13px]">No data yet</div>
     }
   </div>
 </div>
@@ -152,7 +152,7 @@
         [tooltip]="{ theme: 'light' }"
       />
     } @else {
-      <div style="height:200px;display:flex;align-items:center;justify-content:center;color:#AAAAAA;font-size:13px">No properties yet</div>
+      <div class="es-chart-empty">No properties yet</div>
     }
   </div>
 
@@ -171,7 +171,7 @@
         [tooltip]="{ theme: 'light' }"
       />
     } @else {
-      <div style="height:200px;display:flex;align-items:center;justify-content:center;color:#AAAAAA;font-size:13px">No leases yet</div>
+      <div class="es-chart-empty">No leases yet</div>
     }
   </div>
 </div>
@@ -194,7 +194,7 @@
         [tooltip]="{ theme: 'light' }"
       />
     } @else {
-      <div style="height:200px;display:flex;align-items:center;justify-content:center;color:#AAAAAA;font-size:13px">No bills yet</div>
+      <div class="es-chart-empty">No bills yet</div>
     }
   </div>
 
@@ -213,7 +213,7 @@
         [tooltip]="revenueTooltip"
       />
     } @else {
-      <div style="height:200px;display:flex;align-items:center;justify-content:center;color:#AAAAAA;font-size:13px">No payments yet</div>
+      <div class="es-chart-empty">No payments yet</div>
     }
   </div>
 
@@ -232,7 +232,7 @@
         [tooltip]="{ theme: 'light' }"
       />
     } @else {
-      <div style="height:200px;display:flex;align-items:center;justify-content:center;color:#AAAAAA;font-size:13px">No payouts yet</div>
+      <div class="es-chart-empty">No payouts yet</div>
     }
   </div>
 </div>

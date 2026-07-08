@@ -10,7 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import SignaturePad from 'signature_pad';
-import { LeaseService } from '../../../core/services/lease.service';
+import { LeaseService } from '@core/services/leasing/lease.service';
 import { LeaseDetailResponse } from '../../../core/models/lease.model';
 import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
 import { formatDate, formatCurrency } from '../../../core/utils/format.utils';

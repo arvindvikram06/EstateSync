@@ -9,10 +9,12 @@ public interface ILeaseRepository : IRepository<Lease>
 {
     Task<Lease?> GetWithDetailsByIdAsync(Guid id);
     Task<Lease?> GetActiveLeaseByPropertyIdAsync(Guid propertyId);
+    Task<(IEnumerable<Lease> Items, int Total)> GetAllPagedAsync(int page, int limit);
     Task<(IEnumerable<Lease> Items, int Total)> GetByTenantIdPagedAsync(Guid tenantId, int page, int limit);
     Task<(IEnumerable<Lease> Items, int Total)> GetByOwnerIdPagedAsync(Guid ownerId, int page, int limit);
     Task<IEnumerable<Lease>> GetActiveLeasesWithBillsAsync();
-    Task<Lease?> GetActiveLeaseByTenantIdAsync(Guid tenantId);
+    /// <summary>Fetches the active lease on the property and the tenant's active lease in a single query.</summary>
+    Task<(Lease? PropertyLease, Lease? TenantLease)> GetActiveLeaseConflictsAsync(Guid propertyId, Guid tenantId);
     Task<IEnumerable<Lease>> GetActiveLeasesEndingBeforeAsync(DateTime targetDate);
     Task<Lease?> GetByApplicationIdAsync(Guid applicationId);
     Task<IEnumerable<Lease>> GetActiveLeasesPastEndDateAsync(DateTime now);

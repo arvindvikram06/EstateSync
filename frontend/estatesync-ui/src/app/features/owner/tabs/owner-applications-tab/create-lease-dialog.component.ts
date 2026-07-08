@@ -12,7 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
-import { LeaseService } from '../../../../core/services/lease.service';
+import { LeaseService } from '@core/services/leasing/lease.service';
 import { LoadingButtonComponent } from '../../../../shared/components/loading-button/loading-button.component';
 
 export interface CreateLeaseDialogData {
@@ -39,7 +39,7 @@ export interface CreateLeaseDialogData {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="p-7" style="min-width:480px;max-width:540px">
+    <div class="p-7">
       <h2 class="text-[18px] font-bold text-es-text mb-2">Create Lease Agreement</h2>
 
       <div class="mb-5 p-3 rounded-lg bg-gray-50 text-sm">
@@ -165,7 +165,7 @@ export class CreateLeaseDialogComponent {
     this.error.set(null);
     const v = this.form.getRawValue();
     
-    const fmtDate = (d: any) => {
+    const fmtDate = (d: string | Date): string => {
       if (d instanceof Date) {
         return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
       }

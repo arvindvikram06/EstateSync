@@ -1,13 +1,13 @@
 <!-- Page header -->
 <div class="flex items-center justify-between mb-6">
   <div>
-    <h2 style="font-size:20px;font-weight:700;color:#222;margin:0">Bills & Payments</h2>
-    <p style="font-size:13px;color:#717171;margin:4px 0 0">Track your rent, deposits, and other charges.</p>
+    <h2 class="es-title">Bills & Payments</h2>
+    <p class="text-[13px] text-es-muted mt-1">Track your rent, deposits, and other charges.</p>
   </div>
 </div>
 
 @if (loading()) {
-  <div class="flex items-center gap-3 py-12" style="color:#717171;font-size:14px">
+  <div class="flex items-center gap-3 py-12 text-sm text-es-muted">
     <mat-spinner diameter="24" /><span>Loading…</span>
   </div>
 } @else if (bills().length === 0) {
@@ -64,15 +64,17 @@
     </div>
 
     <!-- Type filter -->
-    <mat-form-field appearance="outline" style="width:160px">
-      <mat-label>Bill Type</mat-label>
-      <mat-icon matPrefix class="mr-1">filter_list</mat-icon>
-      <mat-select [value]="typeFilter()" (selectionChange)="setType($event.value)">
-        @for (opt of typeOptions; track opt) {
-          <mat-option [value]="opt">{{ opt === 'All' ? 'All Types' : opt }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+    <button class="filter-pill-btn" [class.filter-pill-btn--active]="typeFilter() !== 'All'"
+      [matMenuTriggerFor]="typeMenu" type="button">
+      <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">receipt_long</mat-icon>
+      {{ typeLabel() }}
+      <mat-icon class="!text-[16px] !w-[16px] !h-[16px]">expand_more</mat-icon>
+    </button>
+    <mat-menu #typeMenu>
+      @for (opt of typeOptions; track opt) {
+        <button mat-menu-item (click)="setType(opt)">{{ opt === 'All' ? 'All Types' : opt }}</button>
+      }
+    </mat-menu>
   </div>
 
   <!-- Bill list -->
@@ -106,16 +108,16 @@
                 <span class="bill-overdue-chip">Overdue</span>
               }
             </div>
-            <div style="font-size:14px;font-weight:600;color:#222;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            <div class="text-sm font-semibold text-es-text mt-1 truncate">
               {{ bill.propertyTitle }}
             </div>
             <div class="flex gap-4 mt-1 flex-wrap">
-              <span style="font-size:12px;color:#717171;display:flex;align-items:center;gap:3px">
+              <span class="text-[12px] text-es-muted flex items-center gap-[3px]">
                 <mat-icon class="!text-[12px] !w-[12px] !h-[12px]">calendar_today</mat-icon>
                 Due {{ bill.dueDate | date:'d MMM yyyy' }}
               </span>
               @if (bill.paidAt) {
-                <span style="font-size:12px;color:#059669;display:flex;align-items:center;gap:3px">
+                <span class="text-[12px] text-es-success flex items-center gap-[3px]">
                   <mat-icon class="!text-[12px] !w-[12px] !h-[12px]">check_circle</mat-icon>
                   Paid {{ bill.paidAt | date:'d MMM yyyy' }}
                 </span>
@@ -125,7 +127,7 @@
 
           <!-- Right: amount + status + action -->
           <div class="flex flex-col items-end gap-2 shrink-0 ml-4">
-            <div style="font-size:18px;font-weight:800;color:#222;letter-spacing:-.3px">
+            <div class="text-[18px] font-extrabold text-es-text tracking-[-0.3px]">
               {{ (bill.status === 'Paid' ? bill.amount : bill.pendingAmount) | currency:'INR':'symbol':'1.0-0' }}
             </div>
             <span class="es-badge"
@@ -137,7 +139,7 @@
           </div>
 
           <!-- Chevron hint -->
-          <mat-icon class="!text-[18px] !w-[18px] !h-[18px] shrink-0 ml-1" style="color:#CCCCCC">chevron_right</mat-icon>
+          <mat-icon class="!text-[18px] !w-[18px] !h-[18px] shrink-0 ml-1 text-[color:var(--es-text-disabled)]">chevron_right</mat-icon>
         </div>
       }
     </div>

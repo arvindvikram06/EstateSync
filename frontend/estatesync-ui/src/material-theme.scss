@@ -11,13 +11,11 @@ html {
     density: 0,
   ));
 
-  /* ── Airbnb coral overrides ─────────────────────────────── */
   --mat-sys-primary:                    #FF385C;
   --mat-sys-on-primary:                 #FFFFFF;
   --mat-sys-primary-container:          #FFE4E9;
   --mat-sys-on-primary-container:       #8B0018;
 
-  /* ── Kill Material 3's pink surface tints (keep surfaces neutral) ── */
   --mat-sys-surface:                    #FFFFFF;
   --mat-sys-surface-dim:                #EBEBEB;
   --mat-sys-surface-bright:             #FFFFFF;

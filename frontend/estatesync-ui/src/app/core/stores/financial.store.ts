@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
 import { catchError, of, tap, pipe, switchMap, exhaustMap, concatMap } from 'rxjs';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { FinancialProfileService } from '../services/financial-profile.service';
+import { FinancialProfileService } from '@core/services/verification/financial-profile.service';
 import { FinancialDocumentResponse, TenantFinancialProfileResponse } from '../models/financial-profile.model';
 
 export type FinancialDocumentType = 'SalarySlip' | 'BankStatement' | 'EmploymentLetter' | 'IncomeTaxReturn';

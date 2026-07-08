@@ -2,7 +2,7 @@
 
   <!-- ── Left hero ─────────────────────────────────────────── -->
   <div class="flex-1 relative overflow-hidden hidden md:flex items-center justify-center p-14
-              bg-gradient-to-br from-brand via-brand-dark to-[#8B003A] text-white">
+              bg-gradient-to-br from-brand via-brand-dark to-brand-deep text-white">
     <div class="absolute -top-32 -right-32 w-[480px] h-[480px] rounded-full bg-white/[0.07] pointer-events-none"></div>
     <div class="absolute -bottom-24 -left-20 w-[360px] h-[360px] rounded-full bg-white/[0.05] pointer-events-none"></div>
 
@@ -41,6 +41,7 @@
         <span class="text-[18px] font-bold text-brand tracking-tight">EstateSync</span>
       </div>
 
+      @if (!registered()) {
       <h2 class="text-[28px] font-bold tracking-tight text-es-text mb-1.5">Create your account</h2>
       <p class="text-sm text-es-muted mb-7">
         Already a member? <a routerLink="/auth/login" class="text-brand font-semibold no-underline hover:underline">Sign in</a>
@@ -129,6 +130,18 @@
         <app-loading-button type="submit" [loading]="isLoading()">Create account</app-loading-button>
 
       </form>
+      } @else {
+        <div class="text-center py-8">
+          <div class="w-16 h-16 rounded-full es-bg-primary-soft flex items-center justify-center mx-auto mb-5">
+            <mat-icon class="!text-[32px] !w-[32px] !h-[32px] es-text-primary">mark_email_unread</mat-icon>
+          </div>
+          <h2 class="text-[24px] font-bold tracking-tight text-es-text mb-2">Check your inbox</h2>
+          <p class="es-text-sm mb-1">We sent a verification link to</p>
+          <p class="text-sm font-semibold text-es-text mb-6">{{ registeredEmail() }}</p>
+          <p class="es-text-xs mb-7">Click the link in the email to activate your account. The link is valid for 24 hours.</p>
+          <a mat-stroked-button routerLink="/auth/login" class="!rounded-full !h-11 !px-8">Go to sign in</a>
+        </div>
+      }
     </div>
   </div>
 

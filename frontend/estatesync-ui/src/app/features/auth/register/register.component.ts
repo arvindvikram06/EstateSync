@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { AlertBannerComponent } from '../../../shared/components/alert-banner/alert-banner.component';
 import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
-import { AuthService } from '../../../core/services/auth.service';
+import { AuthService } from '@core/services/auth/auth.service';
 import { passwordMatchValidator } from '../../../shared/validators/password-match.validator';
 
 @Component({
@@ -23,9 +23,7 @@ import { passwordMatchValidator } from '../../../shared/validators/password-matc
     AlertBannerComponent, LoadingButtonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './register.component.html',
-  styleUrl: './register.component.css'
-})
+  templateUrl: './register.component.html',})
 export class RegisterComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -33,6 +31,8 @@ export class RegisterComponent {
 
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly registered   = signal(false);
+  readonly registeredEmail = signal('');
   readonly passwordVisible = signal(false);
 
   readonly registerForm = new FormGroup({
@@ -119,7 +119,8 @@ export class RegisterComponent {
     ).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.router.navigate(['/dashboard']);
+        this.registeredEmail.set(email);
+        this.registered.set(true);
       },
       error: (err: HttpErrorResponse) => {
         this.isLoading.set(false);

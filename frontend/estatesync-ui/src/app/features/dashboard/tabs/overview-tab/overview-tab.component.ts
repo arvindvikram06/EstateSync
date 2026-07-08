@@ -2,28 +2,29 @@ import {
   Component, ChangeDetectionStrategy, inject, input, output, signal, computed, OnInit, DestroyRef
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { forkJoin, switchMap } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AuthService } from '../../../../core/services/auth.service';
-import { UserService } from '../../../../core/services/user.service';
-import { RentalApplicationService } from '../../../../core/services/rental-application.service';
-import { LeaseService } from '../../../../core/services/lease.service';
-import { PaymentService } from '../../../../core/services/payment.service';
-import { ComplaintService } from '../../../../core/services/complaint.service';
+import { MatDialog } from '@angular/material/dialog';
+import { AuthService } from '@core/services/auth/auth.service';
+import { RentalApplicationService } from '@core/services/leasing/rental-application.service';
+import { LeaseService } from '@core/services/leasing/lease.service';
+import { PaymentService } from '@core/services/payment/payment.service';
+import { ComplaintService } from '@core/services/complaint/complaint.service';
 import { KycVerificationResponse } from '../../../../core/models/kyc.model';
 import { FinancialStore } from '../../../../core/stores/financial.store';
+import { BecomeOwnerDialogComponent } from './become-owner-dialog.component';
 
 @Component({
   selector: 'app-overview-tab',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [
+    MatButtonModule, MatIconModule, MatProgressSpinnerModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './overview-tab.component.html',
-  styleUrl: './overview-tab.component.css',
 })
 export class OverviewTabComponent implements OnInit {
   readonly latestKyc  = input<KycVerificationResponse | null>(null);
@@ -32,7 +33,7 @@ export class OverviewTabComponent implements OnInit {
 
   private readonly router       = inject(Router);
   private readonly authService  = inject(AuthService);
-  private readonly userService  = inject(UserService);
+  private readonly dialog       = inject(MatDialog);
   private readonly appSvc       = inject(RentalApplicationService);
   private readonly leaseSvc     = inject(LeaseService);
   private readonly billSvc      = inject(PaymentService);
@@ -43,11 +44,7 @@ export class OverviewTabComponent implements OnInit {
   readonly user    = this.authService.currentUser;
   readonly isOwner = this.authService.isOwner;
 
-  readonly becoming        = signal(false);
-  readonly becomeOwnerError = signal<string | null>(null);
-
-
-  readonly stats = signal({ applications: 0, activeLeases: 0, pendingBills: 0, openComplaints: 0 });
+  readonly stats        = signal({ applications: 0, activeLeases: 0, pendingBills: 0, openComplaints: 0 });
   readonly statsLoading = signal(true);
 
   readonly firstName = computed(() => this.user()?.fullName?.split(' ')?.[0] ?? 'there');
@@ -58,7 +55,7 @@ export class OverviewTabComponent implements OnInit {
       apps:      this.appSvc.getMyApplications(),
       leases:    this.leaseSvc.getMyLeases(),
       bills:     this.billSvc.getTenantBills(),
-      complaints:this.complaintSvc.getMyComplaints(),
+      complaints:this.complaintSvc.getComplaints(),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ apps, leases, bills, complaints }) => {
         this.stats.set({
@@ -75,16 +72,12 @@ export class OverviewTabComponent implements OnInit {
 
   goToKyc(): void { this.router.navigate(['/kyc']); }
 
-  doBecomeOwner(): void {
-    this.becoming.set(true);
-    this.becomeOwnerError.set(null);
-    this.userService.becomeOwner().pipe(
-      switchMap(() => this.authService.refreshToken()),
-      takeUntilDestroyed(this.destroyRef),
-      finalize(() => this.becoming.set(false))
-    ).subscribe({
-      next: () => this.router.navigate(['/owner/dashboard']),
-      error: (err) => this.becomeOwnerError.set(err?.error?.message ?? 'Something went wrong. Please try again.'),
+  openBecomeOwnerDialog(): void {
+    this.dialog.open(BecomeOwnerDialogComponent, {
+      width: '100%',
+      maxWidth: '560px',
+      panelClass: 'become-owner-panel',
+      disableClose: false,
     });
   }
 }

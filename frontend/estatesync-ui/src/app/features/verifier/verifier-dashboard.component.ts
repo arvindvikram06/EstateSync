@@ -1,7 +1,8 @@
-import { Component, ChangeDetectionStrategy, inject, signal, OnInit, DestroyRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DashboardLayoutComponent, NavItem } from '../../shared/components/dashboard-layout/dashboard-layout.component';
+import { AuthService } from '@core/services/auth/auth.service';
 import { VerifierOverviewTabComponent } from './tabs/verifier-overview-tab/verifier-overview-tab.component';
 import { AdminKycTabComponent } from '../admin/tabs/admin-kyc-tab/admin-kyc-tab.component';
 import { AdminFinancialProfilesTabComponent } from '../admin/tabs/admin-financial-profiles-tab/admin-financial-profiles-tab.component';
@@ -19,9 +20,9 @@ import { AdminFinancialProfilesTabComponent } from '../admin/tabs/admin-financia
   templateUrl: './verifier-dashboard.component.html',
 })
 export class VerifierDashboardComponent implements OnInit {
-  private readonly route      = inject(ActivatedRoute);
-  private readonly router     = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly route       = inject(ActivatedRoute);
+  private readonly router      = inject(Router);
+  private readonly authService = inject(AuthService);
 
   readonly activeTab = signal('overview');
 
@@ -47,5 +48,10 @@ export class VerifierDashboardComponent implements OnInit {
       queryParams: { tab: id },
       queryParamsHandling: 'merge',
     });
+  }
+
+  onLogout(): void {
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
   }
 }

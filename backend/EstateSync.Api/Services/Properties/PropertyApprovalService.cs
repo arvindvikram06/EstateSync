@@ -52,6 +52,23 @@ public class PropertyApprovalService : IPropertyApprovalService
             throw new ForbiddenException("You do not own this property.");
         }
 
+        // Validate all required fields were filled in via the wizard before submission
+        if (string.IsNullOrWhiteSpace(property.Title)       ||
+            string.IsNullOrWhiteSpace(property.Description) ||
+            string.IsNullOrWhiteSpace(property.State)       ||
+            string.IsNullOrWhiteSpace(property.City)        ||
+            string.IsNullOrWhiteSpace(property.Pincode)     ||
+            string.IsNullOrWhiteSpace(property.AddressLine) ||
+            property.MonthlyRent     <= 0  ||
+            property.SecurityDeposit  < 0  ||
+            property.Bedrooms        <= 0  ||
+            property.Bathrooms       <= 0  ||
+            property.LandArea        <= 0  ||
+            property.BuildupArea     <= 0)
+        {
+            throw new BadRequestException("Please complete all required property details before submitting for approval.");
+        }
+
         if (property.PropertyDocuments == null ||
             !property.PropertyDocuments.Any(pd => pd.Document != null && pd.Document.DocumentType == DocumentType.OwnershipCertificate))
         {
@@ -140,7 +157,7 @@ public class PropertyApprovalService : IPropertyApprovalService
 
     private async Task CreateAndSendAdminPropertyNotificationsAsync(Property property)
     {
-        var admins = await _userRepo.GetUsersByRoleAsync("Admin");
+        var admins = await _userRepo.GetUsersByRoleAsync(Roles.Admin);
         foreach (var admin in admins)
         {
             var notification = new Notification

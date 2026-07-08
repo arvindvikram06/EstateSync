@@ -109,7 +109,7 @@ public class ComplaintService : IComplaintService
             throw new NotFoundException("User", userId);
         }
 
-        bool isAdmin = user.UserRoles.Any(ur => ur.Role != null && ur.Role.Name == "Admin");
+        bool isAdmin = user.UserRoles.Any(ur => ur.Role != null && ur.Role.Name == Roles.Admin);
         bool isTenant = complaint.Lease?.TenantId == userId;
         bool isOwner = complaint.Lease?.Property != null && complaint.Lease.Property.OwnerId == userId;
 
@@ -181,7 +181,7 @@ public class ComplaintService : IComplaintService
             throw new NotFoundException("User", userId);
         }
 
-        bool isAdmin = user.UserRoles.Any(ur => ur.Role != null && ur.Role.Name == "Admin");
+        bool isAdmin = user.UserRoles.Any(ur => ur.Role != null && ur.Role.Name == Roles.Admin);
         bool isTenant = complaint.Lease?.TenantId == userId;
         bool isOwner = complaint.Lease?.Property != null && complaint.Lease.Property.OwnerId == userId;
 
@@ -201,14 +201,17 @@ public class ComplaintService : IComplaintService
             throw new NotFoundException("User", userId);
         }
 
-        bool isAdmin = user.UserRoles.Any(ur => ur.Role != null && ur.Role.Name == "Admin");
-        bool isOwner = user.UserRoles.Any(ur => ur.Role != null && ur.Role.Name == "Owner");
+        bool isAdmin = user.UserRoles.Any(ur => ur.Role != null && ur.Role.Name == Roles.Admin);
+        bool isOwner = user.UserRoles.Any(ur => ur.Role != null && ur.Role.Name == Roles.Owner);
 
         IEnumerable<Complaint> complaints;
 
         if (isAdmin)
         {
-            complaints = await _complaintRepo.GetAllAsync();
+            // Admin listing UI uses the paged /admin endpoint; this fallback is
+            // bounded to the most recent page so it can never load the full table.
+            var (items, _) = await _complaintRepo.GetPagedForAdminAsync(null, null, 1, 200, ct);
+            complaints = items;
         }
         else if (isOwner)
         {

@@ -1,5 +1,5 @@
 import {
-  Component, ChangeDetectionStrategy, inject, signal, OnInit, DestroyRef
+  Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, DestroyRef
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -7,11 +7,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
-import { LeaseService } from '../../../../core/services/lease.service';
+import { LeaseService } from '@core/services/leasing/lease.service';
 import { OwnerLeaseSummaryResponse } from '../../../../core/models/lease.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { VoidLeaseDialogComponent, VoidLeaseDialogData } from './void-lease-dialog.component';
+import { ApproveRenewalDialogComponent, ApproveRenewalDialogData } from './approve-renewal-dialog.component';
 import { TerminateLeaseDialogComponent, TerminateLeaseDialogData } from './terminate-lease-dialog.component';
 import { formatDate, formatCurrency } from '../../../../core/utils/format.utils';
 
@@ -31,22 +32,61 @@ export class OwnerLeasesTabComponent implements OnInit {
   readonly leases  = signal<OwnerLeaseSummaryResponse[]>([]);
   readonly loading = signal(true);
 
+  // Precomputed per-lease action flags — memoized, unlike method calls in
+  // the @for loop which re-run on every change detection cycle.
+  readonly leaseRows = computed(() => this.leases().map(l => ({
+    ...l,
+    canOwnerSign: l.status === 'PendingApproval' || (l.status === 'PartialSigned' && !l.ownerSignedAt),
+    canVoid: l.status === 'PendingApproval' || l.status === 'PartialSigned',
+    hasRenewalRequest: l.status === 'Active' && l.isRenewalRequested,
+  })));
+
+  readonly renewalActionId = signal<string | null>(null);
+
   readonly formatDate     = formatDate;
   readonly formatCurrency = formatCurrency;
 
   ngOnInit(): void {
+    this.loadLeases();
+  }
+
+  private loadLeases(): void {
     this.leaseSvc.getOwnerLeases().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => { this.leases.set(res.data ?? []); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
   }
 
-  canOwnerSign(l: OwnerLeaseSummaryResponse): boolean {
-    return l.status === 'PendingApproval' || (l.status === 'PartialSigned' && !l.ownerSignedAt);
+  openApproveRenewalDialog(l: OwnerLeaseSummaryResponse): void {
+    const data: ApproveRenewalDialogData = {
+      leaseId: l.leaseId,
+      propertyTitle: l.propertyTitle ?? 'Lease',
+      startDate: l.startDate,
+      endDate: l.endDate,
+    };
+    const ref = this.dialog.open(ApproveRenewalDialogComponent, {
+      data,
+      maxWidth: '460px',
+      width: '100%',
+      panelClass: 'rounded-dialog',
+    });
+    ref.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(approved => {
+      // End date changed server-side — re-fetch so the card shows the new term
+      if (approved) this.loadLeases();
+    });
   }
 
-  canVoid(l: OwnerLeaseSummaryResponse): boolean {
-    return l.status === 'PendingApproval' || l.status === 'PartialSigned';
+  rejectRenewal(l: OwnerLeaseSummaryResponse): void {
+    this.renewalActionId.set(l.leaseId);
+    this.leaseSvc.rejectRenewal(l.leaseId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.leases.update(list =>
+          list.map(lease => lease.leaseId === l.leaseId ? { ...lease, isRenewalRequested: false } : lease)
+        );
+        this.renewalActionId.set(null);
+      },
+      error: () => this.renewalActionId.set(null),
+    });
   }
 
   openVoidDialog(l: OwnerLeaseSummaryResponse): void {

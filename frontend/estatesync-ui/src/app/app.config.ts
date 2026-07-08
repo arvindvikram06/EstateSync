@@ -2,11 +2,12 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideAppInitia
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { MAT_DIALOG_DEFAULT_OPTIONS, MatDialogConfig } from '@angular/material/dialog';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
-import { AuthService } from './core/services/auth.service';
+import { AuthService } from '@core/services/auth/auth.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -19,6 +20,9 @@ export const appConfig: ApplicationConfig = {
     // Restore an in-memory access token from the httpOnly refresh cookie before the
     // app renders, so a hard reload keeps the user signed in. Resolves quietly when
     // there is no session.
-    provideAppInitializer(() => inject(AuthService).bootstrap())
+    provideAppInitializer(() => inject(AuthService).bootstrap()),
+    // Mobile safety net: any dialog opened without an explicit maxWidth is
+    // capped to the viewport instead of Material's 80vw-less defaults.
+    { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { ...new MatDialogConfig(), maxWidth: 'min(92vw, 720px)' } }
   ]
 };

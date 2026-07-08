@@ -1,20 +1,20 @@
 .complaint-card {
   background: white;
-  border: 1px solid #EBEBEB;
+  border: 1px solid var(--es-border-light);
   border-radius: 12px;
   padding: 18px 20px;
   transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
 }
 .complaint-card:hover {
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 20px rgb(0,0,0,0.08);
   transform: translateY(-2px);
-  border-color: #D4C9F0;
+  border-color: var(--es-primary-tint-border);
 }
 
 .complaint-type-chip {
-  background: #F3F4F6;
+  background: var(--es-grey-bg);
   border-radius: 10px;
   padding: 2px 8px;
   font-size: 11px;
-  color: #444;
+  color: var(--es-text-soft);
 }

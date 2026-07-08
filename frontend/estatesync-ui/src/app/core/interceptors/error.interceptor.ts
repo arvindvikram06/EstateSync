@@ -2,8 +2,8 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, catchError, switchMap, throwError, map, finalize, shareReplay } from 'rxjs';
-import { AuthService } from '../services/auth.service';
-import { ErrorHandlerService } from '../services/error-handler.service';
+import { AuthService } from '@core/services/auth/auth.service';
+import { ErrorHandlerService } from '@core/services/shared/error-handler.service';
 import { SKIP_AUTH_HANDLING } from './http-context.tokens';
 
 /**

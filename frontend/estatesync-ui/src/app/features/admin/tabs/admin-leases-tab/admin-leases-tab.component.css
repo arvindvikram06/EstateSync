@@ -7,18 +7,22 @@
 .filter-tab {
   padding: 6px 18px;
   border-radius: 40px;
-  border: 1px solid #DDDDDD;
+  border: 1px solid var(--es-border);
   background: white;
   font-size: 13px;
   font-weight: 500;
-  color: #717171;
+  color: var(--es-text-secondary);
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.filter-tab:hover {
+.filter-tab:hover:not(.filter-tab--active) {
   border-color: var(--mat-sys-primary);
   color: var(--mat-sys-primary);
+}
+
+.filter-tab--active:hover {
+  background: color-mix(in srgb, var(--mat-sys-primary) 88%, black);
 }
 
 .filter-tab--active {
@@ -30,10 +34,10 @@
 
 .lease-card {
   background: white;
-  border: 1px solid #EBEBEB;
+  border: 1px solid var(--es-border-light);
   border-radius: 14px;
   padding: 20px 22px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgb(0,0,0,0.04);
 }
 
 .lease-header {
@@ -48,7 +52,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
-  background: #F7F7F7;
+  background: var(--es-bg);
   border-radius: 10px;
   padding: 12px 16px;
   margin-bottom: 12px;
@@ -61,13 +65,13 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #AAAAAA;
+  color: var(--es-text-muted);
 }
 
 .detail-value {
   font-size: 13px;
   font-weight: 600;
-  color: #222;
+  color: var(--es-text);
 }
 
 .sign-row {

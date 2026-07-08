@@ -3,25 +3,25 @@ import {
 } from '@angular/core';
 import { SlicePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { AdminService } from '../../../../core/services/admin.service';
+import { AdminService } from '@core/services/admin/admin.service';
 import { AdminComplaintResponse } from '../../../../core/models/admin.model';
 import { AdminUpdateComplaintStatusDialogComponent } from '../../dialogs/admin-update-complaint-status-dialog.component';
+import { Subject, EMPTY, merge, debounceTime, switchMap, catchError } from 'rxjs';
 
 @Component({
   selector: 'app-admin-complaints-tab',
   standalone: true,
   imports: [
     SlicePipe, ReactiveFormsModule, MatButtonModule, MatIconModule,
-    MatSelectModule, MatFormFieldModule, MatProgressSpinnerModule,
+    MatMenuModule, MatProgressSpinnerModule,
     StatusBadgeComponent, EmptyStateComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,33 +41,49 @@ export class AdminComplaintsTabComponent implements OnInit {
 
   readonly statusFilter   = new FormControl<string>('');
   readonly priorityFilter = new FormControl<string>('');
+  private readonly statusValue   = toSignal(this.statusFilter.valueChanges,   { initialValue: this.statusFilter.value });
+  private readonly priorityValue = toSignal(this.priorityFilter.valueChanges, { initialValue: this.priorityFilter.value });
+  readonly statusLabel   = computed(() => this.statusValue()   || 'All statuses');
+  readonly priorityLabel = computed(() => this.priorityValue() || 'Any priority');
 
   readonly totalPages = computed(() => Math.ceil(this.total() / this.limit) || 1);
 
+  private readonly reload$ = new Subject<void>();
+
   ngOnInit(): void {
+    // switchMap cancels an in-flight request when a newer reload fires,
+    // so a slow older response can never overwrite fresher results.
+    this.reload$
+      .pipe(
+        switchMap(() => this.adminService.getAdminComplaints(
+          this.statusFilter.value || undefined,
+          this.priorityFilter.value || undefined,
+          this.page(), this.limit,
+        ).pipe(
+          // Catch inside switchMap so one failed request doesn't kill the stream.
+          catchError(() => { this.loading.set(false); return EMPTY; }),
+        )),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(res => { this.items.set(res.data ?? []); this.total.set(res.total); this.loading.set(false); });
+
+    // Both filters share one debounced trigger — rapid changes fire one request.
+    merge(this.statusFilter.valueChanges, this.priorityFilter.valueChanges)
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => { this.page.set(1); this.load(); });
+
     this.load();
-    this.statusFilter.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.page.set(1); this.load();
-    });
-    this.priorityFilter.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.page.set(1); this.load();
-    });
   }
 
   load(): void {
     this.loading.set(true);
-    const status   = this.statusFilter.value || undefined;
-    const priority = this.priorityFilter.value || undefined;
-    this.adminService.getAdminComplaints(status, priority, this.page(), this.limit)
-      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: res => { this.items.set(res.data ?? []); this.total.set(res.total); this.loading.set(false); },
-        error: () => this.loading.set(false),
-      });
+    this.reload$.next();
   }
 
   openUpdateStatus(complaint: AdminComplaintResponse): void {
     const ref = this.dialog.open(AdminUpdateComplaintStatusDialogComponent, {
-      width: '420px',
+      width: '100%',
+      maxWidth: '420px',
       data: { complaintId: complaint.complaintId, currentStatus: complaint.status },
     });
     ref.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(r => { if (r) this.load(); });

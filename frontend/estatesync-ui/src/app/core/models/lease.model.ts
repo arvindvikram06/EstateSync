@@ -20,6 +20,7 @@ export interface LeaseSummaryResponse {
   endDate: string;
   monthlyRent: number;
   status: LeaseStatusString;
+  isRenewalRequested: boolean;
   tenantSignedAt: string | null;
   ownerSignedAt: string | null;
   agreementPdfUrl: string | null;
@@ -72,6 +73,7 @@ export interface VoidLeaseRequest {
 
 export interface TerminateLeaseRequest {
   reason: string;
+  forfeitDeposit: boolean;
 }
 
 export interface AdminLeaseApprovalRequest {

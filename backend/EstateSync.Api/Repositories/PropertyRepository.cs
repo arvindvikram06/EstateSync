@@ -18,7 +18,7 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
     public async Task<Property?> GetWithDetailsByIdAsync(Guid id)
     {
         return await _dbSet
-            .Include(p => p.Owner)
+            .Include(p => p.Owner).ThenInclude(o => o!.OwnerProfile)
             .Include(p => p.PropertyImages)
             .Include(p => p.PropertyDocuments)
                 .ThenInclude(pd => pd.Document)
@@ -29,7 +29,7 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
     {
         return await _dbSet
             .AsNoTracking()
-            .Include(p => p.Owner)
+            .Include(p => p.Owner).ThenInclude(o => o!.OwnerProfile)
             .Include(p => p.PropertyImages)
             .Include(p => p.PropertyDocuments)
                 .ThenInclude(pd => pd.Document)
@@ -38,6 +38,7 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
     }
 
     public async Task<(IEnumerable<Property> Items, int Total)> SearchAsync(
+        string? search,
         string? state,
         string? propertyType,
         int? bedrooms,
@@ -49,6 +50,12 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
         var query = _dbSet.AsNoTracking()
             .Include(p => p.PropertyImages)
             .Where(p => p.Status == PropertyStatus.Active);
+
+        if (!string.IsNullOrEmpty(search))
+            query = query.Where(p =>
+                p.Title.ToLower().Contains(search.ToLower()) ||
+                p.City.ToLower().Contains(search.ToLower()) ||
+                p.State.ToLower().Contains(search.ToLower()));
 
         if (!string.IsNullOrEmpty(state))
             query = query.Where(p => p.State.ToLower() == state.ToLower());
@@ -80,11 +87,22 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
         return (items, total);
     }
 
+    public async Task<Property?> GetActiveDraftByOwnerIdAsync(Guid ownerId)
+    {
+        return await _dbSet
+            .Include(p => p.Owner).ThenInclude(o => o!.OwnerProfile)
+            .Include(p => p.PropertyImages)
+            .Include(p => p.PropertyDocuments).ThenInclude(pd => pd.Document)
+            .Where(p => p.OwnerId == ownerId && p.Status == PropertyStatus.Draft)
+            .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<(IEnumerable<Property> Items, int Total)> GetPendingApprovalPropertiesAsync(int limit, int offset)
     {
         var query = _dbSet.AsNoTracking()
             .Include(p => p.PropertyImages)
-            .Include(p => p.Owner)
+            .Include(p => p.Owner).ThenInclude(o => o!.OwnerProfile)
             .Where(p => p.Status == PropertyStatus.PendingApproval);
 
         var total = await query.CountAsync();

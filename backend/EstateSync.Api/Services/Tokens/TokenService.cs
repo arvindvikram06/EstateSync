@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using EstateSync.Api.Models;
 using EstateSync.Api.Interfaces.Services.Tokens;
@@ -13,14 +14,16 @@ namespace EstateSync.Api.Services.Tokens;
 public class TokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
+    private readonly ILogger<TokenService> _logger;
     private readonly SymmetricSecurityKey _signingKey;
     private readonly string _issuer;
     private readonly string _audience;
     private readonly int _expiryMinutes;
 
-    public TokenService(IConfiguration configuration)
+    public TokenService(IConfiguration configuration, ILogger<TokenService> logger)
     {
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         
         _issuer = _configuration["Jwt:Issuer"]
             ?? throw new InvalidOperationException("JWT issuer 'Jwt:Issuer' is not configured.");
@@ -104,15 +107,17 @@ public class TokenService : ITokenService
         try
         {
             var principal = tokenHandler.ValidateToken(token, validationParameters, out var securityToken);
-            if (securityToken is not JwtSecurityToken jwtSecurityToken || 
+            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
                 !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             {
+                _logger.LogWarning("Token validation failed: unexpected token type or signing algorithm.");
                 return null;
             }
             return principal;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Token validation failed.");
             return null;
         }
     }

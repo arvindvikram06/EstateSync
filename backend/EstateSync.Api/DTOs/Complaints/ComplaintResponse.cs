@@ -13,7 +13,7 @@ public class ComplaintResponse
 {
     public Guid ComplaintId { get; set; }
     public Guid LeaseId { get; set; }
-    public Guid? LeaseBillId { get; set; }
+    public string? PropertyTitle { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string ComplaintType { get; set; } = string.Empty;
@@ -21,5 +21,6 @@ public class ComplaintResponse
     public string Status { get; set; } = string.Empty;
     public string? ReviewRemarks { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public List<ComplaintImageResponse> Images { get; set; } = new();
 }

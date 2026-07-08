@@ -1,4 +1,4 @@
-<h2 style="font-size:20px;font-weight:700;color:#222;margin-bottom:20px">Tenant Complaints</h2>
+<h2 class="es-title mb-5">Tenant Complaints</h2>
 
 <!-- Filter pills -->
 <div class="flex flex-wrap gap-2 mb-5">
@@ -22,11 +22,11 @@
 } @else {
   <div class="flex flex-col gap-3">
     @for (c of filtered(); track c.complaintId) {
-      <div class="complaint-card">
+      <div class="complaint-card cursor-pointer" (click)="openDetail(c)">
         <div class="card-top">
           <div class="flex-1 min-w-0">
-            <div style="font-size:14px;font-weight:600;color:#222" class="truncate">{{ c.title }}</div>
-            <div style="font-size:12px;color:#717171;margin-top:2px" class="truncate">
+            <div class="es-detail-value truncate">{{ c.title }}</div>
+            <div class="es-text-xs mt-0.5 truncate">
               <mat-icon class="!text-[13px] !w-[13px] !h-[13px] align-middle">home</mat-icon>
               {{ c.propertyTitle }}
             </div>
@@ -42,23 +42,33 @@
           </div>
         </div>
 
-        <p style="font-size:13px;color:#555;margin:10px 0;line-clamp:2" class="line-clamp-2">
+        <p class="line-clamp-2 text-[13px] text-es-soft my-2.5">
           {{ c.description }}
         </p>
 
+        @if (c.images.length) {
+          <div class="flex items-center gap-2 mb-2.5 flex-wrap">
+            @for (img of c.images; track img.complaintImageId) {
+              <img [src]="svc.fileUrl(img.imageUrl)" alt="Complaint photo" loading="lazy"
+                class="w-14 h-14 object-cover rounded-lg border border-solid border-es-border-light cursor-pointer"
+                (click)="openImage(img.imageUrl, $event)" />
+            }
+          </div>
+        }
+
         <div class="card-bottom">
           <div class="flex items-center gap-3">
-            <span class="type-chip">{{ c.type }}</span>
-            <span style="font-size:11px;color:#AAAAAA">{{ formatDate(c.createdAt) }}</span>
+            <span class="type-chip">{{ c.complaintType }}</span>
+            <span class="es-text-hint">{{ formatDate(c.createdAt) }}</span>
           </div>
-          @if (nextStatus(c.status)) {
+          @if (c.nextStatus) {
             <button mat-stroked-button class="!rounded-full !h-8 !text-xs !px-3"
               [disabled]="updatingId() === c.complaintId"
-              (click)="updateStatus(c)">
+              (click)="updateStatus(c); $event.stopPropagation()">
               @if (updatingId() === c.complaintId) {
-                <mat-spinner diameter="14" style="display:inline-block" />
+                <mat-spinner diameter="14" class="inline-block" />
               } @else {
-                {{ nextLabel(c.status) }}
+                {{ c.nextLabel }}
               }
             </button>
           }

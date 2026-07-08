@@ -3,18 +3,17 @@ import {
 } from '@angular/core';
 import { SlicePipe, TitleCasePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { formatCurrency } from '../../../../core/utils/format.utils';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { AdminService } from '../../../../core/services/admin.service';
+import { AdminService } from '@core/services/admin/admin.service';
 import {
   SettlementSummaryResponse, OwnerSettlementResponse,
   ConnectedAccountResponse, AdminPaymentResponse
@@ -25,8 +24,7 @@ import {
   standalone: true,
   imports: [
     SlicePipe, TitleCasePipe, ReactiveFormsModule, MatButtonModule, MatIconModule,
-    MatSelectModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule,
-    MatTabsModule, MatTooltipModule,
+    MatMenuModule, MatProgressSpinnerModule, MatTabsModule, MatTooltipModule,
     StatusBadgeComponent, EmptyStateComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,6 +49,8 @@ export class AdminFinancialTabComponent implements OnInit {
   readonly settlementStatus   = new FormControl<string>('');
   readonly settlementSearch   = new FormControl<string>('');
   private readonly settlementQ = signal('');
+  private readonly settlementStatusValue = toSignal(this.settlementStatus.valueChanges, { initialValue: this.settlementStatus.value });
+  readonly settlementStatusLabel = computed(() => this.settlementStatusValue() || 'All statuses');
 
   readonly filteredSettlements = computed(() => {
     const q = this.settlementQ().trim().toLowerCase();
@@ -88,6 +88,8 @@ export class AdminFinancialTabComponent implements OnInit {
   readonly paymentStatus   = new FormControl<string>('');
   readonly paymentSearch   = new FormControl<string>('');
   private readonly paymentQ = signal('');
+  private readonly paymentStatusValue = toSignal(this.paymentStatus.valueChanges, { initialValue: this.paymentStatus.value });
+  readonly paymentStatusLabel = computed(() => this.paymentStatusValue() || 'All statuses');
 
   readonly filteredPayments = computed(() => {
     const q = this.paymentQ().trim().toLowerCase();
@@ -192,9 +194,7 @@ export class AdminFinancialTabComponent implements OnInit {
       });
   }
 
-  fmt(v: number): string {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
-  }
+  readonly fmt = formatCurrency;
 
   settlementPages = computed(() => Math.ceil(this.settlementTotal() / this.limit));
   accountPages    = computed(() => Math.ceil(this.accountTotal() / this.limit));

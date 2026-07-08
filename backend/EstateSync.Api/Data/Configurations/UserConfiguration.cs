@@ -15,16 +15,18 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.Email).IsRequired().HasMaxLength(250);
         builder.Property(x => x.PhoneNumber).IsRequired().HasMaxLength(50);
         builder.Property(x => x.PasswordHash).IsRequired().HasMaxLength(500);
-        builder.Property(x => x.AadhaarNumber).HasMaxLength(12);
-        builder.Property(x => x.PanNumber).HasMaxLength(10);
         builder.Property(x => x.IsKycVerified).HasDefaultValue(false);
         builder.Property(x => x.IsOwnerVerified).HasDefaultValue(false);
         builder.Property(x => x.IsFinanciallyVerified).HasDefaultValue(false);
         builder.Property(x => x.VerifiedMonthlyIncome).HasPrecision(18, 2);
 
+        // Default TRUE so pre-existing users aren't locked out by the migration;
+        // new registrations explicitly write false.
+        builder.Property(x => x.IsEmailVerified).HasDefaultValue(true);
+        builder.Property(x => x.EmailVerificationToken).HasMaxLength(128);
+        builder.HasIndex(x => x.EmailVerificationToken);
+
         builder.HasIndex(x => x.Email).IsUnique();
-        builder.HasIndex(x => x.AadhaarNumber).IsUnique();
-        builder.HasIndex(x => x.PanNumber).IsUnique();
         builder.HasIndex(x => x.IsActive).HasFilter("\"DeletedAt\" IS NULL");
 
         builder.HasOne(x => x.CreatedBy)
@@ -49,7 +51,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 FullName = "System Admin",
                 Email = "admin@estatesync.com",
                 PhoneNumber = "1234567890",
-                PasswordHash = "$2a$12$R.73c242HjI8U15u2yZ.Nu9L1zXn9i6s7Jm/aP3P.z6N3F8w2KzY2", // Admin123!
+                PasswordHash = "$2a$12$ADKm2THOwyVdzzrREUVdjuvfxion06o.yHrByLvC6Gf0Fd5/PHlfq", // Password123!
                 IsActive = true,
                 IsKycVerified = true,
                 IsOwnerVerified = false,

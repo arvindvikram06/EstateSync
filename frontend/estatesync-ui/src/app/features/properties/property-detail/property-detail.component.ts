@@ -8,9 +8,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
-import { PropertyService } from '../../../core/services/property.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { KycService } from '../../../core/services/kyc.service';
+import { PropertyService } from '@core/services/property/property.service';
+import { AuthService } from '@core/services/auth/auth.service';
 import { PropertyDetailResponse } from '../../../core/models/property.model';
 import { formatCurrency } from '../../../core/utils/format.utils';
 import { ApplyDialogComponent } from './apply-dialog.component';
@@ -38,7 +37,6 @@ export class PropertyDetailComponent implements OnInit {
   private readonly router      = inject(Router);
   private readonly propService = inject(PropertyService);
   private readonly authService = inject(AuthService);
-  private readonly kycService  = inject(KycService);
   private readonly dialog      = inject(MatDialog);
   private readonly destroyRef  = inject(DestroyRef);
 
@@ -46,7 +44,9 @@ export class PropertyDetailComponent implements OnInit {
   readonly loading     = signal(true);
   readonly error       = signal<string | null>(null);
   readonly applied     = signal(false);
-  readonly kycApproved = signal(false);
+  // AuthService is the source of truth for KYC status (kept current by
+  // syncProfile on verification notifications) — no extra KYC fetch needed.
+  readonly kycApproved = this.authService.isKycVerified;
 
   readonly user       = this.authService.currentUser;
   readonly isLoggedIn = this.authService.isLoggedIn;
@@ -85,21 +85,6 @@ export class PropertyDetailComponent implements OnInit {
         next: res => { this.property.set(res.data); this.loading.set(false); },
         error: () => { this.error.set('Property not found.'); this.loading.set(false); }
       });
-
-    if (this.isLoggedIn()) {
-      // Token-stored isKycVerified can be stale — always check live.
-      if (this.user()?.isKycVerified) {
-        this.kycApproved.set(true);
-      } else {
-        this.kycService.getMyKyc()
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe({
-            next: (res) => {
-              this.kycApproved.set((res.data ?? []).some(k => k.status === 'Approved'));
-            },
-          });
-      }
-    }
   }
 
 imageUrl(path: string | null): string {
@@ -116,9 +101,10 @@ imageUrl(path: string | null): string {
       if (!p) return;
       const ref = this.dialog.open(ApplyDialogComponent, {
         data: { propertyId: p.propertyId, propertyTitle: p.title, addressLine: p.addressLine },
-        maxWidth: 520,
-        borderRadius: '16px',
-      } as never);
+        width: '100%',
+        maxWidth: '520px',
+        panelClass: 'rounded-dialog',
+      });
       ref.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
         if (result === 'applied') this.applied.set(true);
       });

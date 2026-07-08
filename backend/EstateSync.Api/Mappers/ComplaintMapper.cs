@@ -12,7 +12,7 @@ public class ComplaintMapper
         {
             ComplaintId = complaint.ComplaintId,
             LeaseId = complaint.LeaseId,
-            LeaseBillId = complaint.LeaseBillId,
+            PropertyTitle = complaint.Lease?.Property?.Title,
             Title = complaint.Title,
             Description = complaint.Description,
             ComplaintType = complaint.ComplaintType.ToString(),
@@ -20,6 +20,7 @@ public class ComplaintMapper
             Status = complaint.Status.ToString(),
             ReviewRemarks = complaint.ReviewRemarks,
             CreatedAt = complaint.CreatedAt,
+            UpdatedAt = complaint.UpdatedAt,
             Images = complaint.ComplaintImages
                 .Select(MapToImageResponse)
                 .ToList()

@@ -1,27 +1,27 @@
-<h2 style="font-size:24px;font-weight:700;color:#222;margin-bottom:4px">
-  Welcome back, {{ user()?.fullName?.split(' ')?.[0] ?? 'Owner' }}
+<h2 class="es-page-title">
+  Welcome back, {{ firstName() }}
 </h2>
-<p style="font-size:14px;color:#717171;margin-bottom:28px">Manage your properties, leases and tenant applications.</p>
+<p class="es-page-subtitle">Manage your properties, leases and tenant applications.</p>
 
 <!-- Stripe callback status banners -->
 @if (stripeCallbackState() === 'checking') {
-  <div class="kyc-banner" style="margin-bottom:28px;display:flex;align-items:center;gap:12px;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:12px;padding:14px 18px">
+  <div class="kyc-banner kyc-banner--notice mb-7">
     <mat-spinner diameter="20" />
-    <div style="font-size:13px;color:#717171">Verifying your Stripe account status…</div>
+    <div class="es-text-sm">Verifying your Stripe account status…</div>
   </div>
 }
 @if (stripeCallbackState() === 'done' && isOnboarded()) {
-  <div class="kyc-banner--success" style="margin-bottom:28px">
-    <mat-icon style="color:#059669;font-size:22px;width:22px;height:22px">check_circle</mat-icon>
-    <div style="font-size:13px;font-weight:600;color:#059669">Payment account connected successfully!</div>
+  <div class="kyc-banner--success mb-7">
+    <mat-icon class="es-text-success !text-[22px] !w-[22px] !h-[22px]">check_circle</mat-icon>
+    <div class="es-text-strong es-text-success">Payment account connected successfully!</div>
   </div>
 }
 @if (stripeCallbackState() === 'done' && !isOnboarded()) {
-  <div class="kyc-banner kyc-banner--action" style="margin-bottom:28px">
-    <mat-icon style="color:#D97706;font-size:22px;width:22px;height:22px">hourglass_empty</mat-icon>
+  <div class="kyc-banner kyc-banner--action mb-7">
+    <mat-icon class="es-text-warning !text-[22px] !w-[22px] !h-[22px]">hourglass_empty</mat-icon>
     <div class="flex-1">
-      <div style="font-size:13px;font-weight:600;color:#D97706">Stripe is still processing your account</div>
-      <div style="font-size:12px;color:#717171;margin-top:2px">This usually takes a few minutes. Try again shortly or restart onboarding.</div>
+      <div class="es-text-strong es-text-warning">Stripe is still processing your account</div>
+      <div class="es-text-xs mt-0.5">This usually takes a few minutes. Try again shortly or restart onboarding.</div>
     </div>
     <button mat-stroked-button class="!rounded-full !text-xs !h-8"
       [disabled]="onboardLoading()" (click)="startOnboarding()">
@@ -32,18 +32,18 @@
 
 <!-- Stripe onboarding banner — only shown when not yet connected and no callback in progress -->
 @if (!isOnboarded() && stripeCallbackState() === 'none') {
-  <div class="kyc-banner kyc-banner--action" style="margin-bottom:28px">
-    <mat-icon class="!text-[24px] !w-[24px] !h-[24px]" style="color:var(--mat-sys-primary)">link</mat-icon>
+  <div class="kyc-banner kyc-banner--action mb-7">
+    <mat-icon class="!text-[24px] !w-[24px] !h-[24px] es-text-primary">link</mat-icon>
     <div class="flex-1">
-      <div style="font-size:13px;font-weight:600;color:var(--mat-sys-primary)">Connect Your Stripe Account</div>
-      <div style="font-size:12px;color:var(--mat-sys-primary);opacity:0.8;margin-top:2px">
+      <div class="es-text-strong es-text-primary">Connect Your Stripe Account</div>
+      <div class="kyc-banner__sub es-text-primary">
         Link your Stripe account to receive rent payments and list properties.
       </div>
     </div>
     <button mat-flat-button color="primary" class="!rounded-full !text-xs !h-8"
       [disabled]="onboardLoading()" (click)="startOnboarding()">
       @if (onboardLoading()) {
-        <mat-spinner diameter="16" style="display:inline-block;margin-right:6px" />
+        <mat-spinner diameter="16" class="inline-block mr-1.5" />
       }
       Start Onboarding
     </button>
@@ -57,9 +57,9 @@
   </div>
 } @else {
   <div class="stat-grid">
-    <div class="stat-card" (click)="tabSwitch.emit('properties')" style="cursor:pointer">
-      <div class="stat-icon" style="background:rgba(103,80,164,0.08)">
-        <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#6750A4">home_work</mat-icon>
+    <div class="stat-card cursor-pointer" (click)="tabSwitch.emit('properties')">
+      <div class="stat-icon stat-icon--primary">
+        <mat-icon class="!text-[22px] !w-[22px] !h-[22px] es-text-primary">home_work</mat-icon>
       </div>
       <div>
         <div class="stat-value">{{ totalProperties() }}</div>
@@ -67,9 +67,9 @@
       </div>
     </div>
 
-    <div class="stat-card" (click)="tabSwitch.emit('applications')" style="cursor:pointer">
-      <div class="stat-icon" style="background:rgba(217,119,6,0.08)">
-        <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#D97706">mail</mat-icon>
+    <div class="stat-card cursor-pointer" (click)="tabSwitch.emit('applications')">
+      <div class="stat-icon stat-icon--warning">
+        <mat-icon class="!text-[22px] !w-[22px] !h-[22px] es-text-warning">mail</mat-icon>
       </div>
       <div>
         <div class="stat-value">{{ pendingApps() }}</div>
@@ -77,9 +77,9 @@
       </div>
     </div>
 
-    <div class="stat-card" (click)="tabSwitch.emit('leases')" style="cursor:pointer">
-      <div class="stat-icon" style="background:rgba(5,150,105,0.08)">
-        <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#059669">article</mat-icon>
+    <div class="stat-card cursor-pointer" (click)="tabSwitch.emit('leases')">
+      <div class="stat-icon stat-icon--success">
+        <mat-icon class="!text-[22px] !w-[22px] !h-[22px] es-text-success">article</mat-icon>
       </div>
       <div>
         <div class="stat-value">{{ activeLeases() }}</div>
@@ -87,9 +87,9 @@
       </div>
     </div>
 
-    <div class="stat-card" (click)="tabSwitch.emit('complaints')" style="cursor:pointer">
-      <div class="stat-icon" style="background:rgba(220,38,38,0.08)">
-        <mat-icon class="!text-[22px] !w-[22px] !h-[22px]" style="color:#DC2626">report_problem</mat-icon>
+    <div class="stat-card cursor-pointer" (click)="tabSwitch.emit('complaints')">
+      <div class="stat-icon stat-icon--danger">
+        <mat-icon class="!text-[22px] !w-[22px] !h-[22px] es-text-danger">report_problem</mat-icon>
       </div>
       <div>
         <div class="stat-value">{{ openComplaints() }}</div>
@@ -101,8 +101,8 @@
   <!-- Recent pending applications -->
   @if (recentPendingApps().length > 0) {
     <div class="section-header">
-      <span style="font-size:16px;font-weight:700;color:#222">Recent Applications</span>
-      <button mat-button color="primary" style="font-size:13px" (click)="tabSwitch.emit('applications')">
+      <span class="text-[16px] font-bold text-es-text">Recent Applications</span>
+      <button mat-button color="primary" class="!text-[13px]" (click)="tabSwitch.emit('applications')">
         See all
       </button>
     </div>
@@ -111,9 +111,9 @@
         <div class="app-card">
           <div class="tenant-avatar">{{ app.tenantName.charAt(0).toUpperCase() }}</div>
           <div class="flex-1 min-w-0">
-            <div style="font-size:14px;font-weight:600;color:#222" class="truncate">{{ app.tenantName }}</div>
-            <div style="font-size:12px;color:#717171;margin-top:2px" class="truncate">{{ app.propertyTitle }}</div>
-            <div style="font-size:11px;color:#AAAAAA;margin-top:2px">Applied {{ formatDate(app.appliedAt) }}</div>
+            <div class="es-detail-value truncate">{{ app.tenantName }}</div>
+            <div class="es-text-xs mt-0.5 truncate">{{ app.propertyTitle }}</div>
+            <div class="es-text-hint mt-0.5">Applied {{ formatDate(app.appliedAt) }}</div>
           </div>
           <app-status-badge [status]="app.status" />
         </div>

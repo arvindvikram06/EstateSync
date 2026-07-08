@@ -16,4 +16,9 @@ public interface IPropertyService
     Task<PropertyDetailResponse> UpdateAsync(Guid id, UpdatePropertyRequest request, Guid ownerId, CancellationToken ct);
     Task DeleteAsync(Guid id, Guid userId, bool isAdmin, CancellationToken ct);
     Task<PagedResponse<ReviewResponse>> GetReviewsAsync(Guid id, int page, int limit, CancellationToken ct);
+
+    // Wizard draft endpoints — support partial creation and incremental saves
+    Task<PropertyDetailResponse> CreateWizardDraftAsync(CreatePropertyDraftRequest request, Guid ownerId, CancellationToken ct);
+    Task<PropertyDetailResponse> PatchWizardDraftAsync(Guid id, PatchPropertyDraftRequest request, Guid ownerId, CancellationToken ct);
+    Task<PropertyDetailResponse?> GetMyActiveDraftAsync(Guid ownerId, CancellationToken ct);
 }

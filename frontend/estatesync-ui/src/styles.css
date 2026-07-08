@@ -16,23 +16,91 @@ html,
 body {
   min-height: 100%;
   -webkit-font-smoothing: antialiased;
-  font-family: 'Inter', Roboto, system-ui, sans-serif;
+  font-family: Inter, Roboto, system-ui, sans-serif;
+
+  /* Safety net: a stray fixed-width element must never give the whole
+     page a sideways scroll (clip, unlike hidden, adds no scroll container) */
+  overflow-x: clip;
 }
 
 /* ── Brand tokens ────────────────────────────────────────────── */
 :root {
   --es-brand: #FF385C;
+  --es-brand-rgb: 255 56 92; /* keep in sync with --es-brand; enables Tailwind alpha modifiers */
   --es-brand-dark: #D4145A;
   --es-bg: #F7F7F7;
   --es-surface: #FFFFFF;
   --es-border: #DDDDDD;
   --es-text: #222222;
   --es-text-secondary: #717171;
-  --es-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.08);
-  --es-shadow-md: 0 6px 24px rgba(0, 0, 0, 0.13);
-  --es-shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.16);
+  --es-shadow-sm: 0 1px 2px rgb(0, 0, 0, 0.06), 0 4px 12px rgb(0, 0, 0, 0.08);
+  --es-shadow-md: 0 6px 24px rgb(0, 0, 0, 0.13);
+  --es-shadow-hover: 0 8px 28px rgb(0, 0, 0, 0.16);
   --es-radius: 16px;
+  --es-radius-md: 12px;
   --es-radius-sm: 8px;
+  --es-radius-pill: 40px;
+  --es-border-light: #EBEBEB;
+  --es-text-muted: #AAAAAA;
+  --es-success: #059669;
+  --es-danger: #DC2626;
+  --es-warning: #D97706;
+
+  /* neutral text/border shades */
+  --es-text-soft: #444444;
+  --es-text-faint: #999999;
+  --es-text-disabled: #CCCCCC;
+  --es-border-strong: #BBBBBB;
+  --es-primary-tint-border: #D4C9F0;
+  --es-danger-border: #FECACA;
+
+  /* status badge/banner text palette */
+  --es-status-green: #065F46;
+  --es-status-amber: #92400E;
+  --es-status-blue: #1D4ED8;
+  --es-status-grey: #6B7280;
+  --es-status-red: #991B1B;
+  --es-info: #1E40AF;
+  --es-warning-deep: #B45309;
+  --es-sky: #0284C7;
+
+  /* status badge/banner backgrounds */
+  --es-green-bg: #D1FAE5;
+  --es-amber-bg: #FEF3C7;
+  --es-blue-bg: #DBEAFE;
+  --es-grey-bg: #F3F4F6;
+  --es-red-bg: #FEE2E2;
+  --es-green-wash: #F0FDF4;
+  --es-amber-wash: #FFFBEB;
+  --es-blue-wash: #EFF6FF;
+  --es-red-wash: #FEF2F2;
+
+  /* brand-purple tints (light backgrounds derived from the primary) */
+  --es-primary-wash: #F5F3FF;
+  --es-primary-tint: #EDE9F8;
+  --es-primary-hover-wash: #F0EDF8;
+
+  /* neutral surfaces */
+  --es-bg-subtle: #FAFAFA;
+  --es-bg-faint: #F9FAFB;
+  --es-bg-hover: #F0F0F0;
+  --es-divider: #F5F5F5;
+  --es-img-placeholder: #E8E8E8;
+  --es-scrollbar: #E0E0E0;
+  --es-scrollbar-hover: #BDBDBD;
+
+  /* auth hero gradients */
+  --es-brand-deep: #8B003A;
+  --es-hero-start: #1A1235;
+  --es-hero-mid: #2D1B69;
+  --es-hero-end: #3B0F6F;
+
+  /* extra wash/border shades */
+  --es-green-border: #BBF7D0;
+  --es-amber-border: #FDE68A;
+  --es-orange-wash: #FFF7ED;
+  --es-orange-border: #FED7AA;
+  --es-yellow-wash: #FEF9C3;
 }
 
 h1,
@@ -41,92 +109,144 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Inter', Roboto, system-ui, sans-serif;
-  color: #222222;
+  font-family: Inter, Roboto, system-ui, sans-serif;
+  color: var(--es-text);
 }
 
-/* ── Status badge colors ─────────────────────────────────────── */
+/* ── Status badges ───────────────────────────────────────────── */
+/* Pill base per the design spec; color comes from the --variant classes. */
+.es-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
 .es-badge--approved {
-  background: #D1FAE5;
-  color: #065F46;
+  background: var(--es-green-bg);
+  color: var(--es-status-green);
 }
 
 .es-badge--active {
-  background: #D1FAE5;
-  color: #065F46;
+  background: var(--es-green-bg);
+  color: var(--es-status-green);
 }
 
 .es-badge--pending {
-  background: #FEF3C7;
-  color: #92400E;
+  background: var(--es-amber-bg);
+  color: var(--es-status-amber);
 }
 
 .es-badge--partial {
-  background: #DBEAFE;
-  color: #1D4ED8;
+  background: var(--es-blue-bg);
+  color: var(--es-status-blue);
 }
 
 .es-badge--draft {
-  background: #F3F4F6;
-  color: #6B7280;
+  background: var(--es-grey-bg);
+  color: var(--es-status-grey);
 }
 
 .es-badge--rejected {
-  background: #FEE2E2;
-  color: #991B1B;
+  background: var(--es-red-bg);
+  color: var(--es-status-red);
 }
 
 .es-badge--failed {
-  background: #FEE2E2;
-  color: #991B1B;
+  background: var(--es-red-bg);
+  color: var(--es-status-red);
 }
 
 .es-badge--closed {
-  background: #F3F4F6;
-  color: #6B7280;
+  background: var(--es-grey-bg);
+  color: var(--es-status-grey);
 }
 
 .es-badge--open {
-  background: #DBEAFE;
-  color: #1D4ED8;
+  background: var(--es-blue-bg);
+  color: var(--es-status-blue);
 }
 
 .es-badge--inprogress {
-  background: #FEF3C7;
-  color: #92400E;
+  background: var(--es-amber-bg);
+  color: var(--es-status-amber);
 }
 
 .es-badge--resolved {
-  background: #D1FAE5;
-  color: #065F46;
+  background: var(--es-green-bg);
+  color: var(--es-status-green);
 }
 
 .es-badge--default {
-  background: #F3F4F6;
-  color: #6B7280;
+  background: var(--es-grey-bg);
+  color: var(--es-status-grey);
 }
 
 /* ── Utility classes ─────────────────────────────────────────── */
 .es-page-title {
   font-size: 24px;
   font-weight: 700;
-  color: #222;
+  color: var(--es-text);
   margin-bottom: 4px;
 }
 .es-page-subtitle {
   font-size: 14px;
-  color: #717171;
+  color: var(--es-text-secondary);
   margin-bottom: 28px;
-}
-.es-detail-label {
-  font-size: 11px;
-  color: #717171;
-  font-weight: 500;
 }
 .es-detail-value {
   font-size: 14px;
   font-weight: 600;
-  color: #222;
+  color: var(--es-text);
+}
+
+/* ── Typography & text utilities — replace inline style="" ────── */
+.es-title       { font-size: 20px; font-weight: 700; color: var(--es-text); }
+.es-text-strong { font-size: 13px; font-weight: 600; color: var(--es-text); }
+.es-text-body   { font-size: 13px; color: var(--es-text-soft); }
+.es-text-sm     { font-size: 13px; color: var(--es-text-secondary); }
+.es-text-xs     { font-size: 12px; color: var(--es-text-secondary); }
+.es-text-hint   { font-size: 11px; color: var(--es-text-muted); }
+.es-label-upper {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--es-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.es-text-success { color: var(--es-success); }
+.es-text-danger  { color: var(--es-danger); }
+.es-text-warning { color: var(--es-warning); }
+.es-text-primary { color: var(--mat-sys-primary); }
+
+.es-text-body-lg { font-size: 14px; color: var(--es-text-soft); }
+
+/* Destructive outline button (beats Material's own button colors) */
+.es-btn-danger {
+  color: var(--es-danger) !important;
+  border-color: var(--es-danger-border) !important;
+}
+
+/* Empty-chart / empty-panel placeholder */
+.es-chart-empty {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--es-text-muted);
+  font-size: 13px;
+}
+
+/* Grey info tile */
+.es-tile {
+  background: var(--es-bg);
+  border: 1px solid var(--es-border-light);
+  border-radius: 12px;
+  padding: 16px;
 }
 
 /* Info banners — replaces scattered inline style=""  */
@@ -138,10 +258,110 @@ h6 {
   padding: 12px 16px;
   font-size: 13px;
 }
-.es-info-banner--warning { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; }
-.es-info-banner--success { background: #F0FDF4; border: 1px solid #BBF7D0; color: #065F46; }
-.es-info-banner--error   { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
-.es-info-banner--info    { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; }
+.es-info-banner--warning { background: var(--es-amber-wash); border: 1px solid var(--es-amber-border); color: var(--es-status-amber); }
+.es-info-banner--success { background: var(--es-green-wash); border: 1px solid var(--es-green-border); color: var(--es-status-green); }
+.es-info-banner--error   { background: var(--es-red-wash); border: 1px solid var(--es-danger-border); color: var(--es-status-red); }
+.es-info-banner--info    { background: var(--es-blue-wash); border: 1px solid #BFDBFE; color: var(--es-info); }
+
+/* Standard card — the CLAUDE.md card spec (white / light border / 16px / soft shadow) */
+.es-card {
+  background: white;
+  border: 1px solid var(--es-border-light);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgb(0, 0, 0, 0.06);
+}
+
+/* Tinted backgrounds for icon tiles / accent chips */
+.es-bg-primary-soft { background: color-mix(in srgb, var(--mat-sys-primary) 10%, white); }
+.es-bg-amber        { background: var(--es-amber-bg); }
+.es-bg-green        { background: var(--es-green-bg); }
+
+/* Deep status text (badge palette, usable outside badges) */
+.es-text-amber-deep { color: var(--es-status-amber); }
+.es-text-green-deep { color: var(--es-status-green); }
+.es-text-blue-deep  { color: var(--es-status-blue); }
+.es-text-sky        { color: var(--es-sky); }
+.es-text-warn-deep  { color: var(--es-warning-deep); }
+
+/* Solid destructive button (e.g. void/delete confirm actions) */
+.es-btn-danger-solid {
+  background: var(--es-danger) !important;
+  color: white !important;
+}
+
+/* ── Verification status banners (KYC / financial / owner) ───── */
+/* Single definition; previously duplicated in tenant + owner overview tabs. */
+.kyc-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 12px;
+}
+.kyc-banner--action   { background: var(--es-primary-tint); }
+.kyc-banner--pending  { background: var(--es-amber-wash); }
+.kyc-banner--approved { background: var(--es-green-wash); }
+.kyc-banner--rejected { background: var(--es-red-wash); }
+.kyc-banner--success {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--es-green-wash);
+  border: 1px solid var(--es-green-border);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+.kyc-banner__sub {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+.kyc-banner--notice {
+  background: var(--es-primary-wash);
+  border: 1px solid #DDD6FE;
+  gap: 12px;
+  padding: 14px 18px;
+}
+
+/* Small status chips (renewal state etc.) */
+.es-chip-amber   { color: var(--es-warning-deep); background: var(--es-amber-bg); }
+.es-chip-primary { color: var(--mat-sys-primary); background: var(--es-primary-tint); }
+
+.es-bg-grey { background: var(--es-grey-bg); }
+
+/* Active search chip (properties filter bar) */
+.search-chip {
+  background: color-mix(in srgb, var(--mat-sys-primary) 10%, white);
+  color: var(--mat-sys-primary);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 25%, white);
+}
+.search-chip__close { background: color-mix(in srgb, var(--mat-sys-primary) 20%, white); }
+
+/* Tinted stat-icon backgrounds (8% of the status color) */
+.stat-icon--primary { background: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent); }
+.stat-icon--success { background: color-mix(in srgb, var(--es-success) 8%, transparent); }
+.stat-icon--warning { background: color-mix(in srgb, var(--es-warning) 8%, transparent); }
+.stat-icon--danger  { background: color-mix(in srgb, var(--es-danger) 8%, transparent); }
+.stat-icon--sky     { background: color-mix(in srgb, var(--es-sky) 8%, transparent); }
+
+/* ── Dashboard stat-card grid ─────────────────────────────────── */
+/* Single definition; previously duplicated in tenant + owner overview tabs. */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+/* ── Dialog mobile guard ─────────────────────────────────────────
+   On small screens every dialog keeps a margin regardless of the
+   width/maxWidth it was opened with. The image gallery is the one
+   intentional full-bleed exception. */
+@media (max-width: 768px) {
+  .cdk-overlay-pane.mat-mdc-dialog-panel:not(.full-screen-modal) {
+    max-width: 92vw !important;
+  }
+}
 
 /* ── Full screen modal (Image Gallery) ───────────────────────── */
 .full-screen-modal .mdc-dialog__surface,
@@ -164,4 +384,192 @@ h6 {
 .rounded-dialog .mdc-dialog__surface {
   border-radius: 20px !important;
   overflow: hidden;
+}
+/* ── Become Owner dialog ── */
+.become-owner-panel .mat-mdc-dialog-surface,
+.become-owner-panel .mdc-dialog__surface {
+  border-radius: 20px !important;
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+/* ── Filter bar — shared across all tabs & pages ─────────────── */
+.filter-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Horizontal scroll without a visible scrollbar (mobile pill rows) */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+.filter-search-pill {
+  display: flex; align-items: center; gap: 6px;
+  border: 1px solid var(--es-border); border-radius: 20px;
+  padding: 0 12px; height: 36px; background: white;
+  transition: border-color 0.2s, box-shadow 0.15s;
+}
+.filter-search-pill:focus-within {
+  border-color: var(--mat-sys-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
+}
+.filter-search-pill mat-icon { font-size: 17px; width: 17px; height: 17px; color: var(--es-text-muted); flex-shrink: 0; }
+.filter-search-pill input { border: none; outline: none; font-size: 13px; color: var(--es-text); background: transparent; width: 190px; }
+.filter-search-pill input::placeholder { color: var(--es-text-muted); }
+
+.filter-pill-btn {
+  display: flex; align-items: center; gap: 4px;
+  height: 36px; padding: 0 10px 0 12px;
+  border: 1px solid var(--es-border); border-radius: 20px;
+  background: white; cursor: pointer; font-size: 13px;
+  color: var(--es-text-soft); font-family: inherit;
+  transition: border-color 0.15s; white-space: nowrap;
+}
+.filter-pill-btn:hover { border-color: var(--es-text-faint); }
+.filter-pill-btn mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--es-text-secondary); }
+.filter-pill-btn--active { border-color: var(--mat-sys-primary); color: var(--mat-sys-primary); background: color-mix(in srgb, var(--mat-sys-primary) 6%, white); }
+.filter-pill-btn--active mat-icon { color: var(--mat-sys-primary); }
+
+/* ── Option pills — dialog/form selection (Type, Priority, Status) ── */
+.opt-label { font-size: 11px; font-weight: 600; color: var(--es-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.opt-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.opt-pill { padding: 6px 14px; border-radius: 40px; border: 1px solid var(--es-border); background: white; font-size: 13px; font-weight: 500; color: var(--es-text-secondary); cursor: pointer; transition: all 0.15s; }
+.opt-pill:hover { border-color: var(--mat-sys-primary); color: var(--mat-sys-primary); }
+.opt-pill--active { border-color: var(--mat-sys-primary); color: var(--mat-sys-primary); background: color-mix(in srgb, var(--mat-sys-primary) 8%, white); font-weight: 600; }
+
+/* ── Filter pills — status/type filters above lists ──────────── */
+/* Single definition; previously copy-pasted in 6+ tab component CSS files. */
+.filter-pill {
+  border: 1px solid var(--es-border);
+  background: white;
+  color: var(--es-text-soft);
+  border-radius: 20px;
+  padding: 5px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.filter-pill:hover { border-color: var(--es-text-faint); }
+.filter-pill--active {
+  border-color: var(--mat-sys-primary);
+  background: color-mix(in srgb, var(--mat-sys-primary) 8%, white);
+  color: var(--mat-sys-primary);
+  font-weight: 600;
+}
+
+/* ── Metric/stat cards — dashboard KPI tiles (row layout) ────── */
+/* Shared base for .stat-card / .summary-card, which were near-identical
+   copies across dashboard and owner overview tabs. The admin .kpi-card /
+   .fin-card use a column layout and stay component-local. */
+.stat-card, .summary-card {
+  background: white;
+  border: 1px solid var(--es-border-light);
+  border-radius: var(--es-radius-md);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: box-shadow 0.15s;
+}
+.stat-card:hover, .summary-card:hover {
+  box-shadow: 0 4px 16px rgb(0, 0, 0, 0.08);
+}
+
+.stat-icon, .summary-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-value, .summary-card__value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--es-text);
+  line-height: 1.2;
+}
+
+.stat-label, .summary-card__label {
+  font-size: 12px;
+  color: var(--es-text-secondary);
+  margin-top: 1px;
+}
+
+/* ── Admin tables ─────────────────────────────────────────────── */
+/* Base table styles; previously duplicated in admin tab components. */
+.admin-table-wrap {
+  background: white;
+  border: 1px solid var(--es-border-light);
+  border-radius: var(--es-radius);
+  overflow-x: auto;
+  box-shadow: 0 2px 12px rgb(0, 0, 0, 0.06);
+}
+.admin-table { width: 100%; border-collapse: collapse; min-width: 560px; }
+.admin-table thead tr { background: var(--es-bg); border-bottom: 1px solid var(--es-border-light); }
+.admin-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--es-text-secondary);
+  white-space: nowrap;
+}
+.admin-table tbody tr { border-bottom: 1px solid #F5F5F5; }
+.admin-table tbody tr:last-child { border-bottom: none; }
+.admin-table tbody tr:hover { background: #FAFAFA; }
+.admin-table td { padding: 14px 16px; vertical-align: middle; font-size: 13px; color: var(--es-text); }
+
+/* ── Form fields — global outline overrides ──────────────────── */
+
+/* Rounded corners */
+.mat-mdc-form-field.mat-form-field-appearance-outline .mdc-notched-outline__leading {
+  border-radius: 12px 0 0 12px !important;
+  min-width: 12px !important;
+}
+.mat-mdc-form-field.mat-form-field-appearance-outline .mdc-notched-outline__trailing {
+  border-radius: 0 12px 12px 0 !important;
+}
+
+/* Default border — softer than Material's #79747E default */
+.mat-mdc-form-field.mat-form-field-appearance-outline .mdc-notched-outline__leading,
+.mat-mdc-form-field.mat-form-field-appearance-outline .mdc-notched-outline__notch,
+.mat-mdc-form-field.mat-form-field-appearance-outline .mdc-notched-outline__trailing {
+  border-color: var(--es-border);
+}
+
+/* Hover — slightly darker border */
+.mat-mdc-form-field.mat-form-field-appearance-outline:not(.mat-focused, .mat-form-field-invalid):hover
+  .mdc-notched-outline__leading,
+.mat-mdc-form-field.mat-form-field-appearance-outline:not(.mat-focused, .mat-form-field-invalid):hover
+  .mdc-notched-outline__notch,
+.mat-mdc-form-field.mat-form-field-appearance-outline:not(.mat-focused, .mat-form-field-invalid):hover
+  .mdc-notched-outline__trailing {
+  border-color: var(--es-border-strong);
+}
+
+/* Focus — brand color border */
+.mat-mdc-form-field.mat-form-field-appearance-outline.mat-focused .mdc-notched-outline__leading,
+.mat-mdc-form-field.mat-form-field-appearance-outline.mat-focused .mdc-notched-outline__notch,
+.mat-mdc-form-field.mat-form-field-appearance-outline.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--mat-sys-primary);
+  border-width: 1.5px;
+}
+
+/* Focus glow on the wrapper */
+.mat-mdc-form-field.mat-form-field-appearance-outline.mat-focused .mat-mdc-text-field-wrapper {
+  filter: drop-shadow(0 0 0 3px color-mix(in srgb, var(--mat-sys-primary) 14%, transparent));
+}
+
+/* Slightly taller input area */
+.mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-form-field-infix {
+  padding-top: 14px;
+  padding-bottom: 14px;
+  min-height: 52px;
+}
+
+/* Resting label — softer color */
+.mat-mdc-form-field.mat-form-field-appearance-outline .mdc-floating-label {
+  font-size: 14px;
+  color: var(--es-text-muted);
 }

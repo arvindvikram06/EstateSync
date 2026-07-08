@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { PropertyService } from '../../core/services/property.service';
+import { PropertyService } from '@core/services/property/property.service';
 import { PropertySummaryResponse, PropertyFilters } from '../../core/models/property.model';
 import { PropertyCardComponent } from './property-card/property-card.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -37,14 +37,13 @@ export class PropertiesComponent implements OnInit {
   readonly page = signal(1);
   readonly limit = 12;
 
-  // Filter pills
+  readonly searchFilter  = signal<string>('');
   readonly typeFilter     = signal<string>('');
   readonly bedroomsFilter = signal<string>('');
   readonly rentFilter     = signal<string>('');
-  readonly stateFilter    = signal<string>('');
 
   readonly hasActiveFilters = computed(() =>
-    !!this.typeFilter() || !!this.bedroomsFilter() || !!this.rentFilter() || !!this.stateFilter()
+    !!this.searchFilter() || !!this.typeFilter() || !!this.bedroomsFilter() || !!this.rentFilter()
   );
 
   readonly typeOptions = [
@@ -66,18 +65,15 @@ export class PropertiesComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    const state = this.route.snapshot.queryParamMap.get('state') ?? '';
-    this.stateFilter.set(state);
-
-    // Setup the reactive pipeline with switchMap to prevent race conditions!
+    // Setup reactive pipeline first
     this.loadTrigger$.pipe(
       switchMap(() => {
         this.isLoading.set(true);
         const filters: PropertyFilters = {};
 
-        if (this.stateFilter())    filters['state']        = this.stateFilter();
-        if (this.typeFilter())     filters['propertyType'] = this.typeFilter();
-        if (this.bedroomsFilter()) filters['bedrooms']     = Number(this.bedroomsFilter());
+        if (this.searchFilter())    filters['search']       = this.searchFilter();
+        if (this.typeFilter())      filters['propertyType'] = this.typeFilter();
+        if (this.bedroomsFilter())  filters['bedrooms']     = Number(this.bedroomsFilter());
 
         const rent = this.rentFilter();
         if (rent === 'under40')  { filters['maxRent'] = 40000; }
@@ -88,7 +84,7 @@ export class PropertiesComponent implements OnInit {
           catchError(() => {
             this.properties.set([]);
             this.isLoading.set(false);
-            return of(null); // safely ignore errors
+            return of(null);
           })
         );
       }),
@@ -101,20 +97,26 @@ export class PropertiesComponent implements OnInit {
       }
     });
 
-    // Trigger initial load
-    this.loadProperties();
+    // React to URL query params — handles both initial load and same-route navbar searches
+    this.route.queryParamMap.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(params => {
+      this.searchFilter.set(params.get('search') ?? '');
+      this.page.set(1);
+      this.loadProperties();
+    });
   }
 
   setType(value: string): void     { this.typeFilter.set(value);     this.page.set(1); this.loadProperties(); }
   setBedrooms(value: string): void { this.bedroomsFilter.set(value); this.page.set(1); this.loadProperties(); }
   setRent(value: string): void     { this.rentFilter.set(value);     this.page.set(1); this.loadProperties(); }
-  clearState(): void               { this.stateFilter.set('');       this.page.set(1); this.loadProperties(); }
+  clearSearch(): void              { this.searchFilter.set('');      this.page.set(1); this.loadProperties(); }
 
   clearFilters(): void {
+    this.searchFilter.set('');
     this.typeFilter.set('');
     this.bedroomsFilter.set('');
     this.rentFilter.set('');
-    this.stateFilter.set('');
     this.page.set(1);
     this.loadProperties();
   }
@@ -126,7 +128,7 @@ export class PropertiesComponent implements OnInit {
   readonly totalPages = computed(() => Math.ceil(this.total() / this.limit));
 
   nextPage(): void { if (this.page() < this.totalPages()) { this.page.update(p => p + 1); this.loadProperties(); } }
-  prevPage(): void { if (this.page() > 1)               { this.page.update(p => p - 1); this.loadProperties(); } }
+  prevPage(): void { if (this.page() > 1)                { this.page.update(p => p - 1); this.loadProperties(); } }
 
   onPageChange(e: PageEvent): void {
     this.page.set(e.pageIndex + 1);

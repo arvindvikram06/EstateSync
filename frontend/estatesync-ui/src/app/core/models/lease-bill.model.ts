@@ -10,6 +10,26 @@ export interface LeaseBillResponse {
   paidAt: string | null;
 }
 
+export interface LeaseBillDetail {
+  leaseBillId: string;
+  billType: 'Rent' | 'Deposit' | 'Penalty' | 'Maintenance' | 'Other';
+  dueDate: string;
+  amount: number;
+  pendingAmount: number;
+  status: 'Pending' | 'Paid';
+}
+
+export interface PaymentRecord {
+  paymentId: string;
+  leaseBillId: string;
+  billType: 'Rent' | 'Deposit' | 'Penalty' | 'Maintenance' | 'Other';
+  amount: number;
+  platformFee: number;
+  transactionId: string;
+  paymentStatus: 'Pending' | 'Paid' | 'Failed';
+  paidDate: string;
+}
+
 export interface OwnerSettlementResponse {
   ownerSettlementId: string;
   ownerId: string;

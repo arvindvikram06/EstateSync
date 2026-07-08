@@ -7,10 +7,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
-import { LeaseService } from '../../../core/services/lease.service';
-import { AuthService } from '../../../core/services/auth.service';
+import { LeaseService } from '@core/services/leasing/lease.service';
+import { PaymentService } from '@core/services/payment/payment.service';
+import { AuthService } from '@core/services/auth/auth.service';
 import { LeaseDetailResponse } from '../../../core/models/lease.model';
+import { LeaseBillDetail, PaymentRecord } from '../../../core/models/lease-bill.model';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { formatDate, formatCurrency } from '../../../core/utils/format.utils';
 import {
   VoidLeaseDialogComponent,
@@ -24,7 +27,7 @@ import {
 @Component({
   selector: 'app-lease-detail',
   standalone: true,
-  imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, StatusBadgeComponent],
+  imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './lease-detail.component.html',
   styleUrl: './lease-detail.component.css'
@@ -33,6 +36,7 @@ export class LeaseDetailComponent implements OnInit {
   private readonly route      = inject(ActivatedRoute);
   private readonly router     = inject(Router);
   private readonly svc        = inject(LeaseService);
+  private readonly paymentSvc = inject(PaymentService);
   private readonly auth       = inject(AuthService);
   private readonly dialog     = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
@@ -40,6 +44,14 @@ export class LeaseDetailComponent implements OnInit {
   readonly lease   = signal<LeaseDetailResponse | null>(null);
   readonly loading = signal(true);
   readonly error   = signal<string | null>(null);
+
+  readonly bills           = signal<LeaseBillDetail[] | null>(null);
+  readonly payments        = signal<PaymentRecord[] | null>(null);
+  readonly billsLoading    = signal(true);
+  readonly paymentsLoading = signal(true);
+  readonly payingBillId    = signal<string | null>(null);
+  readonly payError        = signal<string | null>(null);
+  readonly hashCopied      = signal(false);
 
   readonly formatDate     = formatDate;
   readonly formatCurrency = formatCurrency;
@@ -79,6 +91,7 @@ export class LeaseDetailComponent implements OnInit {
   readonly backLink = computed(() => {
     const l = this.lease();
     const uid = this.uid();
+    if (this.auth.isAdmin()) return ['/admin/dashboard'];
     if (l && l.ownerId === uid) return ['/owner/dashboard'];
     return ['/dashboard'];
   });
@@ -87,15 +100,72 @@ export class LeaseDetailComponent implements OnInit {
     return { tab: 'leases' };
   });
 
+  readonly isTenantViewer = computed(() => {
+    const l = this.lease();
+    const uid = this.uid();
+    return !!l && !!uid && l.tenantId === uid;
+  });
+
   ngOnInit(): void {
-    this.loadLease();
+    const id = this.route.snapshot.paramMap.get('id')!;
+    this.loadLease(id);
+    this.loadBills(id);
+    this.loadPayments(id);
   }
 
-  private loadLease(): void {
-    const id = this.route.snapshot.paramMap.get('id')!;
+  private loadLease(id: string): void {
     this.svc.getLeaseDetail(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => { this.lease.set(res.data); this.loading.set(false); },
       error: () => { this.error.set('Could not load lease.'); this.loading.set(false); }
+    });
+  }
+
+  private loadBills(id: string): void {
+    this.svc.getLeaseBills(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: res => { this.bills.set(res.data ?? []); this.billsLoading.set(false); },
+      error: () => { this.bills.set([]); this.billsLoading.set(false); }
+    });
+  }
+
+  private loadPayments(id: string): void {
+    this.svc.getLeasePayments(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: res => { this.payments.set(res.data ?? []); this.paymentsLoading.set(false); },
+      error: () => { this.payments.set([]); this.paymentsLoading.set(false); }
+    });
+  }
+
+  billIcon(type: string): string {
+    const icons: Record<string, string> = {
+      Rent: 'home', Deposit: 'account_balance_wallet',
+      Penalty: 'gavel', Maintenance: 'build', Other: 'receipt',
+    };
+    return icons[type] ?? 'receipt';
+  }
+
+  isOverdue(bill: LeaseBillDetail): boolean {
+    return bill.status === 'Pending' && new Date(bill.dueDate).getTime() < Date.now();
+  }
+
+  payBill(bill: LeaseBillDetail): void {
+    this.payingBillId.set(bill.leaseBillId);
+    this.payError.set(null);
+    this.paymentSvc.createCheckoutSession(bill.leaseBillId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => { window.location.href = res.data.url; },
+        error: () => {
+          this.payingBillId.set(null);
+          this.payError.set('Failed to start payment. Please try again.');
+        },
+      });
+  }
+
+  copyHash(): void {
+    const hash = this.lease()?.signatureVerificationHash;
+    if (!hash) return;
+    navigator.clipboard.writeText(hash).then(() => {
+      this.hashCopied.set(true);
+      setTimeout(() => this.hashCopied.set(false), 2000);
     });
   }
 
@@ -103,7 +173,7 @@ export class LeaseDetailComponent implements OnInit {
     const l = this.lease();
     if (!l) return;
     const data: VoidLeaseDialogData = { leaseId: l.leaseId, propertyTitle: l.propertyTitle ?? 'Lease' };
-    this.dialog.open(VoidLeaseDialogComponent, { data, panelClass: 'rounded-dialog', autoFocus: false })
+    this.dialog.open(VoidLeaseDialogComponent, { data, width: '100%', maxWidth: '460px', panelClass: 'rounded-dialog', autoFocus: false })
       .afterClosed().subscribe(result => {
         if (result) {
           this.router.navigate(this.backLink(), { queryParams: this.backQueryParams() });
@@ -115,7 +185,7 @@ export class LeaseDetailComponent implements OnInit {
     const l = this.lease();
     if (!l) return;
     const data: TerminateLeaseDialogData = { leaseId: l.leaseId, propertyTitle: l.propertyTitle ?? 'Lease' };
-    this.dialog.open(TerminateLeaseDialogComponent, { data, panelClass: 'rounded-dialog', autoFocus: false })
+    this.dialog.open(TerminateLeaseDialogComponent, { data, width: '100%', maxWidth: '460px', panelClass: 'rounded-dialog', autoFocus: false })
       .afterClosed().subscribe(result => {
         if (result) {
           this.router.navigate(this.backLink(), { queryParams: this.backQueryParams() });

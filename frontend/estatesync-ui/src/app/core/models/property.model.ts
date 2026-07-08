@@ -44,6 +44,7 @@ export interface PropertyDetailResponse {
 }
 
 export interface PropertyFilters {
+  search?: string;
   state?: string;
   propertyType?: string;
   bedrooms?: number;
@@ -65,8 +66,33 @@ export interface CreatePropertyRequest {
   bathrooms: number;
   landArea: number;
   buildupArea: number;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
+}
+
+// Wizard draft — minimal payload to start the wizard (step 1)
+export interface CreatePropertyDraftRequest {
+  propertyType: string;
+}
+
+// Wizard draft — partial update sent on each step advance; all fields optional
+export interface PatchPropertyDraftRequest {
+  propertyType?: string;
+  state?: string;
+  city?: string;
+  pincode?: string;
+  addressLine?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  bedrooms?: number;
+  bathrooms?: number;
+  landArea?: number;
+  buildupArea?: number;
+  title?: string;
+  description?: string;
+  monthlyRent?: number;
+  securityDeposit?: number;
+  amenities?: string[];
 }
 
 export interface UpdatePropertyRequest {

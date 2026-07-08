@@ -56,21 +56,38 @@ public class LocalFileStorageServiceTests
     {
         var fileMock = new Mock<IFormFile>();
         var content = "test file content";
-        var fileName = "test.txt";
+        var fileName = "test.pdf";
         var ms = new MemoryStream(Encoding.UTF8.GetBytes(content));
-        
+
         fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
         fileMock.Setup(f => f.FileName).Returns(fileName);
         fileMock.Setup(f => f.Length).Returns(ms.Length);
+        fileMock.Setup(f => f.ContentType).Returns("application/pdf");
+        fileMock.Setup(f => f.CopyToAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+            .Returns((Stream target, CancellationToken token) => ms.CopyToAsync(target, token));
 
         var result = await _service.SaveFileAsync(fileMock.Object, "subfolder", CancellationToken.None);
 
-        result.Should().NotBeNullOrEmpty();
-        result.Should().Contain("subfolder");
-        result.Should().EndWith(".txt");
+        result.Should().StartWith("/uploads/subfolder/");
+        result.Should().EndWith(".pdf");
 
-        var fullPath = Path.Combine(_tempPath, "uploads", result);
+        var relativePath = result.Substring("/uploads/".Length).Replace('/', Path.DirectorySeparatorChar);
+        var fullPath = Path.Combine(_tempPath, "uploads", relativePath);
         File.Exists(fullPath).Should().BeTrue();
+    }
+
+    [Test]
+    public async Task SaveFileAsync_ShouldThrowBadRequest_WhenMimeTypeIsNotAllowed()
+    {
+        var fileMock = new Mock<IFormFile>();
+        var ms = new MemoryStream(Encoding.UTF8.GetBytes("plain text"));
+
+        fileMock.Setup(f => f.FileName).Returns("notes.txt");
+        fileMock.Setup(f => f.Length).Returns(ms.Length);
+        fileMock.Setup(f => f.ContentType).Returns("text/plain");
+
+        Func<Task> act = () => _service.SaveFileAsync(fileMock.Object, "subfolder", CancellationToken.None);
+        await act.Should().ThrowAsync<BadRequestException>();
     }
 
     [Test]
@@ -81,7 +98,7 @@ public class LocalFileStorageServiceTests
         var fullPath = Path.Combine(uploadsPath, "file.txt");
         await File.WriteAllTextAsync(fullPath, "content");
 
-        await _service.DeleteFileAsync("testdir/file.txt");
+        await _service.DeleteFileAsync("/uploads/testdir/file.txt");
 
         File.Exists(fullPath).Should().BeFalse();
     }

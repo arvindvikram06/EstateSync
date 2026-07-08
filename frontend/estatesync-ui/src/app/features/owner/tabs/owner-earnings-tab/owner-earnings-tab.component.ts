@@ -1,12 +1,13 @@
 import { Component, ChangeDetectionStrategy, inject, signal, DestroyRef, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { forkJoin } from 'rxjs';
 import { CommonModule, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { PaymentService } from '../../../../core/services/payment.service';
+import { PaymentService } from '@core/services/payment/payment.service';
 import { OwnerAvailableBalance, OwnerEarningsSummaryResponse, OwnerSettlementResponse, RequestPayoutResult } from '../../../../core/models/lease-bill.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { PageSpinnerComponent } from '../../../../shared/components/page-spinner/page-spinner.component';
@@ -58,9 +59,30 @@ export class OwnerEarningsTabComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.loadSummary();
-    this.loadSettlements();
-    this.loadBalance();
+    // Initial load: fire all three requests in parallel with a single
+    // subscription instead of three independent ones.
+    this.isLoading.set(true);
+    this.balanceLoading.set(true);
+    forkJoin({
+      summary:     this.paymentSvc.getOwnerEarningsSummary(),
+      settlements: this.paymentSvc.getOwnerSettlements(undefined, 1, this.limit()),
+      balance:     this.paymentSvc.getOwnerAvailableBalance(),
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ summary, settlements, balance }) => {
+          this.summary.set(summary.data);
+          this.settlements.set(settlements.data);
+          this.total.set(settlements.total);
+          this.balance.set(balance.data);
+          this.isLoading.set(false);
+          this.balanceLoading.set(false);
+        },
+        error: () => {
+          this.isLoading.set(false);
+          this.balanceLoading.set(false);
+        },
+      });
   }
 
   private loadBalance(): void {
@@ -82,9 +104,10 @@ export class OwnerEarningsTabComponent implements OnInit {
     const dialogData: PayoutConfirmData = { method, amount, currency: b.currency };
 
     const ref = this.dialog.open(PayoutConfirmDialogComponent, {
-      width: '420px',
+      width: '100%',
+      maxWidth: '420px',
       data: dialogData,
-      panelClass: 'es-dialog',
+      panelClass: 'rounded-dialog',
     });
 
     ref.afterClosed()
@@ -130,12 +153,6 @@ export class OwnerEarningsTabComponent implements OnInit {
           this.payoutError.set(err?.error?.message ?? 'Failed to initiate payout. Please try again.');
         },
       });
-  }
-
-  private loadSummary(): void {
-    this.paymentSvc.getOwnerEarningsSummary()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: res => this.summary.set(res.data) });
   }
 
   loadSettlements(): void {

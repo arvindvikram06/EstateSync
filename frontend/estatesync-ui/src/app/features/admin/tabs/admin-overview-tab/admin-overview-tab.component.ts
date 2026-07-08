@@ -1,15 +1,14 @@
 import {
-  Component, ChangeDetectionStrategy, inject, signal, computed, output, OnInit, DestroyRef
+  Component, ChangeDetectionStrategy, computed, input, output
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import type { ApexChart, ApexNonAxisChartSeries, ApexAxisChartSeries, ApexDataLabels,
   ApexPlotOptions, ApexLegend, ApexFill, ApexTooltip, ApexXAxis, ApexStroke } from 'ng-apexcharts';
-import { AdminService } from '../../../../core/services/admin.service';
 import { AdminDashboardStats } from '../../../../core/models/admin.model';
+import { formatCurrency } from '../../../../core/utils/format.utils';
 
 @Component({
   selector: 'app-admin-overview-tab',
@@ -18,14 +17,12 @@ import { AdminDashboardStats } from '../../../../core/models/admin.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-overview-tab.component.html',
 })
-export class AdminOverviewTabComponent implements OnInit {
+export class AdminOverviewTabComponent {
   readonly tabSwitch = output<string>();
 
-  private readonly adminService = inject(AdminService);
-  private readonly destroyRef   = inject(DestroyRef);
-
-  readonly loading = signal(true);
-  readonly stats   = signal<AdminDashboardStats | null>(null);
+  // Stats are fetched once by the parent dashboard and shared with this tab.
+  readonly stats   = input.required<AdminDashboardStats | null>();
+  readonly loading = input(false);
 
   // Computed chart data
   readonly propertyDonut    = computed(() => this.buildDonut(this.stats()?.propertyStatusBreakdown ?? {}));
@@ -81,15 +78,6 @@ export class AdminOverviewTabComponent implements OnInit {
     },
   };
 
-  ngOnInit(): void {
-    this.adminService.getDashboardStats()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: res => { this.stats.set(res.data); this.loading.set(false); },
-        error: () => this.loading.set(false),
-      });
-  }
-
   private buildDonut(breakdown: Record<string, number>): { series: ApexNonAxisChartSeries; labels: string[] } {
     const entries = Object.entries(breakdown).filter(([, v]) => v > 0);
     return {
@@ -107,7 +95,5 @@ export class AdminOverviewTabComponent implements OnInit {
     };
   }
 
-  formatCurrency(v: number): string {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
-  }
+  readonly formatCurrency = formatCurrency;
 }

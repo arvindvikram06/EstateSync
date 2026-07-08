@@ -27,6 +27,7 @@ public class LeaseService : ILeaseService
     private readonly IFileStorageService _fileStorageService;
     private readonly INotificationSender _notificationSender;
     private readonly ILeaseBillRepository _leaseBillRepo;
+    private readonly IPaymentRepository _paymentRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly LeaseMapper _mapper;
     private readonly ILogger<LeaseService> _logger;
@@ -41,6 +42,7 @@ public class LeaseService : ILeaseService
         IFileStorageService fileStorageService,
         INotificationSender notificationSender,
         ILeaseBillRepository leaseBillRepo,
+        IPaymentRepository paymentRepo,
         IUnitOfWork unitOfWork,
         LeaseMapper mapper,
         ILogger<LeaseService> logger,
@@ -54,6 +56,7 @@ public class LeaseService : ILeaseService
         _fileStorageService = fileStorageService ?? throw new ArgumentNullException(nameof(fileStorageService));
         _notificationSender = notificationSender ?? throw new ArgumentNullException(nameof(notificationSender));
         _leaseBillRepo = leaseBillRepo ?? throw new ArgumentNullException(nameof(leaseBillRepo));
+        _paymentRepo = paymentRepo ?? throw new ArgumentNullException(nameof(paymentRepo));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -88,11 +91,10 @@ public class LeaseService : ILeaseService
         }
 
         var property = application.Property!;
-        var activeLease = await _leaseRepo.GetActiveLeaseByPropertyIdAsync(property.PropertyId);
+        var (activeLease, tenantActiveLease) = await _leaseRepo.GetActiveLeaseConflictsAsync(property.PropertyId, application.TenantId);
         if (activeLease != null && request.StartDate <= activeLease.EndDate)
             throw new ConflictException("The new lease must start after the current active lease ends.");
 
-        var tenantActiveLease = await _leaseRepo.GetActiveLeaseByTenantIdAsync(application.TenantId);
         if (tenantActiveLease != null && request.StartDate <= tenantActiveLease.EndDate)
             throw new ConflictException("Tenant currently has an active lease. The new lease must start after their current lease ends.");
 
@@ -124,7 +126,17 @@ public class LeaseService : ILeaseService
 
         await _leaseRepo.AddAsync(lease);
         await CreateLeaseNotificationAsync(lease.TenantId, lease.LeaseId, property.Title);
-        await _unitOfWork.SaveChangesAsync(ct);
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+        // Concurrent create slipped past the read-then-check guard above; the
+        // partial unique index on Leases.ApplicationId rejects the duplicate.
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+            when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
+        {
+            throw new ConflictException("A lease for this application already exists.");
+        }
 
         _logger.LogInformation("Lease {LeaseId} created and agreement PDF generated at {Url}", leaseId, pdfUrl);
         return _mapper.MapToResponse(lease);
@@ -302,17 +314,61 @@ public class LeaseService : ILeaseService
 
     public async Task<LeaseResponse> GetLeaseByIdAsync(Guid leaseId, Guid userId, bool isAdmin, CancellationToken ct)
     {
+        var lease = await GetAuthorizedLeaseAsync(leaseId, userId, isAdmin);
+        return _mapper.MapToResponse(lease);
+    }
+
+    public async Task<List<LeaseBillDetailResponse>> GetLeaseBillsAsync(Guid leaseId, Guid userId, bool isAdmin, CancellationToken ct)
+    {
+        await GetAuthorizedLeaseAsync(leaseId, userId, isAdmin);
+
+        var bills = await _leaseBillRepo.GetByLeaseIdAsync(leaseId);
+        return bills
+            .OrderByDescending(b => b.DueDate)
+            .Select(b => new LeaseBillDetailResponse
+            {
+                LeaseBillId = b.LeaseBillId,
+                BillType = b.BillType,
+                DueDate = b.DueDate,
+                Amount = b.Amount,
+                PendingAmount = b.PendingAmount,
+            })
+            .ToList();
+    }
+
+    public async Task<List<PaymentRecordResponse>> GetLeasePaymentsAsync(Guid leaseId, Guid userId, bool isAdmin, CancellationToken ct)
+    {
+        await GetAuthorizedLeaseAsync(leaseId, userId, isAdmin);
+
+        var payments = await _paymentRepo.GetByLeaseIdAsync(leaseId, ct);
+        return payments
+            .Select(p => new PaymentRecordResponse
+            {
+                PaymentId = p.PaymentId,
+                LeaseBillId = p.LeaseBillId,
+                BillType = p.LeaseBill?.BillType ?? LeaseBillType.Other,
+                Amount = p.Amount,
+                PlatformFee = p.PlatformFee,
+                TransactionId = p.TransactionId,
+                PaymentStatus = p.PaymentStatus.ToString(),
+                PaidDate = p.PaidDate,
+            })
+            .ToList();
+    }
+
+    /// <summary>Loads a lease and ensures the caller is its tenant, the property owner, or an admin.</summary>
+    private async Task<Lease> GetAuthorizedLeaseAsync(Guid leaseId, Guid userId, bool isAdmin)
+    {
         var lease = await _leaseRepo.GetWithDetailsByIdAsync(leaseId);
         if (lease == null) throw new NotFoundException("Lease", leaseId);
 
-        var property = lease.Property;
         bool isTenant = lease.TenantId == userId;
-        bool isOwner = property != null && property.OwnerId == userId;
+        bool isOwner = lease.Property != null && lease.Property.OwnerId == userId;
 
         if (!isTenant && !isOwner && !isAdmin)
             throw new ForbiddenException("You are not authorized to view this lease.");
 
-        return _mapper.MapToResponse(lease);
+        return lease;
     }
 
     public async Task<PagedResponse<LeaseResponse>> GetTenantLeasesAsync(Guid tenantId, int page, int limit, CancellationToken ct)
@@ -343,7 +399,7 @@ public class LeaseService : ILeaseService
 
     public async Task<PagedResponse<LeaseResponse>> GetAllLeasesAsync(int page, int limit, CancellationToken ct)
     {
-        var paged = await _leaseRepo.GetPagedAsync(page, limit);
+        var paged = await _leaseRepo.GetAllPagedAsync(page, limit);
         return new PagedResponse<LeaseResponse>
         {
             Success = true,
@@ -367,9 +423,43 @@ public class LeaseService : ILeaseService
         {
             NotificationId = Guid.NewGuid(),
             UserId = lease.Property!.OwnerId,
-            Type = NotificationType.General,
+            Type = NotificationType.LeaseRenewalRequested,
             Title = "Lease Renewal Requested",
             Message = $"Your tenant has requested to renew the lease for '{lease.Property.Title}'.",
+            EntityId = lease.LeaseId.ToString(),
+            EntityType = "Lease",
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task ApproveRenewalAsync(Guid leaseId, Guid ownerId, DateTime newEndDate, CancellationToken ct)
+    {
+        var lease = await _leaseRepo.GetWithDetailsByIdAsync(leaseId);
+        if (lease == null) throw new NotFoundException("Lease", leaseId);
+        if (lease.Property?.OwnerId != ownerId) throw new ForbiddenException("You do not own this property.");
+        if (!lease.IsRenewalRequested) throw new BadRequestException("Renewal has not been requested.");
+        if (lease.Status != LeaseStatus.Active) throw new BadRequestException("Only active leases can be renewed.");
+
+        var utcNewEndDate = DateTime.SpecifyKind(newEndDate, DateTimeKind.Utc);
+        if (utcNewEndDate <= lease.EndDate)
+            throw new BadRequestException("New end date must be after the current lease end date.");
+
+        lease.EndDate = utcNewEndDate;
+        lease.IsRenewalRequested = false;
+
+        // Undo the expiry scheduler's 3-month warning state, if it fired
+        if (lease.Property.Status == PropertyStatus.AvailableSoon)
+            lease.Property.Status = PropertyStatus.Leased;
+
+        await _notificationSender.SendAsync(new Notification
+        {
+            NotificationId = Guid.NewGuid(),
+            UserId = lease.TenantId,
+            Type = NotificationType.LeaseRenewalApproved,
+            Title = "Lease Renewal Approved",
+            Message = $"Your lease for '{lease.Property.Title}' has been renewed until {lease.EndDate:d MMM yyyy}.",
             EntityId = lease.LeaseId.ToString(),
             EntityType = "Lease",
             CreatedAt = DateTime.UtcNow
@@ -391,7 +481,7 @@ public class LeaseService : ILeaseService
         {
             NotificationId = Guid.NewGuid(),
             UserId = lease.TenantId,
-            Type = NotificationType.General,
+            Type = NotificationType.LeaseRenewalRejected,
             Title = "Lease Renewal Rejected",
             Message = $"Your request to renew the lease for '{lease.Property!.Title}' was rejected.",
             EntityId = lease.LeaseId.ToString(),
@@ -402,7 +492,7 @@ public class LeaseService : ILeaseService
         await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task TerminateLeaseAsync(Guid leaseId, Guid requesterId, bool isAdmin, string reason, CancellationToken ct)
+    public async Task TerminateLeaseAsync(Guid leaseId, Guid requesterId, bool isAdmin, string reason, bool forfeitDeposit, CancellationToken ct)
     {
         var lease = await _leaseRepo.GetWithDetailsByIdAsync(leaseId);
         if (lease == null) throw new NotFoundException("Lease", leaseId);
@@ -419,7 +509,7 @@ public class LeaseService : ILeaseService
         lease.CancelledBy = requesterId;
         lease.CancelledAt = DateTime.UtcNow;
         lease.CancellationReason = reason;
-        lease.IsDepositForfeited = true;
+        lease.IsDepositForfeited = forfeitDeposit;
 
         if (property.Status == PropertyStatus.Leased || property.Status == PropertyStatus.AvailableSoon)
             property.Status = PropertyStatus.Active;
@@ -428,9 +518,11 @@ public class LeaseService : ILeaseService
         {
             NotificationId = Guid.NewGuid(),
             UserId = lease.TenantId,
-            Type = NotificationType.DepositForfeited,
-            Title = "Lease Terminated — Deposit Forfeited",
-            Message = $"Your lease for '{property.Title}' has been terminated. As per lease terms, your security deposit has been forfeited.",
+            Type = forfeitDeposit ? NotificationType.DepositForfeited : NotificationType.LeaseTerminated,
+            Title = forfeitDeposit ? "Lease Terminated — Deposit Forfeited" : "Lease Terminated",
+            Message = forfeitDeposit
+                ? $"Your lease for '{property.Title}' has been terminated. As per lease terms, your security deposit has been forfeited."
+                : $"Your lease for '{property.Title}' has been terminated. Your security deposit will be returned by the owner.",
             EntityId = leaseId.ToString(),
             EntityType = "Lease",
             IsRead = false,
@@ -443,7 +535,9 @@ public class LeaseService : ILeaseService
             UserId = property.OwnerId,
             Type = NotificationType.LeaseTerminated,
             Title = "Lease Terminated",
-            Message = $"The lease for '{property.Title}' has been terminated. The security deposit has been retained as per lease terms.",
+            Message = forfeitDeposit
+                ? $"The lease for '{property.Title}' has been terminated. The security deposit has been retained as per lease terms."
+                : $"The lease for '{property.Title}' has been terminated. Please arrange the return of the tenant's security deposit.",
             EntityId = leaseId.ToString(),
             EntityType = "Lease",
             IsRead = false,
@@ -503,7 +597,7 @@ public class LeaseService : ILeaseService
 
     private async Task NotifyAdminsAsync(Guid leaseId, string propertyTitle, CancellationToken ct)
     {
-        var admins = await _userRepo.GetUsersByRoleAsync("Admin");
+        var admins = await _userRepo.GetUsersByRoleAsync(Roles.Admin);
         foreach (var admin in admins)
         {
             await _notificationSender.SendAsync(new Notification
@@ -562,7 +656,7 @@ public class LeaseService : ILeaseService
 
     private async Task RejectOtherApplicationsOnLeaseActivationAsync(Guid propertyId, Guid currentApplicationId, string propertyTitle)
     {
-        var applications = await _applicationRepo.GetByPropertyIdAsync(propertyId);
+        var applications = await _applicationRepo.GetByPropertyIdForUpdateAsync(propertyId);
         foreach (var app in applications)
         {
             if (app.ApplicationId == currentApplicationId) continue;

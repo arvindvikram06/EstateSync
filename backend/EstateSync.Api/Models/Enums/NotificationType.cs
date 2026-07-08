@@ -27,5 +27,8 @@ public enum NotificationType
     General,
     LeaseExpired,
     DepositForfeited,
-    DepositReturnReminder
+    DepositReturnReminder,
+    LeaseRenewalRequested,
+    LeaseRenewalApproved,
+    LeaseRenewalRejected
 }

@@ -1,7 +1,6 @@
 <div class="flex justify-between items-center mb-5">
-  <h2 style="font-size:20px;font-weight:700;color:#222">Complaints</h2>
-  <button mat-flat-button color="primary" class="!rounded-full"
-    style="padding:9px 20px;font-size:13px"
+  <h2 class="es-title">Complaints</h2>
+  <button mat-flat-button color="primary" class="!rounded-full !px-5 !py-[9px] !text-[13px]"
     [disabled]="!activePropertyId()"
     (click)="raiseComplaint()">
     <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mr-1">add</mat-icon>
@@ -10,10 +9,19 @@
 </div>
 
 @if (!activePropertyId() && !loading()) {
-  <div class="flex items-center gap-2 px-4 py-3 mb-4 rounded-xl text-sm text-es-muted"
-    style="background:#F9FAFB;border:1px solid #EBEBEB">
+  <div class="flex items-center gap-2 px-4 py-3 mb-4 rounded-xl text-sm text-es-muted bg-es-subtle border border-solid border-es-border-light">
     <mat-icon class="!text-[16px]">info</mat-icon>
     You need an active lease to raise complaints.
+  </div>
+}
+
+@if (!loading() && complaints().length > 0) {
+  <div class="filter-bar mb-4">
+    @for (opt of statusOptions; track opt) {
+      <button type="button" class="filter-pill"
+        [class.filter-pill--active]="statusFilter() === opt"
+        (click)="statusFilter.set(opt)">{{ opt === 'InProgress' ? 'In Progress' : opt }}</button>
+    }
   </div>
 }
 
@@ -24,12 +32,12 @@
     subtitle="Raise a complaint if you face issues with your property." />
 } @else {
   <div class="flex flex-col gap-3">
-    @for (c of complaints(); track c.complaintId) {
-      <div class="complaint-card">
+    @for (c of filtered(); track c.complaintId) {
+      <div class="complaint-card cursor-pointer" (click)="openDetail(c)">
         <div class="flex justify-between gap-3">
           <div class="flex-1 min-w-0">
-            <div style="font-size:14px;font-weight:600;color:#222">{{ c.title }}</div>
-            <div style="font-size:12px;color:#717171;margin-top:3px" class="line-clamp-2">{{ c.description }}</div>
+            <div class="es-detail-value">{{ c.title }}</div>
+            <div class="es-text-xs mt-[3px] line-clamp-2">{{ c.description }}</div>
           </div>
           <div class="flex flex-col items-end gap-1.5 shrink-0">
             <app-status-badge [status]="c.status" />
@@ -37,9 +45,18 @@
           </div>
         </div>
         <div class="flex items-center gap-2 mt-3">
-          <span class="complaint-type-chip">{{ c.type }}</span>
-          <span style="font-size:11px;color:#AAAAAA">{{ formatDate(c.createdAt) }}</span>
+          <span class="complaint-type-chip">{{ c.complaintType }}</span>
+          <span class="es-text-hint">{{ formatDate(c.createdAt) }}</span>
         </div>
+        @if (c.images.length) {
+          <div class="flex items-center gap-2 mt-3 flex-wrap">
+            @for (img of c.images; track img.complaintImageId) {
+              <img [src]="svc.fileUrl(img.imageUrl)" alt="Complaint photo" loading="lazy"
+                class="w-14 h-14 object-cover rounded-lg border border-solid border-es-border-light cursor-pointer"
+                (click)="openImage(img.imageUrl, $event)" />
+            }
+          </div>
+        }
       </div>
     }
   </div>

@@ -1,9 +1,58 @@
-.detail-card {
+/* Section card — every block on this page is one of these, so both
+   columns read as a consistent set of panels. */
+.section-card {
   background: white;
-  border: 1px solid #EBEBEB;
+  border: 1px solid var(--es-border-light);
   border-radius: 16px;
+  box-shadow: 0 2px 12px rgb(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.section-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--es-border-light);
+}
+
+.section-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  color: var(--mat-sys-primary);
+  background: color-mix(in srgb, var(--mat-sys-primary) 8%, white);
+}
+
+.section-card__icon mat-icon {
+  font-size: 19px;
+  width: 19px;
+  height: 19px;
+}
+
+.section-card__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--es-text);
+}
+
+.section-card__count {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--es-text-secondary);
+  background: var(--es-bg);
+  border: 1px solid var(--es-border-light);
+  border-radius: 20px;
+  padding: 1px 10px;
+}
+
+.section-card__body {
   padding: 24px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
 
 .detail-grid {
@@ -20,7 +69,7 @@
 
 .detail-label {
   font-size: 11px;
-  color: #717171;
+  color: var(--es-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -28,12 +77,85 @@
 .detail-value {
   font-size: 14px;
   font-weight: 600;
-  color: #222;
+  color: var(--es-text);
 }
 
 .sign-status-card {
-  background: white;
-  border: 1px solid #EBEBEB;
+  background: var(--es-bg);
+  border: 1px solid var(--es-border-light);
   border-radius: 12px;
   padding: 16px;
+}
+
+.signature-img {
+  max-height: 64px;
+  background: white;
+  border: 1px solid var(--es-border-light);
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+
+/* Scrollable table body inside the bills / payment-history cards */
+.table-scroll {
+  max-height: 340px;
+  overflow: auto;
+}
+
+/* The global .admin-table enforces min-width: 560px for full-width admin
+   pages; these cards sit in a half-width column, so a lower floor lets the
+   table fit the card on desktop while still forcing horizontal scroll
+   (rather than crushed columns) on phones. */
+.table-scroll .admin-table {
+  min-width: 440px;
+}
+
+.table-scroll .admin-table th,
+.table-scroll .admin-table td {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.table-scroll .admin-table th:first-child,
+.table-scroll .admin-table td:first-child {
+  padding-left: 24px;
+}
+
+.table-scroll .admin-table th:last-child,
+.table-scroll .admin-table td:last-child {
+  padding-right: 24px;
+}
+
+/* ── Mobile ─────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .section-card__header {
+    padding: 14px 16px;
+  }
+
+  .section-card__body {
+    padding: 16px;
+  }
+
+  .table-scroll .admin-table th:first-child,
+  .table-scroll .admin-table td:first-child {
+    padding-left: 16px;
+  }
+
+  .table-scroll .admin-table th:last-child,
+  .table-scroll .admin-table td:last-child {
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: white;
 }

@@ -24,6 +24,8 @@ export interface OwnerApplicationResponse {
   tenantName: string;
   tenantEmail: string;
   status: 'Pending' | 'Approved' | 'Rejected' | 'Withdrawn';
+  leaseId: string | null;
+  leaseStatus: string | null;
   appliedAt: string;
   reviewedAt: string | null;
   reviewRemarks: string | null;

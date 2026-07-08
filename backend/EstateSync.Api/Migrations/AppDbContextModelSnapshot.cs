@@ -300,6 +300,14 @@ namespace EstateSync.Api.Migrations
                     b.HasKey("KycVerificationId")
                         .HasName("PK_KycVerificationId");
 
+                    b.HasIndex("AadhaarNumber")
+                        .IsUnique()
+                        .HasFilter("\"Status\" = 'Approved'");
+
+                    b.HasIndex("PanNumber")
+                        .IsUnique()
+                        .HasFilter("\"Status\" = 'Approved'");
+
                     b.HasIndex("ReviewedById");
 
                     b.HasIndex("UserId");
@@ -427,7 +435,9 @@ namespace EstateSync.Api.Migrations
                     b.HasKey("LeaseId")
                         .HasName("PK_LeaseId");
 
-                    b.HasIndex("ApplicationId");
+                    b.HasIndex("ApplicationId")
+                        .IsUnique()
+                        .HasFilter("\"Status\" NOT IN ('Expired', 'Terminated', 'Voided')");
 
                     b.HasIndex("CancelledBy");
 
@@ -571,6 +581,54 @@ namespace EstateSync.Api.Migrations
                         .HasFilter("\"IsRead\" = FALSE");
 
                     b.ToTable("Notifications", (string)null);
+                });
+
+            modelBuilder.Entity("EstateSync.Api.Models.OwnerProfile", b =>
+                {
+                    b.Property<Guid>("OwnerProfileId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CIN")
+                        .HasMaxLength(21)
+                        .HasColumnType("character varying(21)");
+
+                    b.Property<string>("CompanyName")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("CompanyType")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("GSTIN")
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)");
+
+                    b.Property<DateTime>("OwnerSince")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("OwnerType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("OwnerProfileId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("OwnerProfiles", (string)null);
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.OwnerSettlement", b =>
@@ -1058,6 +1116,12 @@ namespace EstateSync.Api.Migrations
                             RoleId = new Guid("33333333-3333-3333-3333-333333333333"),
                             CreatedAt = new DateTime(2026, 6, 4, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Tenant"
+                        },
+                        new
+                        {
+                            RoleId = new Guid("44444444-4444-4444-4444-444444444444"),
+                            CreatedAt = new DateTime(2026, 6, 4, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Verifier"
                         });
                 });
 
@@ -1246,10 +1310,6 @@ namespace EstateSync.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("AadhaarNumber")
-                        .HasMaxLength(12)
-                        .HasColumnType("character varying(12)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
@@ -1267,6 +1327,13 @@ namespace EstateSync.Api.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("character varying(250)");
 
+                    b.Property<string>("EmailVerificationToken")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTime?>("EmailVerificationTokenExpiresAt")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(250)
@@ -1274,6 +1341,11 @@ namespace EstateSync.Api.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEmailVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<bool>("IsFinanciallyVerified")
                         .ValueGeneratedOnAdd()
@@ -1292,10 +1364,6 @@ namespace EstateSync.Api.Migrations
 
                     b.Property<DateTime?>("LastLogin")
                         .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("PanNumber")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1320,9 +1388,6 @@ namespace EstateSync.Api.Migrations
                     b.HasKey("UserId")
                         .HasName("PK_UserId");
 
-                    b.HasIndex("AadhaarNumber")
-                        .IsUnique();
-
                     b.HasIndex("CreatedById");
 
                     b.HasIndex("DeletedById");
@@ -1330,11 +1395,10 @@ namespace EstateSync.Api.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
+                    b.HasIndex("EmailVerificationToken");
+
                     b.HasIndex("IsActive")
                         .HasFilter("\"DeletedAt\" IS NULL");
-
-                    b.HasIndex("PanNumber")
-                        .IsUnique();
 
                     b.HasIndex("UpdatedById");
 
@@ -1348,10 +1412,11 @@ namespace EstateSync.Api.Migrations
                             Email = "admin@estatesync.com",
                             FullName = "System Admin",
                             IsActive = true,
+                            IsEmailVerified = false,
                             IsFinanciallyVerified = false,
                             IsKycVerified = true,
                             IsOwnerVerified = false,
-                            PasswordHash = "$2a$12$R.73c242HjI8U15u2yZ.Nu9L1zXn9i6s7Jm/aP3P.z6N3F8w2KzY2",
+                            PasswordHash = "$2a$12$ADKm2THOwyVdzzrREUVdjuvfxion06o.yHrByLvC6Gf0Fd5/PHlfq",
                             PhoneNumber = "1234567890"
                         });
                 });
@@ -1541,6 +1606,17 @@ namespace EstateSync.Api.Migrations
                         .WithMany("Notifications")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EstateSync.Api.Models.OwnerProfile", b =>
+                {
+                    b.HasOne("EstateSync.Api.Models.User", "User")
+                        .WithOne("OwnerProfile")
+                        .HasForeignKey("EstateSync.Api.Models.OwnerProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -1857,6 +1933,8 @@ namespace EstateSync.Api.Migrations
                     b.Navigation("LeasesAsTenant");
 
                     b.Navigation("Notifications");
+
+                    b.Navigation("OwnerProfile");
 
                     b.Navigation("Payments");
 

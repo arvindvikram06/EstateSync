@@ -1,46 +1,46 @@
-<h2 style="font-size:24px;font-weight:700;color:#222;margin-bottom:4px">Financial Dashboard</h2>
-<p style="font-size:14px;color:#717171;margin-bottom:24px">Settlements, Stripe accounts, and payment ledger.</p>
+<h2 class="es-page-title">Financial Dashboard</h2>
+<p class="text-sm text-es-muted mb-6">Settlements, Stripe accounts, and payment ledger.</p>
 
 <!-- ── Summary cards ──────────────────────────────────────────────────────── -->
 @if (summaryLoading()) {
-  <div class="flex items-center gap-3 mb-8" style="color:#717171;font-size:14px">
+  <div class="flex items-center gap-3 mb-8 text-sm text-es-muted">
     <mat-spinner diameter="20" /><span>Loading summary…</span>
   </div>
 } @else if (summaryError()) {
-  <div class="flex items-center gap-2 mb-8 p-4 rounded-2xl" style="background:#FEE2E2;color:#991B1B;font-size:14px">
-    <mat-icon style="font-size:18px;width:18px;height:18px">error_outline</mat-icon>
+  <div class="flex items-center gap-2 mb-8 p-4 rounded-2xl es-badge--rejected text-sm">
+    <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">error_outline</mat-icon>
     Failed to load financial summary. Run <code>dotnet ef database update</code> if this is the first launch.
-    <button mat-button style="color:#991B1B;margin-left:auto" (click)="loadSummary()">Retry</button>
+    <button mat-button class="es-text-danger ml-auto" (click)="loadSummary()">Retry</button>
   </div>
 } @else if (summary()) {
   <div class="grid grid-cols-2 md:grid-cols-3 gap-5 mb-8">
     <div class="fin-card">
-      <div class="fin-icon" style="background:rgba(5,150,105,0.08)"><mat-icon style="color:#059669">payments</mat-icon></div>
+      <div class="fin-icon stat-icon--success"><mat-icon class="es-text-success">payments</mat-icon></div>
       <div class="fin-value">{{ fmt(summary()!.totalPaid) }}</div>
       <div class="fin-label">Total paid out</div>
     </div>
     <div class="fin-card">
-      <div class="fin-icon" style="background:rgba(217,119,6,0.08)"><mat-icon style="color:#D97706">schedule</mat-icon></div>
+      <div class="fin-icon stat-icon--warning"><mat-icon class="es-text-warning">schedule</mat-icon></div>
       <div class="fin-value">{{ fmt(summary()!.totalPending) }}</div>
       <div class="fin-label">Pending payouts</div>
     </div>
     <div class="fin-card">
-      <div class="fin-icon" style="background:rgba(2,132,199,0.08)"><mat-icon style="color:#0284C7">currency_rupee</mat-icon></div>
+      <div class="fin-icon stat-icon--sky"><mat-icon class="es-text-sky">currency_rupee</mat-icon></div>
       <div class="fin-value">{{ fmt(summary()!.totalPlatformFeesCollected) }}</div>
       <div class="fin-label">Platform fees collected</div>
     </div>
     <div class="fin-card">
-      <div class="fin-icon" style="background:rgba(103,80,164,0.08)"><mat-icon style="color:#6750A4">account_balance</mat-icon></div>
+      <div class="fin-icon stat-icon--primary"><mat-icon class="es-text-primary">account_balance</mat-icon></div>
       <div class="fin-value">{{ fmt(summary()!.totalPaymentsVolume) }}</div>
       <div class="fin-label">Total payments volume</div>
     </div>
     <div class="fin-card">
-      <div class="fin-icon" style="background:rgba(220,38,38,0.08)"><mat-icon style="color:#DC2626">error_outline</mat-icon></div>
+      <div class="fin-icon stat-icon--danger"><mat-icon class="es-text-danger">error_outline</mat-icon></div>
       <div class="fin-value">{{ fmt(summary()!.totalFailed) }}</div>
       <div class="fin-label">Failed payouts</div>
     </div>
     <div class="fin-card">
-      <div class="fin-icon" style="background:rgba(5,150,105,0.08)"><mat-icon style="color:#059669">receipt_long</mat-icon></div>
+      <div class="fin-icon stat-icon--success"><mat-icon class="es-text-success">receipt_long</mat-icon></div>
       <div class="fin-value">{{ summary()!.totalSettlements }}</div>
       <div class="fin-label">Total settlements</div>
     </div>
@@ -52,32 +52,33 @@
 
   <!-- Settlements -->
   <mat-tab label="Settlements">
-    <div style="padding-top:20px">
-      <div class="filter-row">
-        <mat-form-field appearance="outline" style="width:220px">
-          <mat-label>Search owner</mat-label>
-          <mat-icon matPrefix class="mr-1">search</mat-icon>
-          <input matInput [formControl]="settlementSearch" placeholder="Name or email…" />
-        </mat-form-field>
-        <mat-form-field appearance="outline" style="width:160px">
-          <mat-label>Status</mat-label>
-          <mat-icon matPrefix class="mr-1">filter_list</mat-icon>
-          <mat-select [formControl]="settlementStatus">
-            <mat-option value="">All</mat-option>
-            <mat-option value="paid">Paid</mat-option>
-            <mat-option value="pending">Pending</mat-option>
-            <mat-option value="failed">Failed</mat-option>
-          </mat-select>
-        </mat-form-field>
+    <div class="pt-5">
+      <div class="filter-bar">
+        <div class="filter-search-pill">
+          <mat-icon>search</mat-icon>
+          <input [formControl]="settlementSearch" placeholder="Name or email…" autocomplete="off" />
+        </div>
+        <button class="filter-pill-btn" [class.filter-pill-btn--active]="!!settlementStatus.value"
+          [matMenuTriggerFor]="settlementStatusMenu" type="button">
+          <mat-icon>filter_list</mat-icon>
+          {{ settlementStatusLabel() }}
+          <mat-icon>expand_more</mat-icon>
+        </button>
+        <mat-menu #settlementStatusMenu>
+          <button mat-menu-item (click)="settlementStatus.setValue('')">All statuses</button>
+          <button mat-menu-item (click)="settlementStatus.setValue('paid')">Paid</button>
+          <button mat-menu-item (click)="settlementStatus.setValue('pending')">Pending</button>
+          <button mat-menu-item (click)="settlementStatus.setValue('failed')">Failed</button>
+        </mat-menu>
       </div>
 
       @if (settlementsLoading()) {
-        <div class="flex items-center gap-3 py-8" style="color:#717171;font-size:14px"><mat-spinner diameter="24" /><span>Loading…</span></div>
+        <div class="flex items-center gap-3 py-8 text-sm text-es-muted"><mat-spinner diameter="24" /><span>Loading…</span></div>
       } @else if (settlementsError()) {
-        <div class="flex items-center gap-2 p-4 rounded-2xl" style="background:#FEE2E2;color:#991B1B;font-size:14px">
-          <mat-icon style="font-size:18px;width:18px;height:18px">error_outline</mat-icon>
+        <div class="flex items-center gap-2 p-4 rounded-2xl es-badge--rejected text-sm">
+          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">error_outline</mat-icon>
           Failed to load settlements.
-          <button mat-button style="color:#991B1B;margin-left:auto" (click)="loadSettlements()">Retry</button>
+          <button mat-button class="es-text-danger ml-auto" (click)="loadSettlements()">Retry</button>
         </div>
       } @else if (filteredSettlements().length === 0) {
         <app-empty-state icon="payments" title="No settlements" subtitle="No payout records found. Settlements appear here after Stripe processes owner payouts." />
@@ -92,23 +93,23 @@
                 <tr>
                   <td>
                     <div class="user-name">{{ s.ownerName }}</div>
-                    <div style="font-size:12px;color:#717171">{{ s.ownerEmail }}</div>
+                    <div class="es-text-xs">{{ s.ownerEmail }}</div>
                   </td>
-                  <td style="font-size:12px;color:#717171;font-family:monospace">{{ s.stripePayoutId }}</td>
-                  <td style="font-weight:600;color:#222">{{ fmt(s.amount) }}</td>
+                  <td class="!text-[12px] !text-es-muted font-mono">{{ s.stripePayoutId }}</td>
+                  <td class="font-semibold text-es-text">{{ fmt(s.amount) }}</td>
                   <td>
                     <span class="es-badge" [class]="s.status === 'paid' ? 'es-badge--approved' : s.status === 'failed' ? 'es-badge--rejected' : 'es-badge--pending'">
                       {{ s.status | titlecase }}
                     </span>
                   </td>
-                  <td style="font-size:13px;color:#717171">{{ s.arrivalDate | slice:0:10 }}</td>
+                  <td class="es-text-sm">{{ s.arrivalDate | slice:0:10 }}</td>
                 </tr>
               }
             </tbody>
           </table>
         </div>
         <div class="pagination">
-          <span style="font-size:13px;color:#717171">Page {{ settlementPage() }} of {{ settlementPages() }} · {{ settlementTotal() }} total</span>
+          <span class="es-text-sm">Page {{ settlementPage() }} of {{ settlementPages() }} · {{ settlementTotal() }} total</span>
           <div class="flex gap-2">
             <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="settlementPage() === 1" (click)="prevSettlementPage()"><mat-icon>chevron_left</mat-icon></button>
             <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="settlementPage() >= settlementPages()" (click)="nextSettlementPage()"><mat-icon>chevron_right</mat-icon></button>
@@ -120,26 +121,25 @@
 
   <!-- Connected Accounts -->
   <mat-tab label="Stripe Accounts">
-    <div style="padding-top:20px">
-      <div class="filter-row">
-        <mat-form-field appearance="outline" style="width:260px">
-          <mat-label>Search owner or account ID</mat-label>
-          <mat-icon matPrefix class="mr-1">search</mat-icon>
-          <input matInput [formControl]="accountSearch" placeholder="Name, email, or acct_…" />
-        </mat-form-field>
-        <div style="margin-left:auto;font-size:12px;color:#717171;display:flex;align-items:center;gap:4px">
-          <mat-icon style="font-size:14px;width:14px;height:14px">info_outline</mat-icon>
-          Click <strong>Sync</strong> to pull live status from Stripe
+    <div class="pt-5">
+      <div class="filter-bar">
+        <div class="filter-search-pill">
+          <mat-icon>search</mat-icon>
+          <input [formControl]="accountSearch" placeholder="Name, email, or acct_…" autocomplete="off" />
         </div>
+        <span class="ml-auto text-[12px] text-es-muted flex items-center gap-1">
+          <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">info_outline</mat-icon>
+          Click <strong>Sync</strong> to pull live status from Stripe
+        </span>
       </div>
 
       @if (accountsLoading()) {
-        <div class="flex items-center gap-3 py-8" style="color:#717171;font-size:14px"><mat-spinner diameter="24" /><span>Loading…</span></div>
+        <div class="flex items-center gap-3 py-8 text-sm text-es-muted"><mat-spinner diameter="24" /><span>Loading…</span></div>
       } @else if (accountsError()) {
-        <div class="flex items-center gap-2 p-4 rounded-2xl" style="background:#FEE2E2;color:#991B1B;font-size:14px">
-          <mat-icon style="font-size:18px;width:18px;height:18px">error_outline</mat-icon>
+        <div class="flex items-center gap-2 p-4 rounded-2xl es-badge--rejected text-sm">
+          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">error_outline</mat-icon>
           Failed to load Stripe accounts.
-          <button mat-button style="color:#991B1B;margin-left:auto" (click)="loadAccounts()">Retry</button>
+          <button mat-button class="es-text-danger ml-auto" (click)="loadAccounts()">Retry</button>
         </div>
       } @else if (filteredAccounts().length === 0) {
         <app-empty-state icon="link" title="No connected accounts" subtitle="No owners have connected Stripe yet." />
@@ -147,41 +147,41 @@
         <div class="admin-table-wrap">
           <table class="admin-table">
             <thead><tr>
-              <th>Owner</th><th>Account ID</th><th>Charges</th><th>Payouts</th><th>Onboarded</th><th>Last sync</th><th style="text-align:right">Action</th>
+              <th>Owner</th><th>Account ID</th><th>Charges</th><th>Payouts</th><th>Onboarded</th><th>Last sync</th><th class="!text-right">Action</th>
             </tr></thead>
             <tbody>
               @for (a of filteredAccounts(); track a.id) {
                 <tr>
                   <td>
                     <div class="user-name">{{ a.ownerName }}</div>
-                    <div style="font-size:12px;color:#717171">{{ a.ownerEmail }}</div>
+                    <div class="es-text-xs">{{ a.ownerEmail }}</div>
                   </td>
-                  <td style="font-size:12px;font-family:monospace;color:#717171">{{ a.stripeAccountId }}</td>
+                  <td class="!text-[12px] font-mono !text-es-muted">{{ a.stripeAccountId }}</td>
                   <td>
-                    <mat-icon [style.color]="a.chargesEnabled ? '#059669' : '#DC2626'" style="font-size:18px;width:18px;height:18px">
+                    <mat-icon [class]="a.chargesEnabled ? 'es-text-success' : 'es-text-danger'" class="!text-[18px] !w-[18px] !h-[18px]">
                       {{ a.chargesEnabled ? 'check_circle' : 'cancel' }}
                     </mat-icon>
                   </td>
                   <td>
-                    <mat-icon [style.color]="a.payoutsEnabled ? '#059669' : '#DC2626'" style="font-size:18px;width:18px;height:18px">
+                    <mat-icon [class]="a.payoutsEnabled ? 'es-text-success' : 'es-text-danger'" class="!text-[18px] !w-[18px] !h-[18px]">
                       {{ a.payoutsEnabled ? 'check_circle' : 'cancel' }}
                     </mat-icon>
                   </td>
                   <td>
-                    <mat-icon [style.color]="a.detailsSubmitted ? '#059669' : '#D97706'" style="font-size:18px;width:18px;height:18px">
+                    <mat-icon [class]="a.detailsSubmitted ? 'es-text-success' : 'es-text-warning'" class="!text-[18px] !w-[18px] !h-[18px]">
                       {{ a.detailsSubmitted ? 'check_circle' : 'hourglass_empty' }}
                     </mat-icon>
                   </td>
-                  <td style="font-size:12px;color:#717171">{{ a.lastSyncedAt ? (a.lastSyncedAt | slice:0:10) : 'Never' }}</td>
-                  <td style="text-align:right">
+                  <td class="es-text-xs">{{ a.lastSyncedAt ? (a.lastSyncedAt | slice:0:10) : 'Never' }}</td>
+                  <td class="text-right">
                     <button mat-stroked-button color="primary" class="!rounded-full !text-xs !h-8"
                       [disabled]="syncingId() === a.id"
                       (click)="syncAccount(a)"
                       matTooltip="Fetch live status from Stripe API">
                       @if (syncingId() === a.id) {
-                        <mat-spinner diameter="14" style="display:inline-block;margin-right:4px" />
+                        <mat-spinner diameter="14" class="inline-block mr-1" />
                       } @else {
-                        <mat-icon style="font-size:14px;width:14px;height:14px;margin-right:2px">sync</mat-icon>
+                        <mat-icon class="!text-[14px] !w-[14px] !h-[14px] mr-0.5">sync</mat-icon>
                       }
                       Sync
                     </button>
@@ -192,7 +192,7 @@
           </table>
         </div>
         <div class="pagination">
-          <span style="font-size:13px;color:#717171">Page {{ accountPage() }} of {{ accountPages() }} · {{ accountTotal() }} total</span>
+          <span class="es-text-sm">Page {{ accountPage() }} of {{ accountPages() }} · {{ accountTotal() }} total</span>
           <div class="flex gap-2">
             <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="accountPage() === 1" (click)="prevAccountPage()"><mat-icon>chevron_left</mat-icon></button>
             <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="accountPage() >= accountPages()" (click)="nextAccountPage()"><mat-icon>chevron_right</mat-icon></button>
@@ -204,31 +204,32 @@
 
   <!-- Payments Ledger -->
   <mat-tab label="Payments Ledger">
-    <div style="padding-top:20px">
-      <div class="filter-row">
-        <mat-form-field appearance="outline" style="width:220px">
-          <mat-label>Search tenant</mat-label>
-          <mat-icon matPrefix class="mr-1">search</mat-icon>
-          <input matInput [formControl]="paymentSearch" placeholder="Name, email, or txn ID…" />
-        </mat-form-field>
-        <mat-form-field appearance="outline" style="width:160px">
-          <mat-label>Status</mat-label>
-          <mat-icon matPrefix class="mr-1">filter_list</mat-icon>
-          <mat-select [formControl]="paymentStatus">
-            <mat-option value="">All</mat-option>
-            <mat-option value="Paid">Paid</mat-option>
-            <mat-option value="Failed">Failed</mat-option>
-          </mat-select>
-        </mat-form-field>
+    <div class="pt-5">
+      <div class="filter-bar">
+        <div class="filter-search-pill">
+          <mat-icon>search</mat-icon>
+          <input [formControl]="paymentSearch" placeholder="Name, email, or txn ID…" autocomplete="off" />
+        </div>
+        <button class="filter-pill-btn" [class.filter-pill-btn--active]="!!paymentStatus.value"
+          [matMenuTriggerFor]="paymentStatusMenu" type="button">
+          <mat-icon>filter_list</mat-icon>
+          {{ paymentStatusLabel() }}
+          <mat-icon>expand_more</mat-icon>
+        </button>
+        <mat-menu #paymentStatusMenu>
+          <button mat-menu-item (click)="paymentStatus.setValue('')">All statuses</button>
+          <button mat-menu-item (click)="paymentStatus.setValue('Paid')">Paid</button>
+          <button mat-menu-item (click)="paymentStatus.setValue('Failed')">Failed</button>
+        </mat-menu>
       </div>
 
       @if (paymentsLoading()) {
-        <div class="flex items-center gap-3 py-8" style="color:#717171;font-size:14px"><mat-spinner diameter="24" /><span>Loading…</span></div>
+        <div class="flex items-center gap-3 py-8 text-sm text-es-muted"><mat-spinner diameter="24" /><span>Loading…</span></div>
       } @else if (paymentsError()) {
-        <div class="flex items-center gap-2 p-4 rounded-2xl" style="background:#FEE2E2;color:#991B1B;font-size:14px">
-          <mat-icon style="font-size:18px;width:18px;height:18px">error_outline</mat-icon>
+        <div class="flex items-center gap-2 p-4 rounded-2xl es-badge--rejected text-sm">
+          <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">error_outline</mat-icon>
           Failed to load payments ledger.
-          <button mat-button style="color:#991B1B;margin-left:auto" (click)="loadPayments()">Retry</button>
+          <button mat-button class="es-text-danger ml-auto" (click)="loadPayments()">Retry</button>
         </div>
       } @else if (filteredPayments().length === 0) {
         <app-empty-state icon="receipt_long" title="No payments" subtitle="No transactions found. Payments appear here after tenants pay via Stripe Checkout." />
@@ -243,20 +244,20 @@
                 <tr>
                   <td>
                     <div class="user-name">{{ p.paidByName }}</div>
-                    <div style="font-size:12px;color:#717171">{{ p.paidByEmail }}</div>
+                    <div class="es-text-xs">{{ p.paidByEmail }}</div>
                   </td>
-                  <td style="font-weight:600;color:#222">{{ fmt(p.amount) }}</td>
-                  <td style="font-size:13px;color:#717171">{{ fmt(p.platformFee) }}</td>
+                  <td class="font-semibold text-es-text">{{ fmt(p.amount) }}</td>
+                  <td class="es-text-sm">{{ fmt(p.platformFee) }}</td>
                   <td><app-status-badge [status]="p.paymentStatus" /></td>
-                  <td style="font-size:11px;font-family:monospace;color:#717171;max-width:180px;overflow:hidden;text-overflow:ellipsis">{{ p.transactionId }}</td>
-                  <td style="font-size:13px;color:#717171">{{ p.paidDate | slice:0:10 }}</td>
+                  <td class="!text-[11px] font-mono !text-es-muted max-w-[180px] overflow-hidden text-ellipsis">{{ p.transactionId }}</td>
+                  <td class="es-text-sm">{{ p.paidDate | slice:0:10 }}</td>
                 </tr>
               }
             </tbody>
           </table>
         </div>
         <div class="pagination">
-          <span style="font-size:13px;color:#717171">Page {{ paymentPage() }} of {{ paymentPages() }} · {{ paymentTotal() }} total</span>
+          <span class="es-text-sm">Page {{ paymentPage() }} of {{ paymentPages() }} · {{ paymentTotal() }} total</span>
           <div class="flex gap-2">
             <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="paymentPage() === 1" (click)="prevPaymentPage()"><mat-icon>chevron_left</mat-icon></button>
             <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="paymentPage() >= paymentPages()" (click)="nextPaymentPage()"><mat-icon>chevron_right</mat-icon></button>

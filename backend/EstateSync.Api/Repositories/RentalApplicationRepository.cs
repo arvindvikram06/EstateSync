@@ -15,10 +15,11 @@ public class RentalApplicationRepository : BaseRepository<RentalApplication>, IR
     {
     }
 
-    public async Task<IEnumerable<RentalApplication>> GetByPropertyIdAsync(Guid propertyId)
+    // Tracked on purpose: LeaseService mutates these entities (rejecting other
+    // applications on lease activation) and persists via SaveChangesAsync.
+    public async Task<IEnumerable<RentalApplication>> GetByPropertyIdForUpdateAsync(Guid propertyId)
     {
         return await _dbSet
-            .AsNoTracking()
             .Where(ra => ra.PropertyId == propertyId)
             .ToListAsync();
     }
@@ -44,6 +45,7 @@ public class RentalApplicationRepository : BaseRepository<RentalApplication>, IR
             .Include(ra => ra.Property)
                 .ThenInclude(p => p!.Owner)
             .Include(ra => ra.Tenant)
+            .Include(ra => ra.Leases)
             .FirstOrDefaultAsync(ra => ra.ApplicationId == applicationId);
     }
 
@@ -53,6 +55,7 @@ public class RentalApplicationRepository : BaseRepository<RentalApplication>, IR
             .AsNoTracking()
             .Include(ra => ra.Property)
             .Include(ra => ra.Tenant)
+            .Include(ra => ra.Leases)
             .Where(ra => ra.Property != null && ra.Property.OwnerId == ownerId);
 
         var total = await query.CountAsync();
@@ -71,6 +74,7 @@ public class RentalApplicationRepository : BaseRepository<RentalApplication>, IR
             .AsNoTracking()
             .Include(ra => ra.Property)
             .Include(ra => ra.Tenant)
+            .Include(ra => ra.Leases)
             .Where(ra => ra.PropertyId == propertyId);
 
         var total = await query.CountAsync();
@@ -89,6 +93,7 @@ public class RentalApplicationRepository : BaseRepository<RentalApplication>, IR
             .AsNoTracking()
             .Include(ra => ra.Property)
             .Include(ra => ra.Tenant)
+            .Include(ra => ra.Leases)
             .Where(ra => ra.TenantId == tenantId);
 
         var total = await query.CountAsync();

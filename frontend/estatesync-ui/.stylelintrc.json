@@ -1,0 +1,32 @@
+{
+  "extends": "stylelint-config-standard",
+  "plugins": ["stylelint-declaration-strict-value"],
+  "rules": {
+    "scale-unlimited/declaration-strict-value": [
+      ["/color$/", "background-color", "fill", "stroke"],
+      {
+        "ignoreValues": [
+          "transparent", "inherit", "currentColor", "currentcolor",
+          "white", "black", "none",
+          "/^var\\(/", "/^color-mix\\(/", "/^rgba?\\(/",
+          "/^linear-gradient/"
+        ],
+        "message": "Use a design token (var(--es-*) / var(--mat-sys-*)) instead of a hardcoded color"
+      }
+    ],
+    "declaration-no-important": null,
+    "no-empty-source": null,
+    "selector-class-pattern": null,
+    "custom-property-pattern": null,
+    "no-descending-specificity": null,
+    "color-function-notation": null,
+    "alpha-value-notation": null,
+    "color-hex-length": null,
+    "declaration-block-single-line-max-declarations": null,
+    "comment-empty-line-before": null,
+    "rule-empty-line-before": null,
+    "selector-pseudo-element-no-unknown": [true, { "ignorePseudoElements": ["ng-deep"] }],
+    "selector-type-no-unknown": [true, { "ignore": ["custom-elements"] }],
+    "at-rule-no-unknown": [true, { "ignoreAtRules": ["tailwind", "apply", "layer"] }]
+  }
+}

@@ -4,25 +4,24 @@
     <p class="tab-subtitle">Review and approve tenant identity documents.</p>
   </div>
 
-  <div class="flex gap-3 items-center flex-wrap">
-    <!-- Search -->
-    <mat-form-field appearance="outline" style="width:220px">
-      <mat-label>Search</mat-label>
-      <mat-icon matPrefix class="mr-1">search</mat-icon>
-      <input matInput [formControl]="searchControl" placeholder="Name or email…" />
-    </mat-form-field>
+  <div class="filter-bar">
+    <div class="filter-search-pill">
+      <mat-icon>search</mat-icon>
+      <input [formControl]="searchControl" placeholder="Name or email…" autocomplete="off" />
+    </div>
 
-    <!-- Status filter -->
-    <mat-form-field appearance="outline" style="width:160px">
-      <mat-label>Status</mat-label>
-      <mat-icon matPrefix class="mr-1">filter_list</mat-icon>
-      <mat-select [formControl]="statusFilter">
-        <mat-option value="">All</mat-option>
-        <mat-option value="Pending">Pending</mat-option>
-        <mat-option value="Approved">Approved</mat-option>
-        <mat-option value="Rejected">Rejected</mat-option>
-      </mat-select>
-    </mat-form-field>
+    <button class="filter-pill-btn" [class.filter-pill-btn--active]="!!statusFilter.value"
+      [matMenuTriggerFor]="statusMenu" type="button">
+      <mat-icon>filter_list</mat-icon>
+      {{ statusLabel() }}
+      <mat-icon>expand_more</mat-icon>
+    </button>
+    <mat-menu #statusMenu>
+      <button mat-menu-item (click)="statusFilter.setValue('')">All statuses</button>
+      <button mat-menu-item (click)="statusFilter.setValue('Pending')">Pending</button>
+      <button mat-menu-item (click)="statusFilter.setValue('Approved')">Approved</button>
+      <button mat-menu-item (click)="statusFilter.setValue('Rejected')">Rejected</button>
+    </mat-menu>
   </div>
 </div>
 
@@ -40,35 +39,35 @@
           <th>Status</th>
           <th>Submitted</th>
           <th>Remarks</th>
-          <th style="text-align:right">Action</th>
+          <th class="!text-right">Action</th>
         </tr>
       </thead>
       <tbody>
         @for (item of filteredItems(); track item.kycVerificationId) {
           <tr>
             <td><span class="user-name">{{ item.fullName }}</span></td>
-            <td style="color:#717171;font-size:13px">{{ item.email }}</td>
+            <td class="es-text-sm">{{ item.email }}</td>
             <td><app-status-badge [status]="item.status" /></td>
-            <td style="color:#717171;font-size:13px">{{ item.createdAt | slice:0:10 }}</td>
-            <td style="color:#717171;font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            <td class="es-text-sm">{{ item.createdAt | slice:0:10 }}</td>
+            <td class="!text-es-muted !text-[12px] max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
               {{ item.reviewRemarks || '—' }}
             </td>
-            <td style="text-align:right">
+            <td class="text-right">
               @if (item.status === 'Pending') {
                 <button mat-stroked-button color="primary" class="!rounded-full !text-xs !h-8"
                   [disabled]="reviewingId() !== null"
                   (click)="openReview(item)">
                   @if (reviewingId() === item.kycVerificationId) {
-                    <mat-spinner diameter="14" style="display:inline-block;margin-right:4px" />
+                    <mat-spinner diameter="14" class="inline-block mr-1" />
                   }
                   Review
                 </button>
               } @else {
-                <button mat-button class="!rounded-full !text-xs !h-8" style="color:#717171"
+                <button mat-button class="!rounded-full !text-xs !h-8 text-es-muted"
                   [disabled]="reviewingId() !== null"
                   (click)="openReview(item)">
                   @if (reviewingId() === item.kycVerificationId) {
-                    <mat-spinner diameter="14" style="display:inline-block;margin-right:4px" />
+                    <mat-spinner diameter="14" class="inline-block mr-1" />
                   }
                   View
                 </button>
@@ -82,7 +81,7 @@
 
   <!-- Pagination -->
   <div class="pagination">
-    <span style="font-size:13px;color:#717171">
+    <span class="es-text-sm">
       Page {{ page() }} of {{ totalPages }} · {{ totalCount() }} total
     </span>
     <div class="flex gap-2">

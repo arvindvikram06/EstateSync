@@ -4,8 +4,9 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DashboardLayoutComponent, NavItem } from '../../shared/components/dashboard-layout/dashboard-layout.component';
-import { AuthService } from '../../core/services/auth.service';
-import { AdminService } from '../../core/services/admin.service';
+import { AuthService } from '@core/services/auth/auth.service';
+import { AdminService } from '@core/services/admin/admin.service';
+import { AdminDashboardStats } from '../../core/models/admin.model';
 import { AdminOverviewTabComponent } from './tabs/admin-overview-tab/admin-overview-tab.component';
 import { AdminKycTabComponent } from './tabs/admin-kyc-tab/admin-kyc-tab.component';
 import { AdminFinancialProfilesTabComponent } from './tabs/admin-financial-profiles-tab/admin-financial-profiles-tab.component';
@@ -43,6 +44,11 @@ export class AdminDashboardComponent implements OnInit {
 
   readonly activeTab = signal('overview');
 
+  // Fetched once here and shared with the overview tab, so tab switches
+  // don't refire the stats endpoint.
+  readonly stats        = signal<AdminDashboardStats | null>(null);
+  readonly statsLoading = signal(true);
+
   private readonly pendingLeaseCount = signal(0);
 
   readonly navItems = computed<NavItem[]>(() => [
@@ -73,10 +79,13 @@ export class AdminDashboardComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: res => {
+          this.stats.set(res.data);
+          this.statsLoading.set(false);
           if (res.data?.pendingLeaseApprovalCount) {
             this.pendingLeaseCount.set(res.data.pendingLeaseApprovalCount);
           }
         },
+        error: () => this.statsLoading.set(false),
       });
   }
 
@@ -90,4 +99,9 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   updateLeaseBadge(count: number): void { this.pendingLeaseCount.set(count); }
+
+  onLogout(): void {
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
+  }
 }

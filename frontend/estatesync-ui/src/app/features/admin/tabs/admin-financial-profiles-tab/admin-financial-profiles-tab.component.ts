@@ -2,19 +2,18 @@ import {
   Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, DestroyRef
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { SlicePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
-import { AdminService } from '../../../../core/services/admin.service';
+import { AdminService } from '@core/services/admin/admin.service';
+import { formatCurrency } from '../../../../core/utils/format.utils';
 import { FinancialProfileResponse } from '../../../../core/models/admin.model';
 import { AdminReviewDialogComponent, AdminReviewDialogData } from '../../dialogs/admin-review-dialog.component';
 
@@ -23,7 +22,7 @@ import { AdminReviewDialogComponent, AdminReviewDialogData } from '../../dialogs
   standalone: true,
   imports: [
     SlicePipe, ReactiveFormsModule, MatButtonModule, MatIconModule,
-    MatSelectModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule,
+    MatMenuModule, MatProgressSpinnerModule,
     StatusBadgeComponent, EmptyStateComponent, SkeletonLoaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,11 +39,14 @@ export class AdminFinancialProfilesTabComponent implements OnInit {
   readonly items       = signal<FinancialProfileResponse[]>([]);
   readonly totalCount  = signal(0);
   readonly page        = signal(1);
-  readonly limit       = 20;
+  readonly limit          = 20;
+  readonly formatCurrency = formatCurrency;
 
-  readonly statusFilter = new FormControl<string>('Pending');
+  readonly statusFilter  = new FormControl<string>('Pending');
   readonly searchControl = new FormControl<string>('');
-  private readonly searchTerm = signal('');
+  private readonly searchTerm  = signal('');
+  private readonly statusValue = toSignal(this.statusFilter.valueChanges, { initialValue: this.statusFilter.value });
+  readonly statusLabel = computed(() => this.statusValue() || 'All statuses');
 
   readonly filteredItems = computed(() => {
     const q = this.searchTerm().trim().toLowerCase();
@@ -100,7 +102,8 @@ export class AdminFinancialProfilesTabComponent implements OnInit {
             financialProfileItem: full,
           };
           this.dialog.open(AdminReviewDialogComponent, {
-            width: '620px',
+            width: '100%',
+            maxWidth: '620px',
             panelClass: 'rounded-dialog',
             data,
           }).afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(r => {

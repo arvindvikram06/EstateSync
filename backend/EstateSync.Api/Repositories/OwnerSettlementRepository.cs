@@ -60,20 +60,31 @@ public class OwnerSettlementRepository : BaseRepository<OwnerSettlement>, IOwner
     public async Task<(decimal TotalPaid, decimal TotalPending, int TotalPayouts, DateTime? LastPayoutDate, decimal? LastPayoutAmount)> GetOwnerTotalsAsync(
         Guid ownerId, CancellationToken ct = default)
     {
-        var settlements = await _dbSet
-            .AsNoTracking()
-            .Where(s => s.OwnerId == ownerId)
+        var owned = _dbSet.AsNoTracking().Where(s => s.OwnerId == ownerId);
+
+        // Aggregate in SQL instead of loading every settlement row into memory.
+        var totals = await owned
+            .GroupBy(s => 1)
+            .Select(g => new
+            {
+                Paid    = g.Where(s => s.Status == "paid").Sum(s => (decimal?)s.Amount) ?? 0,
+                Pending = g.Where(s => s.Status == "pending").Sum(s => (decimal?)s.Amount) ?? 0,
+                Count   = g.Count(),
+            })
+            .FirstOrDefaultAsync(ct);
+
+        var last = await owned
+            .Where(s => s.Status == "paid")
             .OrderByDescending(s => s.ArrivalDate)
-            .ToListAsync(ct);
+            .Select(s => new { s.ArrivalDate, s.Amount })
+            .FirstOrDefaultAsync(ct);
 
-        var paid    = settlements.Where(s => s.Status == "paid").Sum(s => s.Amount);
-        var pending = settlements.Where(s => s.Status == "pending").Sum(s => s.Amount);
-        var total   = settlements.Count;
-        var last    = settlements.FirstOrDefault(s => s.Status == "paid");
-
-        return (paid, pending, total, last?.ArrivalDate, last?.Amount);
+        return (totals?.Paid ?? 0, totals?.Pending ?? 0, totals?.Count ?? 0, last?.ArrivalDate, last?.Amount);
     }
 
     public async Task<OwnerSettlement?> GetByStripePayoutIdAsync(string stripePayoutId, CancellationToken ct = default)
         => await _dbSet.FirstOrDefaultAsync(s => s.StripePayoutId == stripePayoutId, ct);
+
+    public async Task<int> CountAsync(CancellationToken ct = default)
+        => await _dbSet.CountAsync(ct);
 }

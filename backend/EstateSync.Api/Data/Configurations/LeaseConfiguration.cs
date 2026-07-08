@@ -24,6 +24,13 @@ public class LeaseConfiguration : IEntityTypeConfiguration<Lease>
         builder.HasIndex(x => x.Status);
         builder.HasIndex(x => x.EndDate);
 
+        // At most ONE non-terminal lease per rental application (history of
+        // voided/expired/terminated leases remains allowed). Backs up the
+        // service-level guard in CreateLeaseAsync against concurrent creates.
+        builder.HasIndex(x => x.ApplicationId)
+            .IsUnique()
+            .HasFilter("\"Status\" NOT IN ('Expired', 'Terminated', 'Voided')");
+
         builder.HasOne(x => x.Property)
             .WithMany(p => p.Leases)
             .HasForeignKey(x => x.PropertyId)

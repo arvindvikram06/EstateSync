@@ -12,7 +12,6 @@ public interface IComplaintRepository : IRepository<Complaint>
     Task<Complaint?> GetWithDetailsByIdAsync(Guid id);
     Task<IEnumerable<Complaint>> GetByTenantIdAsync(Guid tenantId);
     Task<IEnumerable<Complaint>> GetByOwnerIdAsync(Guid ownerId);
-    Task<IEnumerable<Complaint>> GetAllAsync();
     Task<(IEnumerable<Complaint> Items, int Total)> GetPagedForAdminAsync(
         string? status, string? priority, int page, int limit, CancellationToken ct = default);
 

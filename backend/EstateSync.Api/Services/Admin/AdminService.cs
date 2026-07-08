@@ -1,4 +1,5 @@
 using System;
+using EstateSync.Api.Common;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -41,7 +42,7 @@ public class AdminService : IAdminService
         if (existing != null)
             throw new ConflictException("A user with this email already exists.");
 
-        var verifierRole = await _roleRepo.GetByNameAsync("Verifier")
+        var verifierRole = await _roleRepo.GetByNameAsync(Roles.Verifier)
             ?? throw new InvalidOperationException("Verifier role not seeded. Please contact support.");
 
         var verifier = new User
@@ -71,7 +72,7 @@ public class AdminService : IAdminService
         var user = await _userRepo.GetByIdWithRolesAsync(userId)
             ?? throw new NotFoundException("User", userId);
 
-        var isVerifier = user.UserRoles.Any(ur => ur.Role?.Name == "Verifier");
+        var isVerifier = user.UserRoles.Any(ur => ur.Role?.Name == Roles.Verifier);
         if (!isVerifier)
             throw new BadRequestException("This user is not a verifier.");
 
@@ -85,7 +86,7 @@ public class AdminService : IAdminService
 
     public async Task<IEnumerable<StaffResponse>> GetStaffAsync(CancellationToken ct = default)
     {
-        var verifiers = await _userRepo.GetUsersByRoleAsync("Verifier");
+        var verifiers = await _userRepo.GetUsersByRoleAsync(Roles.Verifier);
         return verifiers.Select(u => new StaffResponse(
             u.UserId, u.FullName, u.Email, u.PhoneNumber, u.IsActive, u.CreatedAt));
     }

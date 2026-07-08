@@ -42,6 +42,7 @@ public class ComplaintRepository : BaseRepository<Complaint>, IComplaintReposito
             .Include(c => c.Lease)
                 .ThenInclude(l => l!.Property)
             .Where(c => c.Lease != null && c.Lease.TenantId == tenantId)
+            .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
     }
 
@@ -53,16 +54,7 @@ public class ComplaintRepository : BaseRepository<Complaint>, IComplaintReposito
             .Include(c => c.Lease)
                 .ThenInclude(l => l!.Property)
             .Where(c => c.Lease != null && c.Lease.Property != null && c.Lease.Property.OwnerId == ownerId)
-            .ToListAsync();
-    }
-
-    public async Task<IEnumerable<Complaint>> GetAllAsync()
-    {
-        return await _dbSet
-            .AsNoTracking()
-            .Include(c => c.ComplaintImages)
-            .Include(c => c.Lease)
-                .ThenInclude(l => l!.Property)
+            .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
     }
 

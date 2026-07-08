@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DatePipe, CurrencyPipe } from '@angular/common';
-import { LeaseService } from '../../../../core/services/lease.service';
+import { LeaseService } from '@core/services/leasing/lease.service';
 
 export interface ApproveLeaseDialogData {
   leaseId: string;
@@ -44,7 +44,7 @@ export interface ApproveLeaseDialogData {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div style="min-width:480px;max-width:580px;font-family:Inter,sans-serif">
+    <div>
 
       <!-- Header -->
       <div class="flex items-center gap-3 px-6 pt-6 pb-4"
@@ -65,8 +65,8 @@ export interface ApproveLeaseDialogData {
         <!-- Property -->
         <div class="rounded-xl p-4" style="background:#F7F7F7;border:1px solid #EBEBEB">
           <div class="flex items-start gap-3">
-            <mat-icon class="!text-[18px] !w-[18px] !h-[18px] mt-[2px] flex-shrink-0"
-              style="color:var(--mat-sys-primary)">home</mat-icon>
+            <mat-icon class="!text-[18px] !w-[18px] !h-[18px] mt-[2px] flex-shrink-0 es-text-primary"
+             >home</mat-icon>
             <div>
               <div class="text-[13px] font-semibold text-es-text">{{ data.propertyTitle ?? '—' }}</div>
               @if (data.propertyAddress) {
@@ -122,21 +122,21 @@ export interface ApproveLeaseDialogData {
         <div class="grid grid-cols-2 gap-3">
           <div class="rounded-xl p-3 flex items-center gap-2"
             style="background:#F0FDF4;border:1px solid #BBF7D0">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] flex-shrink-0" style="color:#059669">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] flex-shrink-0 es-text-success">
               verified
             </mat-icon>
             <div>
-              <div class="text-[11px] font-semibold" style="color:#059669">Owner signed</div>
+              <div class="text-[11px] font-semibold es-text-success">Owner signed</div>
               <div class="text-[11px] text-es-muted">{{ data.ownerSignedAt | date:'d MMM yyyy, h:mm a' }}</div>
             </div>
           </div>
           <div class="rounded-xl p-3 flex items-center gap-2"
             style="background:#F0FDF4;border:1px solid #BBF7D0">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] flex-shrink-0" style="color:#059669">
+            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] flex-shrink-0 es-text-success">
               verified
             </mat-icon>
             <div>
-              <div class="text-[11px] font-semibold" style="color:#059669">Tenant signed</div>
+              <div class="text-[11px] font-semibold es-text-success">Tenant signed</div>
               <div class="text-[11px] text-es-muted">{{ data.tenantSignedAt | date:'d MMM yyyy, h:mm a' }}</div>
             </div>
           </div>
@@ -163,12 +163,12 @@ export interface ApproveLeaseDialogData {
         <button type="button" mat-stroked-button class="!rounded-full !px-6" mat-dialog-close>
           Cancel
         </button>
-        <button type="button" mat-stroked-button class="!rounded-full !px-6"
-          style="color:#DC2626;border-color:#FECACA"
+        <button type="button" mat-stroked-button class="!rounded-full !px-6 es-btn-danger"
+         
           [disabled]="submitting()"
           (click)="decide(false)">
           @if (submitting() && lastAction() === 'reject') {
-            <mat-spinner diameter="16" style="display:inline-block;margin-right:6px" />
+            <mat-spinner diameter="16" class="inline-block mr-1.5" />
           }
           Reject
         </button>
@@ -177,7 +177,7 @@ export interface ApproveLeaseDialogData {
           [disabled]="submitting()"
           (click)="decide(true)">
           @if (submitting() && lastAction() === 'approve') {
-            <mat-spinner diameter="16" style="display:inline-block;margin-right:6px" />
+            <mat-spinner diameter="16" class="inline-block mr-1.5" />
           }
           Approve
         </button>

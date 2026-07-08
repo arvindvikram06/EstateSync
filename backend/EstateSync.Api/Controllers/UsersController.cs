@@ -29,10 +29,10 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("me/become-owner")]
-    public async Task<ActionResult<ApiResponse<object>>> BecomeOwner(CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<object>>> BecomeOwner([FromBody] BecomeOwnerRequest request, CancellationToken ct)
     {
         var userId = User.GetUserId();
-        var message = await _userService.BecomeOwnerAsync(userId, ct);
+        var message = await _userService.BecomeOwnerAsync(userId, request, ct);
         return Ok(new ApiResponse<object> { Message = message });
     }
 }

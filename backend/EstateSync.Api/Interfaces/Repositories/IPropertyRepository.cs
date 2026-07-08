@@ -10,6 +10,7 @@ public interface IPropertyRepository : IRepository<Property>
     Task<Property?> GetWithDetailsByIdAsync(Guid id);
     Task<IEnumerable<Property>> GetByOwnerIdAsync(Guid ownerId);
     Task<(IEnumerable<Property> Items, int Total)> SearchAsync(
+        string? search,
         string? state,
         string? propertyType,
         int? bedrooms,
@@ -18,4 +19,5 @@ public interface IPropertyRepository : IRepository<Property>
         int limit,
         int offset);
     Task<(IEnumerable<Property> Items, int Total)> GetPendingApprovalPropertiesAsync(int limit, int offset);
+    Task<Property?> GetActiveDraftByOwnerIdAsync(Guid ownerId);
 }

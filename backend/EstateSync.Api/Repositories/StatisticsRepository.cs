@@ -20,28 +20,15 @@ public class StatisticsRepository : IStatisticsRepository
     public Task<int> GetTotalUsersAsync(CancellationToken ct = default)
         => _db.Users.CountAsync(ct);
 
-    public Task<int> GetUserCountByRoleAsync(string roleName, CancellationToken ct = default)
-        => _db.UserRoles
-            .Include(ur => ur.Role)
-            .CountAsync(ur => ur.Role != null && ur.Role.Name == roleName && ur.User!.DeletedAt == null, ct);
-
-    public Task<int> GetPendingKycCountAsync(CancellationToken ct = default)
-        => _db.KycVerifications.CountAsync(k => k.Status == ApprovalStatus.Pending, ct);
+    public async Task<Dictionary<string, int>> GetUserCountsByRoleAsync(CancellationToken ct = default)
+        => await _db.UserRoles
+            .Where(ur => ur.Role != null && ur.User!.DeletedAt == null)
+            .GroupBy(ur => ur.Role!.Name)
+            .Select(g => new { Role = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Role, x => x.Count, ct);
 
     public Task<int> GetPendingFinancialProfileCountAsync(CancellationToken ct = default)
         => _db.TenantFinancialProfiles.CountAsync(f => f.Status == ApprovalStatus.Pending, ct);
-
-    public Task<int> GetPendingPropertyApprovalCountAsync(CancellationToken ct = default)
-        => _db.Properties.CountAsync(p => p.Status == PropertyStatus.PendingApproval, ct);
-
-    public Task<int> GetPendingLeaseApprovalCountAsync(CancellationToken ct = default)
-        => _db.Leases.CountAsync(l => l.Status == LeaseStatus.PendingAdminApproval, ct);
-
-    public Task<int> GetOpenComplaintsCountAsync(CancellationToken ct = default)
-        => _db.Complaints.CountAsync(c => c.Status == ComplaintStatus.Open, ct);
-
-    public Task<int> GetActiveLeasesCountAsync(CancellationToken ct = default)
-        => _db.Leases.CountAsync(l => l.Status == LeaseStatus.Active, ct);
 
     public async Task<(decimal TotalRevenue, decimal TotalPlatformFees)> GetRevenueThisMonthAsync(CancellationToken ct = default)
     {

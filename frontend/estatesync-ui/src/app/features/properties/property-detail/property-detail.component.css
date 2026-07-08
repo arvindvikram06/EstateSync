@@ -4,7 +4,7 @@
   padding: 24px 24px 60px;
 }
 
-@media (max-width: 640px) {
+@media (width <= 640px) {
   .detail-page-wrap {
     padding: 16px 12px 48px;
   }
@@ -23,12 +23,28 @@
 .photo-grid__main {
   grid-row: 1 / 3;
   overflow: hidden;
-  background: #E8E8E8;
+  background: var(--es-img-placeholder);
 }
 
 .photo-grid__thumb {
   overflow: hidden;
-  background: #E8E8E8;
+  background: var(--es-img-placeholder);
+}
+
+.photo-grid__all-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: white;
+  border: 1.5px solid var(--es-text);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .photo-grid__main img,
@@ -64,21 +80,30 @@
   gap: 14px;
 }
 
-.map-placeholder {
-  height: 340px;
+.map-container {
+  height: 350px;
+  width: 100%;
   border-radius: 12px;
-  background: #E8F4F8;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  z-index: 1;
+}
+
+.pricing-sticky {
+  position: sticky;
+  top: 88px;
+  align-self: start;
+}
+
+.pricing-divider {
+  border: none;
+  border-top: 1px solid var(--es-border-light);
+  margin: 0 0 20px;
 }
 
 .pricing-card {
-  border: 1px solid #DDDDDD;
+  border: 1px solid var(--es-border);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 6px 24px rgb(0, 0, 0, 0.10);
 }
 
 .pricing-detail-grid {
@@ -89,7 +114,7 @@
 }
 
 .pricing-detail-cell {
-  background: #F7F7F7;
+  background: var(--es-bg);
   border-radius: 8px;
   padding: 10px 12px;
   display: flex;
@@ -99,16 +124,16 @@
 
 .pricing-detail-label {
   font-size: 11px;
-  color: #717171;
+  color: var(--es-text-secondary);
 }
 
 .pricing-detail-value {
   font-size: 13px;
   font-weight: 600;
-  color: #222;
+  color: var(--es-text);
 }
 
-@media (max-width: 900px) {
+@media (width <= 900px) {
   .content-grid {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -125,7 +150,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (width <= 640px) {
   /* Show only the hero image on very small screens */
   .photo-grid {
     grid-template-columns: 1fr;
@@ -150,7 +175,7 @@
   }
 
   /* Map area shorter on small screens */
-  .map-placeholder {
+  .map-container {
     height: 220px;
   }
 

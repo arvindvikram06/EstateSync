@@ -19,12 +19,14 @@ export interface NavItem {
   styleUrl: './dashboard-layout.component.css'
 })
 export class DashboardLayoutComponent {
-  readonly title     = input<string>('');
-  readonly subtitle  = input<string>('');
-  readonly navItems  = input<NavItem[]>([]);
-  readonly activeTab = input<string>('');
-  readonly tabChange = output<string>();
-  @Input() topOffset = 64;
+  readonly title      = input<string>('');
+  readonly subtitle   = input<string>('');
+  readonly navItems   = input<NavItem[]>([]);
+  readonly activeTab  = input<string>('');
+  readonly showLogout = input<boolean>(false);
+  readonly tabChange  = output<string>();
+  readonly logout     = output<void>();
+  @Input() topOffset  = 64;
 
   // Open by default on desktop, closed on mobile
   readonly sidebarOpen = signal(

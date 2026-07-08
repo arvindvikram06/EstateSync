@@ -20,7 +20,7 @@
           <th>Rent/mo</th>
           <th>Beds / Baths</th>
           <th>Submitted</th>
-          <th style="text-align:right">Action</th>
+          <th class="!text-right">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -29,38 +29,38 @@
             <td>
               <div class="flex items-center gap-3">
                 @if (item.primaryImage) {
-                  <img [src]="item.primaryImage" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid #EBEBEB;flex-shrink:0" />
+                  <img [src]="item.primaryImage" alt="" class="w-11 h-11 object-cover rounded-lg border border-solid border-es-border-light shrink-0" />
                 } @else {
-                  <div style="width:44px;height:44px;border-radius:8px;background:#F3F4F6;border:1px solid #EBEBEB;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                    <mat-icon style="font-size:20px;width:20px;height:20px;color:#AAAAAA">home_work</mat-icon>
+                  <div class="w-11 h-11 rounded-lg es-bg-grey border border-solid border-es-border-light flex items-center justify-center shrink-0">
+                    <mat-icon class="!text-[20px] !w-[20px] !h-[20px] text-es-faint">home_work</mat-icon>
                   </div>
                 }
                 <div>
                   <div class="user-name">{{ item.title }}</div>
-                  <div style="font-size:11px;color:#AAAAAA;margin-top:1px">{{ item.propertyType }}</div>
+                  <div class="es-text-hint mt-px">{{ item.propertyType }}</div>
                 </div>
               </div>
             </td>
-            <td style="font-size:13px;color:#717171">
+            <td class="es-text-sm">
               <div>{{ item.city ? item.city + ', ' : '' }}{{ item.state }}</div>
               @if (item.addressLine) {
-                <div style="font-size:11px;color:#AAAAAA;margin-top:1px">{{ item.addressLine }}</div>
+                <div class="es-text-hint mt-px">{{ item.addressLine }}</div>
               }
             </td>
             <td>
               @if (item.ownerName) {
-                <div style="font-size:13px;font-weight:600;color:#222">{{ item.ownerName }}</div>
-                <div style="font-size:12px;color:#717171">{{ item.ownerEmail }}</div>
+                <div class="es-text-strong">{{ item.ownerName }}</div>
+                <div class="es-text-xs">{{ item.ownerEmail }}</div>
               } @else {
-                <span style="font-size:13px;color:#AAAAAA">—</span>
+                <span class="text-[13px] text-es-faint">—</span>
               }
             </td>
-            <td style="font-weight:600;color:#222">₹{{ item.monthlyRent.toLocaleString('en-IN') }}</td>
-            <td style="font-size:13px;color:#717171">{{ item.bedrooms }} bd / {{ item.bathrooms }} ba</td>
-            <td style="font-size:13px;color:#717171">{{ item.createdAt | slice:0:10 }}</td>
-            <td style="text-align:right">
+            <td class="font-semibold text-es-text">{{ formatCurrency(item.monthlyRent) }}</td>
+            <td class="es-text-sm">{{ item.bedrooms }} bd / {{ item.bathrooms }} ba</td>
+            <td class="es-text-sm">{{ item.createdAt | slice:0:10 }}</td>
+            <td class="text-right">
               <button mat-stroked-button color="primary" class="!rounded-full !text-xs !h-8" (click)="openReview(item)">
-                <mat-icon style="font-size:14px;width:14px;height:14px;margin-right:2px">visibility</mat-icon>
+                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] mr-0.5">visibility</mat-icon>
                 Review
               </button>
             </td>
@@ -70,7 +70,7 @@
     </table>
   </div>
   <div class="pagination">
-    <span style="font-size:13px;color:#717171">Page {{ page() }} of {{ totalPages() }} · {{ totalCount() }} total</span>
+    <span class="es-text-sm">Page {{ page() }} of {{ totalPages() }} · {{ totalCount() }} total</span>
     <div class="flex gap-2">
       <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="page() === 1" (click)="prevPage()"><mat-icon>chevron_left</mat-icon></button>
       <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="page() >= totalPages()" (click)="nextPage()"><mat-icon>chevron_right</mat-icon></button>

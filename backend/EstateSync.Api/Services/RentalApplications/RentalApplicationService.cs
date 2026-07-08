@@ -234,13 +234,12 @@ public class RentalApplicationService : IRentalApplicationService
             throw new BadRequestException("You cannot apply to your own property.");
         }
 
-        var propertyActiveLease = await _leaseRepo.GetActiveLeaseByPropertyIdAsync(propertyId);
+        var (propertyActiveLease, tenantActiveLease) = await _leaseRepo.GetActiveLeaseConflictsAsync(propertyId, tenantId);
         if (propertyActiveLease != null && moveInDate <= DateOnly.FromDateTime(propertyActiveLease.EndDate))
         {
             throw new ConflictException("The move-in date must be after the current active lease ends.");
         }
 
-        var tenantActiveLease = await _leaseRepo.GetActiveLeaseByTenantIdAsync(tenantId);
         if (tenantActiveLease != null && moveInDate <= DateOnly.FromDateTime(tenantActiveLease.EndDate))
         {
             throw new ConflictException("You currently have an active lease. Your move-in date must be after your current lease ends.");

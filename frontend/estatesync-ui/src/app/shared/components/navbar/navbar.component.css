@@ -3,15 +3,26 @@ mat-toolbar.es-navbar {
   color: var(--es-text);
   height: 64px;
   padding: 0 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgb(0, 0, 0, 0.08);
 }
 
 /* Kill any Material focus-indicator pseudo-element shadow on the avatar pill */
 button[matMenuTriggerFor] {
   box-shadow: none !important;
   outline: none !important;
-  -webkit-appearance: none !important;
   appearance: none !important;
+}
+
+/* ── Desktop right section ───────────────────────────────────── */
+.navbar-right-desktop {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+@media (width <= 1023px) {
+  .navbar-right-desktop { display: none; }
 }
 
 /* Notification bell */
@@ -20,7 +31,7 @@ button[matMenuTriggerFor] {
   cursor: pointer;
   padding: 8px;
   border-radius: 50%;
-  color: #717171;
+  color: var(--es-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,7 +39,7 @@ button[matMenuTriggerFor] {
 }
 
 .navbar-bell:hover {
-  background: #F5F5F5;
+  background: var(--es-divider);
 }
 
 .navbar-bell__badge {
@@ -37,7 +48,7 @@ button[matMenuTriggerFor] {
   right: 4px;
   min-width: 18px;
   height: 18px;
-  background: #DC2626;
+  background: var(--es-danger);
   color: white;
   font-size: 11px;
   font-weight: 700;
@@ -49,10 +60,11 @@ button[matMenuTriggerFor] {
   line-height: 1;
 }
 
+/* Notification panel — fixed so it renders at any breakpoint */
 .navbar-notif-overlay {
-  position: absolute;
-  top: 58px;
-  right: 0;
+  position: fixed;
+  top: 64px;
+  right: 16px;
   z-index: 2000;
 }
 
@@ -63,4 +75,151 @@ button[matMenuTriggerFor] .mat-mdc-focus-indicator {
   display: none !important;
   box-shadow: none !important;
   background: transparent !important;
+}
+
+/* ── Mobile hamburger button ─────────────────────────────────── */
+.navbar-hamburger {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--es-text);
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.navbar-hamburger:hover { background: var(--es-divider); }
+
+@media (width >= 1024px) {
+  .navbar-hamburger { display: none; }
+}
+
+/* ── Backdrop ────────────────────────────────────────────────── */
+.mobile-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  background: rgb(0, 0, 0, 0.35);
+}
+
+/* ── Drawer panel ────────────────────────────────────────────── */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 280px;
+  z-index: 1600;
+  background: white;
+  box-shadow: -4px 0 24px rgb(0, 0, 0, 0.12);
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  padding-top: 64px;
+  overflow-y: auto;
+}
+
+.mobile-drawer--open { transform: translateX(0); }
+
+.mobile-drawer__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 20px 16px;
+}
+
+.mobile-drawer__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--mat-sys-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.mobile-drawer__name  { font-size: 14px; font-weight: 600; color: var(--es-text); }
+.mobile-drawer__email { font-size: 12px; color: var(--es-text-secondary); margin-top: 1px; }
+
+.mobile-drawer__divider {
+  height: 1px;
+  background: var(--es-bg-hover);
+  margin: 4px 0;
+  flex-shrink: 0;
+}
+
+.mobile-drawer__spacer { flex: 1; }
+
+.mobile-drawer__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--es-text);
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  width: 100%;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.mobile-drawer__link:hover { background: var(--es-bg); }
+
+.mobile-drawer__link mat-icon {
+  color: var(--es-text-secondary);
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.mobile-drawer__link--danger { color: var(--es-danger); }
+.mobile-drawer__link--danger mat-icon { color: var(--es-danger); }
+
+/* Unread count badge inside drawer notifications row */
+.mobile-drawer__badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  background: var(--es-danger);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+/* Active dashboard indicator — shows which dashboard (Owner vs Tenant) is current */
+.nav-link--active {
+  --mdc-text-button-label-text-color: var(--mat-sys-on-primary);
+
+  background: var(--mat-sys-primary);
+  border-radius: 40px;
+  font-weight: 600 !important;
+  color: var(--mat-sys-on-primary) !important;
+}
+
+
+.mobile-drawer__link--active {
+  color: var(--mat-sys-on-primary);
+  background: var(--mat-sys-primary);
+  font-weight: 600;
 }

@@ -56,8 +56,7 @@ public class StripeConnectedAccountService : IStripeConnectedAccountService
             var nameParts = owner.FullName.Split(' ', 2);
             var options = new AccountCreateOptions
             {
-                Type    = "express",
-                Country = "IN",
+                Type  = "express",
                 Email = owner.Email,
                 BusinessType = "individual",
                 BusinessProfile = new AccountBusinessProfileOptions
@@ -261,9 +260,9 @@ public class StripeConnectedAccountService : IStripeConnectedAccountService
             owner.IsOwnerVerified = true;
             owner.UpdatedAt = DateTime.UtcNow;
 
-            if (!owner.UserRoles.Any(ur => ur.Role?.Name == "Owner"))
+            if (!owner.UserRoles.Any(ur => ur.Role?.Name == Roles.Owner))
             {
-                var ownerRole = await _roleRepo.GetByNameAsync("Owner");
+                var ownerRole = await _roleRepo.GetByNameAsync(Roles.Owner);
                 if (ownerRole != null)
                     owner.UserRoles.Add(new UserRole { UserId = owner.UserId, RoleId = ownerRole.RoleId });
             }

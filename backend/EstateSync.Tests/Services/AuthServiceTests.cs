@@ -12,8 +12,10 @@ using EstateSync.Api.Models;
 using EstateSync.Api.Services.Auth;
 using EstateSync.Api.Services.Tokens;
 using EstateSync.Api.Interfaces.Services.Auth;
+using EstateSync.Api.Interfaces.Services.Email;
 using EstateSync.Api.Interfaces.Services.Tokens;
 using EstateSync.Api.Mappers;
+using EstateSync.Api.Services.Email;
 
 namespace EstateSync.Tests.Services;
 
@@ -26,6 +28,7 @@ public class AuthServiceTests
     private Mock<IPasswordService> _passwordServiceMock;
     private Mock<ITokenService> _tokenServiceMock;
     private Mock<IUnitOfWork> _unitOfWorkMock;
+    private Mock<IEmailQueue> _emailQueueMock;
     private AuthService _authService;
 
     [SetUp]
@@ -37,6 +40,7 @@ public class AuthServiceTests
         _passwordServiceMock = new Mock<IPasswordService>();
         _tokenServiceMock = new Mock<ITokenService>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _emailQueueMock = new Mock<IEmailQueue>();
 
         _authService = new AuthService(
             _userRepositoryMock.Object,
@@ -45,7 +49,8 @@ public class AuthServiceTests
             _passwordServiceMock.Object,
             _tokenServiceMock.Object,
             _unitOfWorkMock.Object,
-            new AuthMapper()
+            new AuthMapper(),
+            _emailQueueMock.Object
         );
     }
 
@@ -71,24 +76,19 @@ public class AuthServiceTests
         _passwordServiceMock.Setup(x => x.HashPassword(request.Password))
             .Returns("hashed_pwd");
 
-        _tokenServiceMock.Setup(x => x.GenerateAccessToken(It.IsAny<User>()))
-            .Returns("access_token");
-
-        _tokenServiceMock.Setup(x => x.GenerateRefreshToken())
-            .Returns("refresh_token");
-
-        // Act
-        var (response, refreshToken) = await _authService.RegisterAsync(request);
+        // Act — registration issues no tokens; it queues a verification email instead.
+        await _authService.RegisterAsync(request);
 
         // Assert
-        response.Should().NotBeNull();
-        response.AccessToken.Should().Be("access_token");
-        response.Email.Should().Be(request.Email);
-        response.Roles.Should().Contain("Tenant");
-        refreshToken.Should().Be("refresh_token");
-
-        _userRepositoryMock.Verify(x => x.AddAsync(It.Is<User>(u => u.Email == request.Email && u.FullName == request.FullName)), Times.Once);
+        _userRepositoryMock.Verify(x => x.AddAsync(It.Is<User>(u =>
+            u.Email == request.Email &&
+            u.FullName == request.FullName &&
+            !u.IsEmailVerified &&
+            u.EmailVerificationToken != null)), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<System.Threading.CancellationToken>()), Times.Once);
+        _emailQueueMock.Verify(x => x.EnqueueAsync(
+            It.Is<EmailMessage>(m => m.To == request.Email),
+            It.IsAny<System.Threading.CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -138,9 +138,10 @@ public class AuthServiceTests
             FullName = "John Doe",
             PasswordHash = "hash",
             PhoneNumber = "1234567890",
-            IsActive = true
+            IsActive = true,
+            IsEmailVerified = true
         };
-        
+
         _userRepositoryMock.Setup(x => x.GetByEmailWithRolesAsync(request.Email))
             .ReturnsAsync(user);
 

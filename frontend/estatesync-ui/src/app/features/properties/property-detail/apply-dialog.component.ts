@@ -9,7 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { RentalApplicationService } from '../../../core/services/rental-application.service';
+import { RentalApplicationService } from '@core/services/leasing/rental-application.service';
 import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
 
 function futureDateValidator(): ValidatorFn {
@@ -49,7 +49,7 @@ import { provideNativeDateAdapter } from '@angular/material/core';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="p-7" style="min-width:440px;max-width:480px">
+    <div class="p-7">
       @if (!success()) {
         <h2 class="text-[18px] font-bold text-es-text mb-1">Apply for {{ data.propertyTitle }}</h2>
         <p class="text-[13px] text-es-muted mb-5">{{ data.addressLine }}</p>
@@ -119,7 +119,7 @@ import { provideNativeDateAdapter } from '@angular/material/core';
         </form>
       } @else {
         <div class="flex flex-col items-center py-6 gap-4">
-          <mat-icon class="!text-[52px] !w-[52px] !h-[52px]" style="color:#059669">check_circle</mat-icon>
+          <mat-icon class="!text-[52px] !w-[52px] !h-[52px] es-text-success">check_circle</mat-icon>
           <h3 class="text-xl font-bold text-es-text">Application sent!</h3>
           <p class="text-sm text-es-muted text-center">The owner will review your request and get back to you soon.</p>
         </div>
@@ -153,11 +153,11 @@ export class ApplyDialogComponent {
     this.error.set(null);
     const v = this.form.getRawValue();
     
-    // Format Date to YYYY-MM-DD safely
-    let formattedDate = v.expectedMoveInDate as any;
-    if (formattedDate instanceof Date) {
-      formattedDate = new Date(formattedDate.getTime() - formattedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-    }
+    // The datepicker sets a Date at runtime even though the control is typed string.
+    const raw = v.expectedMoveInDate as string | Date;
+    const formattedDate = raw instanceof Date
+      ? new Date(raw.getTime() - raw.getTimezoneOffset() * 60000).toISOString().split('T')[0]
+      : raw;
     
     this.appService.applyToProperty(this.data.propertyId, { ...v, expectedMoveInDate: formattedDate })
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({

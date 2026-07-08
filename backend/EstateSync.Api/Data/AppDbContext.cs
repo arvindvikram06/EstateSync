@@ -46,6 +46,7 @@ public partial class AppDbContext : DbContext
     public DbSet<StripeConnectedAccount> StripeConnectedAccounts => Set<StripeConnectedAccount>();
     public DbSet<StripeCustomerProfile> StripeCustomerProfiles => Set<StripeCustomerProfile>();
     public DbSet<OwnerSettlement> OwnerSettlements => Set<OwnerSettlement>();
+    public DbSet<OwnerProfile> OwnerProfiles => Set<OwnerProfile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,6 +57,7 @@ public partial class AppDbContext : DbContext
 
         // Apply global query filters for soft-deletable entities (BaseEntity)
         modelBuilder.Entity<User>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<OwnerProfile>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<KycVerification>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<TenantFinancialProfile>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<Document>().HasQueryFilter(x => x.DeletedAt == null);

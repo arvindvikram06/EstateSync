@@ -1,8 +1,8 @@
 .kpi-card {
   background: white;
-  border: 1px solid #EBEBEB;
+  border: 1px solid var(--es-border-light);
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 12px rgb(0,0,0,0.06);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -22,31 +22,31 @@
 .kpi-value {
   font-size: 28px;
   font-weight: 700;
-  color: #222;
+  color: var(--es-text);
   line-height: 1;
 }
 
 .kpi-label {
   font-size: 13px;
-  color: #717171;
+  color: var(--es-text-secondary);
 }
 
 .kpi-sub {
   font-size: 11px;
-  color: #AAAAAA;
+  color: var(--es-text-muted);
 }
 
 .chart-card {
   background: white;
-  border: 1px solid #EBEBEB;
+  border: 1px solid var(--es-border-light);
   border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 12px rgb(0,0,0,0.06);
   padding: 20px 20px 12px;
 }
 
 .chart-title {
   font-size: 14px;
   font-weight: 700;
-  color: #222;
+  color: var(--es-text);
   margin-bottom: 12px;
 }

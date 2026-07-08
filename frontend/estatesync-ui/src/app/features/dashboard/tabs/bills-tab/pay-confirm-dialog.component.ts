@@ -12,7 +12,7 @@ import { formatCurrency } from '../../../../core/utils/format.utils';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="p-6 flex flex-col items-center gap-4" style="max-width:380px">
-      <mat-icon class="!text-[36px] !w-[36px] !h-[36px]" style="color:var(--mat-sys-primary)">payment</mat-icon>
+      <mat-icon class="!text-[36px] !w-[36px] !h-[36px] es-text-primary">payment</mat-icon>
       <h3 class="text-lg font-bold text-es-text text-center">Confirm payment</h3>
       <p class="text-sm text-es-muted text-center">
         You'll be redirected to Stripe to pay

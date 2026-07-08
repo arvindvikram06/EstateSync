@@ -1,4 +1,4 @@
-<h2 style="font-size:20px;font-weight:700;color:#222;margin-bottom:20px">Rental Applications</h2>
+<h2 class="es-title mb-5">Rental Applications</h2>
 
 <!-- Filter pills -->
 <div class="flex flex-wrap gap-2 mb-5">
@@ -24,18 +24,18 @@
         <div class="tenant-avatar">{{ initials(app.tenantName) }}</div>
 
         <div class="flex-1 min-w-0">
-          <div style="font-size:14px;font-weight:600;color:#222">{{ app.tenantName }}</div>
-          <div style="font-size:12px;color:#717171;margin-top:1px">{{ app.tenantEmail }}</div>
-          <div style="font-size:12px;color:#717171;margin-top:4px" class="truncate">
-            <span style="font-weight:500;color:#444">{{ app.propertyTitle }}</span>
+          <div class="es-detail-value">{{ app.tenantName }}</div>
+          <div class="es-text-xs mt-px">{{ app.tenantEmail }}</div>
+          <div class="es-text-xs mt-1 truncate">
+            <span class="font-medium text-es-soft">{{ app.propertyTitle }}</span>
             · Applied {{ formatDate(app.appliedAt) }}
           </div>
-          <div style="font-size:12px;color:#717171;margin-top:2px">
+          <div class="es-text-xs mt-0.5">
             Move-in: {{ formatDate(app.expectedMoveInDate) }}
             · {{ app.durationMonths }} months
           </div>
           @if (app.message) {
-            <div style="font-size:12px;color:#555;margin-top:6px;font-style:italic" class="line-clamp-2">
+            <div class="line-clamp-2 text-[12px] text-es-soft mt-1.5 italic">
               "{{ app.message }}"
             </div>
           }
@@ -44,7 +44,7 @@
         <div class="flex flex-col items-end gap-2 shrink-0">
           <app-status-badge [status]="app.status" />
           @if (app.reviewedAt) {
-            <span style="font-size:11px;color:#AAAAAA">{{ formatDate(app.reviewedAt) }}</span>
+            <span class="es-text-hint">{{ formatDate(app.reviewedAt) }}</span>
           }
           <div class="flex gap-2 mt-1">
             @if (app.status === 'Pending') {
@@ -58,10 +58,18 @@
               </button>
             }
             @if (app.status === 'Approved') {
-              <button mat-stroked-button color="primary" class="!rounded-full !h-8 !text-xs !px-3"
-                (click)="openCreateLease(app)">
-                Create Lease
-              </button>
+              @if (app.liveLease) {
+                <app-status-badge [status]="app.leaseStatus!" />
+                <a mat-stroked-button class="!rounded-full !h-8 !text-xs !px-3"
+                  [routerLink]="['/leases', app.leaseId]">
+                  View Lease
+                </a>
+              } @else {
+                <button mat-stroked-button color="primary" class="!rounded-full !h-8 !text-xs !px-3"
+                  (click)="openCreateLease(app)">
+                  Create Lease
+                </button>
+              }
             }
           </div>
         </div>

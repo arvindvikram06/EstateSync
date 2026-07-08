@@ -6,9 +6,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   standalone: true,
   imports: [MatProgressSpinnerModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './page-spinner.component.html',
-  styleUrl: './page-spinner.component.css'
-})
+  templateUrl: './page-spinner.component.html',})
 export class PageSpinnerComponent {
   readonly diameter = input<number>(48);
 }

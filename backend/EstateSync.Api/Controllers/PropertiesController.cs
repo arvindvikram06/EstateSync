@@ -115,6 +115,46 @@ public class PropertiesController : ControllerBase
         return NoContent();
     }
 
+    // ── Wizard draft endpoints ─────────────────────────────────────────────
+
+    // Create a minimal wizard draft (step 1 — property type selected)
+    [HttpPost("wizard-draft")]
+    [Authorize(Roles = "Owner")]
+    public async Task<ActionResult<ApiResponse<PropertyDetailResponse>>> CreateWizardDraft(
+        [FromBody] CreatePropertyDraftRequest request,
+        CancellationToken ct)
+    {
+        var ownerId = User.GetUserId();
+        var result = await _propertyService.CreateWizardDraftAsync(request, ownerId, ct);
+        return CreatedAtAction(nameof(GetById), new { id = result.PropertyId },
+            new ApiResponse<PropertyDetailResponse> { Data = result, Message = "Wizard draft created." });
+    }
+
+    // Patch a wizard draft incrementally (steps 2–9)
+    [HttpPatch("{id:guid}/wizard-draft")]
+    [Authorize(Roles = "Owner")]
+    public async Task<ActionResult<ApiResponse<PropertyDetailResponse>>> PatchWizardDraft(
+        Guid id,
+        [FromBody] PatchPropertyDraftRequest request,
+        CancellationToken ct)
+    {
+        var ownerId = User.GetUserId();
+        var result = await _propertyService.PatchWizardDraftAsync(id, request, ownerId, ct);
+        return Ok(new ApiResponse<PropertyDetailResponse> { Data = result });
+    }
+
+    // Get the owner's most recent active draft (used to resume wizard after browser refresh)
+    [HttpGet("wizard-draft/mine")]
+    [Authorize(Roles = "Owner")]
+    public async Task<ActionResult<ApiResponse<PropertyDetailResponse?>>> GetMyActiveDraft(CancellationToken ct)
+    {
+        var ownerId = User.GetUserId();
+        var result = await _propertyService.GetMyActiveDraftAsync(ownerId, ct);
+        return Ok(new ApiResponse<PropertyDetailResponse?> { Data = result });
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+
     // Submit for Approval (Owner)
     [HttpPut("{id:guid}/submit")]
     [Authorize(Roles = "Owner")]

@@ -15,11 +15,15 @@ public class LeaseRepository : BaseRepository<Lease>, ILeaseRepository
     {
     }
 
-    public async Task<Lease?> GetActiveLeaseByTenantIdAsync(Guid tenantId)
+    public async Task<(Lease? PropertyLease, Lease? TenantLease)> GetActiveLeaseConflictsAsync(Guid propertyId, Guid tenantId)
     {
-        return await _dbSet
-            .Include(l => l.Property)
-            .FirstOrDefaultAsync(l => l.TenantId == tenantId && l.Status == LeaseStatus.Active);
+        var leases = await _dbSet
+            .AsNoTracking()
+            .Where(l => l.Status == LeaseStatus.Active && (l.PropertyId == propertyId || l.TenantId == tenantId))
+            .ToListAsync();
+
+        return (leases.FirstOrDefault(l => l.PropertyId == propertyId),
+                leases.FirstOrDefault(l => l.TenantId == tenantId));
     }
 
     public async Task<IEnumerable<Lease>> GetActiveLeasesEndingBeforeAsync(DateTime targetDate)
@@ -52,6 +56,24 @@ public class LeaseRepository : BaseRepository<Lease>, ILeaseRepository
             .AsNoTracking()
             .OrderByDescending(l => l.CreatedAt)
             .FirstOrDefaultAsync(l => l.ApplicationId == applicationId);
+    }
+
+    public async Task<(IEnumerable<Lease> Items, int Total)> GetAllPagedAsync(int page, int limit)
+    {
+        var query = _dbSet
+            .AsNoTracking()
+            .Include(l => l.Property)
+                .ThenInclude(p => p!.Owner)
+            .Include(l => l.Tenant)
+            .OrderByDescending(l => l.CreatedAt);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToListAsync();
+
+        return (items, total);
     }
 
     public async Task<(IEnumerable<Lease> Items, int Total)> GetByTenantIdPagedAsync(Guid tenantId, int page, int limit)

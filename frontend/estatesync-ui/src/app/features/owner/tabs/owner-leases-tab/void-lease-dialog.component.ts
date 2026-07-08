@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { LeaseService } from '../../../../core/services/lease.service';
+import { LeaseService } from '@core/services/leasing/lease.service';
 
 export interface VoidLeaseDialogData {
   leaseId: string;
@@ -30,10 +30,10 @@ export interface VoidLeaseDialogData {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="p-7" style="min-width:400px;max-width:460px">
+    <div class="p-7">
       <div class="flex items-center gap-3 mb-4">
         <div class="flex items-center justify-center w-10 h-10 rounded-full bg-red-50">
-          <mat-icon class="!text-[20px]" style="color:#DC2626">block</mat-icon>
+          <mat-icon class="!text-[20px] es-text-danger">block</mat-icon>
         </div>
         <h2 class="text-[18px] font-bold text-es-text m-0">Void Lease</h2>
       </div>
@@ -65,7 +65,7 @@ export interface VoidLeaseDialogData {
             style="background:#DC2626;color:white"
             [disabled]="form.invalid || submitting()">
             @if (submitting()) {
-              <mat-spinner diameter="16" style="display:inline-block;margin-right:6px" />
+              <mat-spinner diameter="16" class="inline-block mr-1.5" />
             }
             Void Lease
           </button>

@@ -20,6 +20,9 @@ public class StripeConnectedAccountRepository : BaseRepository<StripeConnectedAc
     public async Task<StripeConnectedAccount?> GetByStripeAccountIdAsync(string stripeAccountId)
         => await _dbSet.FirstOrDefaultAsync(x => x.StripeAccountId == stripeAccountId);
 
+    public async Task<StripeConnectedAccount?> GetByIdWithOwnerAsync(Guid id, CancellationToken ct = default)
+        => await _dbSet.Include(a => a.Owner).FirstOrDefaultAsync(a => a.Id == id, ct);
+
     public async Task<(IEnumerable<StripeConnectedAccount> Items, int Total)> GetPagedWithOwnerAsync(
         int page, int limit, CancellationToken ct = default)
     {

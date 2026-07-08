@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/cor
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { PropertyService } from '../../../core/services/property.service';
+import { PropertyService } from '@core/services/property/property.service';
 import { PropertyImageResponse } from '../../../core/models/property.model';
 
 @Component({

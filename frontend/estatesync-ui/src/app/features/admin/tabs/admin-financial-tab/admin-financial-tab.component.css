@@ -1,6 +1,6 @@
 .fin-card {
   background: white;
-  border: 1px solid #EBEBEB;
+  border: 1px solid var(--es-border-light);
   border-radius: 16px;
   padding: 20px 24px;
   display: flex;
@@ -21,78 +21,32 @@
 .fin-value {
   font-size: 22px;
   font-weight: 700;
-  color: #222;
+  color: var(--es-text);
   line-height: 1;
 }
 
 .fin-label {
   font-size: 13px;
-  color: #717171;
+  color: var(--es-text-secondary);
 }
 
 .fin-tabs ::ng-deep .mat-mdc-tab-header {
-  border-bottom: 1px solid #EBEBEB;
+  border-bottom: 1px solid var(--es-border-light);
   margin-bottom: 4px;
 }
 
-.filter-row {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-/* Table styles (shared pattern) */
-.admin-table-wrap {
-  background: white;
-  border: 1px solid #EBEBEB;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-}
-
-.admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.admin-table thead tr {
-  background: #F7F7F7;
-  border-bottom: 1px solid #EBEBEB;
-}
+/* Structural table styles come from the global .admin-table block in
+   styles.css; only the local tweaks live here. */
+.admin-table td { font-size: 14px; }
 
 .admin-table th {
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 600;
-  color: #717171;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.admin-table tbody tr {
-  border-bottom: 1px solid #F3F4F6;
-  transition: background 0.15s;
-}
-
-.admin-table tbody tr:last-child {
-  border-bottom: none;
-}
-
-.admin-table tbody tr:hover {
-  background: #FAFAFA;
-}
-
-.admin-table td {
-  padding: 14px 16px;
-  vertical-align: middle;
-}
-
 .user-name {
   font-weight: 600;
-  color: #222;
+  color: var(--es-text);
   font-size: 14px;
 }
 

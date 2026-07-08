@@ -1,4 +1,4 @@
-<h2 style="font-size:20px;font-weight:700;color:#222;margin-bottom:20px">Leases</h2>
+<h2 class="es-title mb-5">Leases</h2>
 
 @if (loading()) {
   <div class="flex items-center gap-3 py-8 text-sm text-es-muted">
@@ -9,15 +9,15 @@
     subtitle="Leases created from approved applications will appear here." />
 } @else {
   <div class="flex flex-col gap-4">
-    @for (lease of leases(); track lease.leaseId) {
+    @for (lease of leaseRows(); track lease.leaseId) {
       <div class="lease-card">
         <!-- Header -->
         <div class="lease-header">
           <div>
-            <div style="font-size:15px;font-weight:700;color:#222">{{ lease.propertyTitle }}</div>
-            <div style="font-size:12px;color:#717171;margin-top:2px">{{ lease.propertyAddress }}</div>
+            <div class="text-[15px] font-bold text-es-text">{{ lease.propertyTitle }}</div>
+            <div class="es-text-xs mt-0.5">{{ lease.propertyAddress }}</div>
             @if (lease.tenantName) {
-              <div style="font-size:12px;color:#717171;margin-top:2px">
+              <div class="es-text-xs mt-0.5">
                 <mat-icon class="!text-[13px] !w-[13px] !h-[13px] align-middle">person</mat-icon>
                 Tenant: <strong>{{ lease.tenantName }}</strong>
               </div>
@@ -43,16 +43,16 @@
           <div class="lease-detail">
             <span class="detail-label">Signed</span>
             <span class="detail-value">
-              <span [style.color]="lease.ownerSignedAt ? '#059669' : '#B45309'">Owner</span>
+              <span [class]="lease.ownerSignedAt ? 'es-text-success' : 'es-text-warn-deep'">Owner</span>
               /
-              <span [style.color]="lease.tenantSignedAt ? '#059669' : '#B45309'">Tenant</span>
+              <span [class]="lease.tenantSignedAt ? 'es-text-success' : 'es-text-warn-deep'">Tenant</span>
             </span>
           </div>
         </div>
 
         <!-- Actions -->
         <div class="lease-actions">
-          @if (canOwnerSign(lease)) {
+          @if (lease.canOwnerSign) {
             <a mat-flat-button color="primary" class="!rounded-full !h-9 !px-4 !text-sm"
               [routerLink]="['/leases', lease.leaseId, 'sign']">
               <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mr-1">draw</mat-icon>
@@ -60,14 +60,30 @@
             </a>
           }
           @if (lease.status === 'PartialSigned' && lease.ownerSignedAt && !lease.tenantSignedAt) {
-            <span style="font-size:12px;color:#B45309;background:#FEF3C7;padding:5px 12px;border-radius:20px;font-weight:600">
+            <span class="es-chip-amber text-[12px] px-3 py-[5px] rounded-[20px] font-semibold">
               Awaiting tenant signature
             </span>
           }
           @if (lease.status === 'PendingAdminApproval') {
-            <span style="font-size:12px;color:#6750A4;background:#EDE9F8;padding:5px 12px;border-radius:20px;font-weight:600">
+            <span class="es-chip-primary text-[12px] px-3 py-[5px] rounded-[20px] font-semibold">
               Awaiting admin approval
             </span>
+          }
+          @if (lease.hasRenewalRequest) {
+            <span class="es-chip-amber text-[12px] px-3 py-[5px] rounded-[20px] font-semibold">
+              Renewal requested
+            </span>
+            <button mat-flat-button color="primary" class="!rounded-full !h-9 !px-4 !text-sm"
+              [disabled]="renewalActionId() === lease.leaseId"
+              (click)="openApproveRenewalDialog(lease)">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mr-1">autorenew</mat-icon>
+              Approve renewal
+            </button>
+            <button mat-stroked-button class="!rounded-full !h-9 !px-4 !text-sm void-btn"
+              [disabled]="renewalActionId() === lease.leaseId"
+              (click)="rejectRenewal(lease)">
+              Decline
+            </button>
           }
           @if (lease.agreementPdfUrl) {
             <a mat-stroked-button class="!rounded-full !h-9 !px-4 !text-sm"
@@ -80,7 +96,7 @@
             [routerLink]="['/leases', lease.leaseId]">
             View
           </a>
-          @if (canVoid(lease)) {
+          @if (lease.canVoid) {
             <button mat-stroked-button class="!rounded-full !h-9 !px-4 !text-sm void-btn"
               (click)="openVoidDialog(lease)">
               Void

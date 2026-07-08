@@ -4,6 +4,7 @@ namespace EstateSync.Api.DTOs.Properties;
 
 public record PropertySearchRequest
 {
+    public string? Search { get; init; }
     public string? State { get; init; }
     public string? ListingType { get; init; }
     public string? PropertyType { get; init; }

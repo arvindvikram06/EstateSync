@@ -34,6 +34,7 @@ public record LeaseResponse
     public DateTime? OwnerSignedAt { get; init; }
     public string? OwnerSignature { get; init; }
     public string Status { get; init; } = string.Empty;
+    public bool IsRenewalRequested { get; init; }
     public DateTime? ActivatedAt { get; init; }
     public Guid? CancelledBy { get; init; }
     public string? CancellationReason { get; init; }

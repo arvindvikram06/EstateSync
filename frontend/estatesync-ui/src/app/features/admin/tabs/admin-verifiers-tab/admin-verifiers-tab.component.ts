@@ -11,7 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SlicePipe } from '@angular/common';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
-import { AdminService } from '../../../../core/services/admin.service';
+import { AdminService } from '@core/services/admin/admin.service';
 import { StaffResponse } from '../../../../core/models/admin.model';
 import { AdminCreateVerifierDialogComponent } from '../../dialogs/admin-create-verifier-dialog.component';
 
@@ -47,7 +47,7 @@ export class AdminVerifiersTabComponent implements OnInit {
   }
 
   openCreate(): void {
-    const ref = this.dialog.open(AdminCreateVerifierDialogComponent, { width: '480px' });
+    const ref = this.dialog.open(AdminCreateVerifierDialogComponent, { width: '100%', maxWidth: '480px' });
     ref.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(r => { if (r) this.load(); });
   }
 

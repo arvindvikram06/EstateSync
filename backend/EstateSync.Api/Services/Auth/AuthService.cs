@@ -1,4 +1,5 @@
 using System;
+using EstateSync.Api.Common;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +10,8 @@ using EstateSync.Api.Models;
 using EstateSync.Api.Interfaces.Services.Auth;
 using EstateSync.Api.Interfaces.Services.Tokens;
 
+using EstateSync.Api.Interfaces.Services.Email;
+using EstateSync.Api.Services.Email;
 namespace EstateSync.Api.Services.Auth;
 
 public class AuthService : IAuthService
@@ -20,6 +23,7 @@ public class AuthService : IAuthService
     private readonly ITokenService _tokenService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly EstateSync.Api.Mappers.AuthMapper _authMapper;
+    private readonly IEmailQueue _emailQueue;
 
     public AuthService(
         IUserRepository userRepository,
@@ -28,7 +32,8 @@ public class AuthService : IAuthService
         IPasswordService passwordService,
         ITokenService tokenService,
         IUnitOfWork unitOfWork,
-        EstateSync.Api.Mappers.AuthMapper authMapper)
+        EstateSync.Api.Mappers.AuthMapper authMapper,
+        IEmailQueue emailQueue)
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _roleRepository = roleRepository ?? throw new ArgumentNullException(nameof(roleRepository));
@@ -37,35 +42,76 @@ public class AuthService : IAuthService
         _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _authMapper = authMapper ?? throw new ArgumentNullException(nameof(authMapper));
+        _emailQueue = emailQueue ?? throw new ArgumentNullException(nameof(emailQueue));
     }
 
-    public async Task<(AuthResponse Auth, string RefreshToken)> RegisterAsync(RegisterRequest request)
-    {   
+    public async Task RegisterAsync(RegisterRequest request)
+    {
         var existingUser = await _userRepository.GetByEmailAsync(request.Email);
         if (existingUser != null)
         {
             throw new ConflictException("Email is already registered.");
         }
 
-        var tenantRole = await _roleRepository.GetByNameAsync("Tenant");
+        var tenantRole = await _roleRepository.GetByNameAsync(Roles.Tenant);
         if (tenantRole == null)
         {
-            throw new NotFoundException("Role", "Tenant");
+            throw new NotFoundException("Role", Roles.Tenant);
         }
 
         var newUser = CreateTenantUser(request, tenantRole);
+        newUser.IsEmailVerified = false;
+        IssueVerificationToken(newUser);
         await _userRepository.AddAsync(newUser);
-
-        var token = _tokenService.GenerateAccessToken(newUser);
-        var refreshTokenString = _tokenService.GenerateRefreshToken();
-
-        await CreateAndSaveRefreshTokenAsync(newUser.UserId, refreshTokenString, Guid.NewGuid().ToString());
-
-        newUser.LastLogin = DateTime.UtcNow;
         await _unitOfWork.SaveChangesAsync();
 
-        var authResponse = _authMapper.MapToAuthResponse(newUser, token);
-        return (authResponse, refreshTokenString);
+        // No tokens issued here — the user signs in after verifying their email.
+        await QueueVerificationEmailAsync(newUser);
+    }
+
+    public async Task VerifyEmailAsync(string token)
+    {
+        var user = await _userRepository.GetByEmailVerificationTokenAsync(token);
+        if (user == null)
+            throw new BadRequestException("Invalid or already-used verification link.");
+
+        if (user.EmailVerificationTokenExpiresAt < DateTime.UtcNow)
+            throw new BadRequestException("This verification link has expired. Please request a new one.");
+
+        user.IsEmailVerified = true;
+        user.EmailVerificationToken = null;
+        user.EmailVerificationTokenExpiresAt = null;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task ResendVerificationAsync(string email)
+    {
+        // Always succeed silently — never reveal whether an email is registered.
+        var user = await _userRepository.GetByEmailAsync(email);
+        if (user == null || user.IsEmailVerified) return;
+
+        IssueVerificationToken(user);
+        await _unitOfWork.SaveChangesAsync();
+        await QueueVerificationEmailAsync(user);
+    }
+
+    private static void IssueVerificationToken(User user)
+    {
+        user.EmailVerificationToken = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+        user.EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24);
+    }
+
+    private async Task QueueVerificationEmailAsync(User user)
+    {
+        await _emailQueue.EnqueueAsync(new EmailMessage
+        {
+            To = user.Email,
+            Subject = "Verify your EstateSync email",
+            Heading = $"Welcome, {user.FullName}!",
+            Body = "Confirm your email address to activate your EstateSync account. This link is valid for 24 hours.",
+            CtaLabel = "Verify my email",
+            CtaUrl = $"http://localhost:4200/auth/verify-email?token={user.EmailVerificationToken}",
+        });
     }
 
     public async Task<(AuthResponse Auth, string RefreshToken)> LoginAsync(LoginRequest request)
@@ -79,6 +125,11 @@ public class AuthService : IAuthService
         if (!user.IsActive)
         {
             throw new ForbiddenException("Your account is deactivated.");
+        }
+
+        if (!user.IsEmailVerified)
+        {
+            throw new ForbiddenException("Please verify your email before signing in. Check your inbox for the verification link.");
         }
 
         var accessToken = _tokenService.GenerateAccessToken(user);

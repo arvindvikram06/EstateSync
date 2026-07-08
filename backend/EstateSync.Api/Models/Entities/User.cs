@@ -13,13 +13,18 @@ public class User : BaseEntity
     public required string PasswordHash { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime? LastLogin { get; set; }
+
+    public bool IsEmailVerified { get; set; } = false;
+    public string? EmailVerificationToken { get; set; }
+    public DateTime? EmailVerificationTokenExpiresAt { get; set; }
     
-    public string? AadhaarNumber { get; set; }
-    public string? PanNumber { get; set; }
     public bool IsKycVerified { get; set; } = false;
     public bool IsOwnerVerified { get; set; } = false;
     public bool IsFinanciallyVerified { get; set; } = false;
     public decimal? VerifiedMonthlyIncome { get; set; }
+
+    // Role extension profiles
+    public OwnerProfile? OwnerProfile { get; set; }
 
     // Stripe Mappings
     public StripeConnectedAccount? StripeConnectedAccount { get; set; }

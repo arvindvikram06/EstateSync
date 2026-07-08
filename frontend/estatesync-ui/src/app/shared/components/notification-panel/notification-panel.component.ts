@@ -3,8 +3,6 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { NotificationResponse } from '../../../core/models/notification.model';
-import { NotificationService } from '../../../core/services/notification.service';
-import { AuthService } from '../../../core/services/auth.service';
 import { NotificationType } from '../../../core/models/enums';
 import {
   NotificationDetailDialogComponent,
@@ -118,14 +116,18 @@ export class NotificationPanelComponent {
   readonly notifications = input.required<NotificationResponse[]>();
   readonly markAllRead = output<void>();
 
-  private readonly notificationService = inject(NotificationService);
-  private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
 
   readonly hasUnread = computed(() => this.notifications().some(n => !n.isRead));
 
-  iconFor = iconForType;
-  timeAgo = timeAgo;
+  // Pre-compute per-item values so the template reads signals, not function calls.
+  readonly enriched = computed(() =>
+    this.notifications().map(n => ({
+      ...n,
+      _icon: iconForType(n.type),
+      _timeAgo: timeAgo(n.createdAt),
+    }))
+  );
 
   onClickNotification(n: NotificationResponse, event: MouseEvent): void {
     event.stopPropagation();
@@ -137,6 +139,8 @@ export class NotificationPanelComponent {
     };
     this.dialog.open(NotificationDetailDialogComponent, {
       data,
+      width: '100%',
+      maxWidth: '460px',
       panelClass: 'notif-dialog-panel',
       autoFocus: false,
     });

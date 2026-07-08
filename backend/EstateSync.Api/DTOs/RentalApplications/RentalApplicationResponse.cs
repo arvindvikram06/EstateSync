@@ -14,6 +14,8 @@ public record RentalApplicationResponse
     public int DurationMonths { get; init; }
     public decimal CommuteDistance { get; init; }
     public string Status { get; init; } = string.Empty;
+    public Guid? LeaseId { get; init; }
+    public string? LeaseStatus { get; init; }
     public string? ReviewRemarks { get; init; }
     public DateTime? ReviewedAt { get; init; }
     public DateTime CreatedAt { get; init; }

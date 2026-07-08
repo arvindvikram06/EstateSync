@@ -12,6 +12,8 @@ using EstateSync.Api.Services.Properties;
 using EstateSync.Api.Services.Auth;
 using EstateSync.Api.Services.Tokens;
 using EstateSync.Api.Services.Storage;
+using EstateSync.Api.Services.Documents;
+using EstateSync.Api.Interfaces.Services.Documents;
 using EstateSync.Api.Interfaces.Services.Properties;
 using EstateSync.Api.Interfaces.Services.Auth;
 using EstateSync.Api.Interfaces.Services.Tokens;
@@ -168,6 +170,7 @@ builder.Services.AddScoped<IPropertyApprovalService, PropertyApprovalService>();
 builder.Services.AddScoped<IPropertyDocumentService, PropertyDocumentService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<IKycService, KycService>();
+builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
 builder.Services.AddScoped<IRentalApplicationService, RentalApplicationService>();
 builder.Services.AddScoped<ITenantFinancialProfileService, TenantFinancialProfileService>();
 builder.Services.AddScoped<ILeaseService, LeaseService>();
@@ -199,6 +202,11 @@ builder.Services.AddHostedService<PenaltyScheduler>();
 builder.Services.AddHostedService<PropertyStatusUpdateScheduler>();
 builder.Services.AddHostedService<LeaseExpiryScheduler>();
 builder.Services.AddHostedService<RefreshTokenCleanupScheduler>();
+
+// ── Email (SMTP via background queue) ─────────────────────────
+builder.Services.Configure<EstateSync.Api.Common.EmailSettings>(builder.Configuration.GetSection("Email"));
+builder.Services.AddSingleton<EstateSync.Api.Interfaces.Services.Email.IEmailQueue, EstateSync.Api.Services.Email.EmailQueue>();
+builder.Services.AddHostedService<EstateSync.Api.Services.Email.EmailDispatcher>();
 
 var app = builder.Build();
 

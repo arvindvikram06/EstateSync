@@ -103,6 +103,32 @@ public class LeasesController : ControllerBase
         });
     }
 
+    [HttpGet("{id:guid}/bills")]
+    [Authorize(Roles = "Owner,Tenant,Admin")]
+    public async Task<ActionResult<ApiResponse<List<LeaseBillDetailResponse>>>> GetBills(
+        Guid id,
+        CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        var isAdmin = User.IsInRole("Admin");
+        var result = await _leaseService.GetLeaseBillsAsync(id, userId, isAdmin, ct);
+
+        return Ok(new ApiResponse<List<LeaseBillDetailResponse>> { Data = result });
+    }
+
+    [HttpGet("{id:guid}/payments")]
+    [Authorize(Roles = "Owner,Tenant,Admin")]
+    public async Task<ActionResult<ApiResponse<List<PaymentRecordResponse>>>> GetPayments(
+        Guid id,
+        CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        var isAdmin = User.IsInRole("Admin");
+        var result = await _leaseService.GetLeasePaymentsAsync(id, userId, isAdmin, ct);
+
+        return Ok(new ApiResponse<List<PaymentRecordResponse>> { Data = result });
+    }
+
     [HttpGet("tenant")]
     [Authorize(Roles = "Tenant")]
     public async Task<ActionResult<PagedResponse<LeaseResponse>>> GetTenantLeases(
@@ -147,7 +173,7 @@ public class LeasesController : ControllerBase
     {
         var requesterId = User.GetUserId();
         var isAdmin = User.IsInRole("Admin");
-        await _leaseService.TerminateLeaseAsync(id, requesterId, isAdmin, request.Reason, ct);
+        await _leaseService.TerminateLeaseAsync(id, requesterId, isAdmin, request.Reason, request.ForfeitDeposit, ct);
         return Ok(new ApiResponse<object> { Message = "Lease terminated successfully." });
     }
 
@@ -158,6 +184,15 @@ public class LeasesController : ControllerBase
         var tenantId = User.GetUserId();
         await _leaseService.RequestRenewalAsync(id, tenantId, ct);
         return Ok(new ApiResponse<object> { Message = "Renewal requested successfully." });
+    }
+
+    [HttpPost("{id:guid}/approve-renewal")]
+    [Authorize(Roles = "Owner")]
+    public async Task<ActionResult<ApiResponse<object>>> ApproveRenewal(Guid id, [FromBody] ApproveRenewalRequest request, CancellationToken ct)
+    {
+        var ownerId = User.GetUserId();
+        await _leaseService.ApproveRenewalAsync(id, ownerId, request.NewEndDate, ct);
+        return Ok(new ApiResponse<object> { Message = "Renewal approved successfully." });
     }
 
     [HttpPost("{id:guid}/reject-renewal")]

@@ -21,7 +21,7 @@
   }
 
   @if (activeTab() === 'bills') {
-    <app-bills-tab (pendingCountChange)="updateBillsBadge($event)" />
+    <app-bills-tab [bills]="bills()" [loading]="billsLoading()" />
   }
 
   @if (activeTab() === 'complaints') {

@@ -2,3 +2,6 @@
   display: block;
   width: 100%;
 }
+mat-spinner {
+  --mdc-circular-progress-active-indicator-color: white;
+}

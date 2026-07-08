@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using EstateSync.Api.Common;
 using EstateSync.Api.DTOs.Complaints;
 using EstateSync.Api.Interfaces.Services.Complaints;
 
@@ -26,53 +27,54 @@ public class ComplaintsController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Tenant")]
-    public async Task<ActionResult<ComplaintResponse>> CreateComplaint(CreateComplaintRequest request, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<ComplaintResponse>>> CreateComplaint(CreateComplaintRequest request, CancellationToken ct)
     {
         var tenantId = User.GetUserId();
         if (tenantId == Guid.Empty) throw new UnauthorizedAccessException();
 
         var result = await _complaintService.CreateComplaintAsync(tenantId, request, ct);
-        return CreatedAtAction(nameof(GetById), new { id = result.ComplaintId }, result);
+        return CreatedAtAction(nameof(GetById), new { id = result.ComplaintId },
+            new ApiResponse<ComplaintResponse> { Data = result, Message = "Complaint created successfully." });
     }
 
     [HttpPut("{id}/status")]
-    public async Task<ActionResult<ComplaintResponse>> UpdateStatus(Guid id, UpdateComplaintStatusRequest request, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<ComplaintResponse>>> UpdateStatus(Guid id, UpdateComplaintStatusRequest request, CancellationToken ct)
     {
         var userId = User.GetUserId();
         if (userId == Guid.Empty) throw new UnauthorizedAccessException();
 
         var result = await _complaintService.UpdateComplaintStatusAsync(userId, id, request, ct);
-        return Ok(result);
+        return Ok(new ApiResponse<ComplaintResponse> { Data = result, Message = "Complaint status updated." });
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<ComplaintResponse>> GetById(Guid id, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<ComplaintResponse>>> GetById(Guid id, CancellationToken ct)
     {
         var userId = User.GetUserId();
         if (userId == Guid.Empty) throw new UnauthorizedAccessException();
 
         var result = await _complaintService.GetByIdAsync(id, userId, ct);
-        return Ok(result);
+        return Ok(new ApiResponse<ComplaintResponse> { Data = result });
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ComplaintResponse>>> GetMyComplaints(CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<IEnumerable<ComplaintResponse>>>> GetMyComplaints(CancellationToken ct)
     {
         var userId = User.GetUserId();
         if (userId == Guid.Empty) throw new UnauthorizedAccessException();
 
         var result = await _complaintService.GetMyComplaintsAsync(userId, ct);
-        return Ok(result);
+        return Ok(new ApiResponse<IEnumerable<ComplaintResponse>> { Data = result });
     }
 
     [HttpPost("{id}/images")]
     [Authorize(Roles = "Tenant")]
-    public async Task<ActionResult<ComplaintResponse>> UploadImage(Guid id, [FromForm] IFormFile file, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<ComplaintResponse>>> UploadImage(Guid id, [FromForm] IFormFile file, CancellationToken ct)
     {
         var tenantId = User.GetUserId();
         if (tenantId == Guid.Empty) throw new UnauthorizedAccessException();
 
         var result = await _complaintService.UploadComplaintImageAsync(tenantId, id, file, ct);
-        return Ok(result);
+        return Ok(new ApiResponse<ComplaintResponse> { Data = result });
     }
 }

@@ -1,18 +1,18 @@
-<mat-toolbar class="es-navbar border-b border-[#EBEBEB]">
+<mat-toolbar class="es-navbar border-b border-es-border-light">
 
   <!-- Brand -->
   <a routerLink="/" class="flex items-center gap-1.5 no-underline font-bold text-[19px] tracking-tight shrink-0">
-    <mat-icon style="color: #FF385C; font-size: 22px; width: 22px; height: 22px;">home_work</mat-icon>
+    <mat-icon class="text-brand !text-[22px] !w-[22px] !h-[22px]">home_work</mat-icon>
     <span class="text-brand">EstateSync</span>
   </a>
 
   <!-- Centred search pill — desktop only -->
   <div class="hidden md:flex flex-1 justify-center px-8">
     @if (isSearchVisible()) {
-      <div class="flex items-center gap-1.5 border border-[#BBBBBB] rounded-[40px] pl-4 pr-2 py-[7px] max-w-[520px] w-full shadow-[0_1px_4px_rgba(0,0,0,0.3)] bg-white transition-[box-shadow,border-color] focus-within:shadow-[0_2px_10px_rgba(0,0,0,0.5)] focus-within:border-[#BBBBBB]">
-        <mat-icon class="text-es-muted shrink-0" style="font-size: 18px; width: 18px; height: 18px;">search</mat-icon>
+      <div class="flex items-center gap-1.5 border border-es-border-strong rounded-[40px] pl-4 pr-2 py-[7px] max-w-[520px] w-full shadow-[0_1px_4px_rgba(0,0,0,0.3)] bg-white transition-[box-shadow,border-color] focus-within:shadow-[0_2px_10px_rgba(0,0,0,0.5)] focus-within:border-es-border-strong">
+        <mat-icon class="text-es-muted shrink-0 !text-[18px] !w-[18px] !h-[18px]">search</mat-icon>
         <input #searchInput
-          class="flex-1 border-none outline-none text-sm text-es-text bg-transparent min-w-0 placeholder:text-[#AAAAAA]"
+          class="flex-1 border-none outline-none text-sm text-es-text bg-transparent min-w-0 placeholder:text-es-faint"
           type="text"
           placeholder="Search by city or state…"
           (keyup.enter)="doSearch(searchInput.value)" />
@@ -28,8 +28,8 @@
   <!-- Mobile spacer -->
   <span class="flex-1 md:hidden"></span>
 
-  <!-- Right side -->
-  <div class="flex items-center gap-2 shrink-0" style="position: relative;">
+  <!-- Desktop right side — hidden below 1024px via component CSS -->
+  <div class="navbar-right-desktop">
     @if (authService.isLoggedIn()) {
 
       <!-- Notification bell -->
@@ -40,75 +40,120 @@
         }
       </div>
 
-      <!-- Notification panel dropdown -->
-      @if (panelOpen()) {
-        <div class="navbar-notif-overlay" (click)="$event.stopPropagation()">
-          <app-notification-panel
-            [notifications]="notificationService.notifications()"
-            (markAllRead)="onMarkAllRead()" />
-        </div>
-      }
-
-      <!-- Desktop nav links (navbar is only shown to Tenant/Owner) -->
+      <!-- Desktop nav links -->
       @if (isOwner()) {
-        <a mat-button routerLink="/owner/dashboard" class="hidden md:inline-flex" style="font-size: 13px; font-weight: 500;">
+        <a mat-button routerLink="/owner/dashboard" routerLinkActive="nav-link--active"
+          class="!text-[13px] !font-medium">
           Owner dashboard
         </a>
       }
-      <a mat-button routerLink="/dashboard" class="hidden md:inline-flex" style="font-size: 13px; font-weight: 500;">
+      <a mat-button routerLink="/dashboard" routerLinkActive="nav-link--active"
+        class="!text-[13px] !font-medium">
         {{ isOwner() ? 'Tenant dashboard' : 'Dashboard' }}
       </a>
 
-      <!-- User avatar + dropdown (always visible; contains nav links for mobile) -->
+      <!-- Avatar pill + dropdown -->
       <div [matMenuTriggerFor]="userMenu"
-        class="flex items-center gap-2 border border-[#DDDDDD] rounded-[40px] py-[5px] pl-3 pr-1.5 bg-white cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.4)] transition-shadow ml-1 outline-none focus:outline-none appearance-none">
-        <mat-icon style="font-size: 18px; width: 18px; height: 18px; color: #717171;">menu</mat-icon>
+        class="flex items-center gap-2 border border-es-border rounded-[40px] py-[5px] pl-3 pr-1.5 bg-white cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.4)] transition-shadow ml-1 outline-none focus:outline-none appearance-none">
+        <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-es-muted">menu</mat-icon>
         <span class="w-[30px] h-[30px] rounded-full bg-[var(--mat-sys-primary)] text-white text-xs font-bold flex items-center justify-center shrink-0">{{ initials() }}</span>
       </div>
 
       <mat-menu #userMenu="matMenu" xPosition="before">
-        <!-- User info header -->
-        <div class="flex flex-col px-4 pt-3 pb-2 border-b border-[#EBEBEB] pointer-events-none select-none">
+        <div class="flex flex-col px-4 pt-3 pb-2 border-b border-es-border-light pointer-events-none select-none">
           <span class="text-[13px] font-bold text-es-text leading-tight">{{ user()?.fullName }}</span>
           <span class="text-xs text-es-muted mt-0.5">{{ user()?.email }}</span>
         </div>
-
-        <!-- Navigation links (navbar is only shown to Tenant/Owner) -->
-        @if (isOwner()) {
-          <a mat-menu-item routerLink="/owner/dashboard">
-            <mat-icon>apartment</mat-icon> Owner dashboard
-          </a>
-        }
-        <a mat-menu-item routerLink="/dashboard">
-          <mat-icon>dashboard</mat-icon> {{ isOwner() ? 'Tenant dashboard' : 'Dashboard' }}
+        <a mat-menu-item routerLink="/profile">
+          <mat-icon>person</mat-icon> My profile
         </a>
-        <mat-divider />
-        <button mat-menu-item (click)="logout()" style="color: #DC2626;">
-          <mat-icon style="color: #DC2626;">logout</mat-icon> Sign out
+        <button mat-menu-item (click)="logout()" class="!text-es-danger">
+          <mat-icon class="!text-es-danger">logout</mat-icon> Sign out
         </button>
       </mat-menu>
 
     } @else {
-      <!-- Desktop: Sign in / Sign up buttons -->
-      <a mat-button routerLink="/auth/login" class="hidden md:inline-flex" style="font-size: 13px; font-weight: 500;">Sign in</a>
+      <a mat-button routerLink="/auth/login" class="!text-[13px] !font-medium">Sign in</a>
       <a mat-stroked-button routerLink="/auth/register"
-        class="hidden md:inline-flex ml-1" style="font-size: 13px; font-weight: 500; border-radius: 9999px; padding-left: 20px; padding-right: 20px;">
+        class="!text-[13px] !font-medium !rounded-full !pl-5 !pr-5 !ml-1">
         Sign up
       </a>
-
-      <!-- Mobile: hamburger menu -->
-      <button mat-icon-button class="md:hidden" [matMenuTriggerFor]="mobileAuthMenu" aria-label="Open menu">
-        <mat-icon>menu</mat-icon>
-      </button>
-      <mat-menu #mobileAuthMenu="matMenu" xPosition="before">
-        <a mat-menu-item routerLink="/auth/login">
-          <mat-icon>login</mat-icon> Sign in
-        </a>
-        <a mat-menu-item routerLink="/auth/register">
-          <mat-icon>person_add</mat-icon> Sign up
-        </a>
-      </mat-menu>
     }
   </div>
 
+  <!-- Mobile hamburger — hidden above 1024px via component CSS media query -->
+  @if (authService.isLoggedIn()) {
+    <button class="navbar-hamburger" (click)="toggleMobileMenu()" aria-label="Open menu">
+      <mat-icon>{{ mobileMenuOpen() ? 'close' : 'menu' }}</mat-icon>
+    </button>
+  } @else {
+    <button class="navbar-hamburger" [matMenuTriggerFor]="mobileAuthMenu" aria-label="Open menu">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <mat-menu #mobileAuthMenu="matMenu" xPosition="before">
+      <a mat-menu-item routerLink="/auth/login">
+        <mat-icon>login</mat-icon> Sign in
+      </a>
+      <a mat-menu-item routerLink="/auth/register">
+        <mat-icon>person_add</mat-icon> Sign up
+      </a>
+    </mat-menu>
+  }
+
 </mat-toolbar>
+
+<!-- Notification panel — fixed so it works at any viewport width -->
+@if (panelOpen()) {
+  <div class="navbar-notif-overlay" (click)="$event.stopPropagation()">
+    <app-notification-panel
+      [notifications]="notificationService.notifications()"
+      (markAllRead)="onMarkAllRead()" />
+  </div>
+}
+
+<!-- Mobile backdrop -->
+@if (mobileMenuOpen()) {
+  <div class="mobile-drawer-backdrop" (click)="closeMobileMenu()"></div>
+}
+
+<!-- Mobile drawer (authenticated) -->
+@if (authService.isLoggedIn()) {
+  <div class="mobile-drawer" [class.mobile-drawer--open]="mobileMenuOpen()">
+
+    @if (user()) {
+      <div class="mobile-drawer__user">
+        <div class="mobile-drawer__avatar">{{ initials() }}</div>
+        <div>
+          <div class="mobile-drawer__name">{{ user()!.fullName }}</div>
+          <div class="mobile-drawer__email">{{ user()!.email }}</div>
+        </div>
+      </div>
+      <div class="mobile-drawer__divider"></div>
+    }
+
+    <!-- Notifications -->
+    <button class="mobile-drawer__link" (click)="openMobileNotifications()">
+      <mat-icon>notifications</mat-icon>
+      Notifications
+      @if (notificationService.unreadCount() > 0) {
+        <span class="mobile-drawer__badge">{{ notificationService.unreadCount() }}</span>
+      }
+    </button>
+
+    @if (isOwner()) {
+      <a class="mobile-drawer__link" routerLinkActive="mobile-drawer__link--active" routerLink="/owner/dashboard" (click)="closeMobileMenu()">
+        <mat-icon>home_work</mat-icon> Owner Dashboard
+      </a>
+    }
+    <a class="mobile-drawer__link" routerLinkActive="mobile-drawer__link--active" routerLink="/dashboard" (click)="closeMobileMenu()">
+      <mat-icon>dashboard</mat-icon> {{ isOwner() ? 'Tenant Dashboard' : 'Dashboard' }}
+    </a>
+
+    <div class="mobile-drawer__spacer"></div>
+    <div class="mobile-drawer__divider"></div>
+    <button class="mobile-drawer__link mobile-drawer__link--danger" (click)="logout()">
+      <mat-icon>logout</mat-icon> Sign out
+    </button>
+
+  </div>
+}

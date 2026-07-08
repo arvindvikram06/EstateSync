@@ -19,4 +19,6 @@ public interface IOwnerSettlementRepository : IRepository<OwnerSettlement>
         Guid ownerId, CancellationToken ct = default);
 
     Task<OwnerSettlement?> GetByStripePayoutIdAsync(string stripePayoutId, CancellationToken ct = default);
+
+    Task<int> CountAsync(CancellationToken ct = default);
 }

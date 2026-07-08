@@ -16,7 +16,7 @@ export interface ConfirmDialogData {
   imports: [MatDialogModule, MatButtonModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="p-7" style="min-width:360px;max-width:440px">
+    <div class="p-7">
       <div class="flex items-center gap-3 mb-4">
         <div class="flex items-center justify-center w-10 h-10 rounded-full"
           [style.background]="data.destructive ? '#FEE2E2' : '#FEF3C7'">

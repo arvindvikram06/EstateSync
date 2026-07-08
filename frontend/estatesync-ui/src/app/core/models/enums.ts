@@ -127,4 +127,7 @@ export enum NotificationType {
   PropertyRejected = 'PropertyRejected',
   DocumentUploaded = 'DocumentUploaded',
   General = 'General',
+  LeaseRenewalRequested = 'LeaseRenewalRequested',
+  LeaseRenewalApproved = 'LeaseRenewalApproved',
+  LeaseRenewalRejected = 'LeaseRenewalRejected',
 }

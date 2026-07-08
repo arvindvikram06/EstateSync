@@ -1,5 +1,5 @@
 <div class="flex items-center justify-between mb-5">
-  <h2 style="font-size:20px;font-weight:700;color:#222;margin:0">Lease Approvals</h2>
+  <h2 class="es-title">Lease Approvals</h2>
   @if (pendingCount() > 0) {
     <span class="es-badge es-badge--pending">{{ pendingCount() }} pending review</span>
   }
@@ -29,8 +29,8 @@
         <!-- Header -->
         <div class="lease-header">
           <div class="flex-1 min-w-0">
-            <div style="font-size:15px;font-weight:700;color:#222">{{ lease.propertyTitle ?? '—' }}</div>
-            <div style="font-size:12px;color:#717171;margin-top:2px">{{ lease.propertyAddress ?? '' }}</div>
+            <div class="text-[15px] font-bold text-es-text">{{ lease.propertyTitle ?? '—' }}</div>
+            <div class="es-text-xs mt-0.5">{{ lease.propertyAddress ?? '' }}</div>
             <div class="flex gap-4 mt-2 text-xs text-es-muted">
               @if (lease.tenantName) {
                 <span>
@@ -71,13 +71,13 @@
 
         <!-- Signing status -->
         <div class="sign-row">
-          <span class="sign-indicator" [style.color]="lease.ownerSignedAt ? '#059669' : '#9CA3AF'">
+          <span class="sign-indicator" [class]="lease.ownerSignedAt ? 'es-text-success' : 'text-es-faint'">
             <mat-icon class="!text-[15px] !w-[15px] !h-[15px] align-middle">
               {{ lease.ownerSignedAt ? 'check_circle' : 'radio_button_unchecked' }}
             </mat-icon>
             Owner {{ lease.ownerSignedAt ? 'signed' : 'pending' }}
           </span>
-          <span class="sign-indicator" [style.color]="lease.tenantSignedAt ? '#059669' : '#9CA3AF'">
+          <span class="sign-indicator" [class]="lease.tenantSignedAt ? 'es-text-success' : 'text-es-faint'">
             <mat-icon class="!text-[15px] !w-[15px] !h-[15px] align-middle">
               {{ lease.tenantSignedAt ? 'check_circle' : 'radio_button_unchecked' }}
             </mat-icon>
@@ -88,7 +88,7 @@
         <!-- Actions -->
         <div class="lease-actions">
           <a mat-stroked-button class="!rounded-full !h-9 !px-4 !text-sm"
-            [routerLink]="['/leases', lease.leaseId]">
+            [routerLink]="['/admin/leases', lease.leaseId]">
             View
           </a>
           @if (lease.agreementPdfUrl) {
@@ -103,7 +103,7 @@
               [disabled]="reviewingId() !== null"
               (click)="openApproveDialog(lease)">
               @if (reviewingId() === lease.leaseId) {
-                <mat-spinner diameter="14" style="display:inline-block;margin-right:6px" />
+                <mat-spinner diameter="14" class="inline-block mr-1.5" />
               } @else {
                 <mat-icon class="!text-[15px] !w-[15px] !h-[15px] mr-1">rate_review</mat-icon>
               }

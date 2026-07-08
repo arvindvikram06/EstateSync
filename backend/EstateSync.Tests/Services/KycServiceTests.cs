@@ -180,8 +180,8 @@ public class KycServiceTests
         };
 
         _kycRepoMock.Setup(x => x.GetWithDetailsByIdAsync(kycId)).ReturnsAsync(kyc);
-        _userRepoMock.Setup(x => x.IsAadhaarInUseAsync(request.AadhaarNumber, userId)).ReturnsAsync(false);
-        _userRepoMock.Setup(x => x.IsPanInUseAsync(request.PanNumber, userId)).ReturnsAsync(false);
+        _kycRepoMock.Setup(x => x.IsAadhaarApprovedAsync(request.AadhaarNumber, userId)).ReturnsAsync(false);
+        _kycRepoMock.Setup(x => x.IsPanApprovedAsync(request.PanNumber, userId)).ReturnsAsync(false);
 
         await _service.SubmitAsync(userId, kycId, request, CancellationToken.None);
 

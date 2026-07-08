@@ -27,14 +27,27 @@ public class AuthController : ControllerBase
 
     // User Registration Endpoint
     [HttpPost("register")]
-    public async Task<ActionResult<ApiResponse<AuthResponse>>> Register([FromBody] RegisterRequest request)
+    public async Task<ActionResult<ApiResponse<object>>> Register([FromBody] RegisterRequest request)
     {
-        var (auth, refreshToken) = await _authService.RegisterAsync(request);
+        await _authService.RegisterAsync(request);
+        return StatusCode(StatusCodes.Status201Created, new ApiResponse<object>
+        {
+            Message = "Registration successful. Check your email for the verification link."
+        });
+    }
 
-        // Set the refresh token in an HttpOnly cookie
-        SetRefreshTokenCookie(refreshToken);
+    [HttpPost("verify-email")]
+    public async Task<ActionResult<ApiResponse<object>>> VerifyEmail([FromBody] VerifyEmailRequest request)
+    {
+        await _authService.VerifyEmailAsync(request.Token);
+        return Ok(new ApiResponse<object> { Message = "Email verified successfully. You can now sign in." });
+    }
 
-        return StatusCode(StatusCodes.Status201Created, ApiResponse<AuthResponse>.Ok(auth, message: "Registration successful."));
+    [HttpPost("resend-verification")]
+    public async Task<ActionResult<ApiResponse<object>>> ResendVerification([FromBody] ResendVerificationRequest request)
+    {
+        await _authService.ResendVerificationAsync(request.Email);
+        return Ok(new ApiResponse<object> { Message = "If that email is registered and unverified, a new verification link has been sent." });
     }
 
     // User Login Endpoint

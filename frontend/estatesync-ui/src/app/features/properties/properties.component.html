@@ -4,32 +4,30 @@
 }
 
 <!-- Filter bar -->
-<section class="sticky top-16 z-10 bg-white border-b border-[#EBEBEB] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-  <div class="max-w-[1240px] mx-auto px-6 py-3 flex items-center flex-wrap gap-x-6 gap-y-2">
+<section class="sticky top-16 z-10 bg-white border-b border-es-border-light shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+  <div class="max-w-[1240px] mx-auto px-4 sm:px-6 py-3 flex items-center flex-wrap gap-x-3 sm:gap-x-6 gap-y-2">
 
-    <!-- Active location chip -->
-    @if (stateFilter()) {
-      <div class="flex items-center gap-1.5 pl-3 pr-1.5 py-[5px] rounded-full text-[12px] font-semibold"
-           style="background:color-mix(in srgb,var(--mat-sys-primary) 10%,white);color:var(--mat-sys-primary);border:1px solid color-mix(in srgb,var(--mat-sys-primary) 25%,white)">
-        <mat-icon style="font-size:13px;width:13px;height:13px">location_on</mat-icon>
-        {{ stateFilter() }}
-        <button type="button" (click)="clearState()"
-          class="flex items-center justify-center w-[18px] h-[18px] rounded-full ml-0.5 border-none cursor-pointer"
-          style="background:color-mix(in srgb,var(--mat-sys-primary) 20%,white)">
-          <mat-icon style="font-size:11px;width:11px;height:11px;color:var(--mat-sys-primary)">close</mat-icon>
+    <!-- Active search chip -->
+    @if (searchFilter()) {
+      <div class="search-chip flex items-center gap-1.5 pl-3 pr-1.5 py-[5px] rounded-full text-[12px] font-semibold">
+        <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">search</mat-icon>
+        {{ searchFilter() }}
+        <button type="button" (click)="clearSearch()"
+          class="search-chip__close flex items-center justify-center w-[18px] h-[18px] rounded-full ml-0.5 border-none cursor-pointer">
+          <mat-icon class="!text-[11px] !w-[11px] !h-[11px] es-text-primary">close</mat-icon>
         </button>
       </div>
     }
 
-    <!-- Divider if location chip visible -->
-    @if (stateFilter()) {
-      <div class="h-5 w-px bg-[#EBEBEB]"></div>
+    <!-- Divider if search chip visible -->
+    @if (searchFilter()) {
+      <div class="h-5 w-px bg-es-border-light hidden sm:block"></div>
     }
 
     <!-- Type filter -->
-    <div class="flex items-center gap-1.5">
+    <div class="flex items-center gap-1.5 max-w-full">
       <span class="text-[11px] font-semibold text-es-muted uppercase tracking-[0.4px] shrink-0">Type</span>
-      <div class="flex gap-1">
+      <div class="flex gap-1 overflow-x-auto no-scrollbar">
         @for (opt of typeOptions; track opt.value) {
           <button type="button" class="filter-pill" [class.filter-pill--active]="typeFilter() === opt.value"
             (click)="setType(opt.value)">{{ opt.label }}</button>
@@ -37,12 +35,12 @@
       </div>
     </div>
 
-    <div class="h-5 w-px bg-[#EBEBEB]"></div>
+    <div class="h-5 w-px bg-es-border-light hidden sm:block"></div>
 
     <!-- Bedrooms filter -->
-    <div class="flex items-center gap-1.5">
+    <div class="flex items-center gap-1.5 max-w-full">
       <span class="text-[11px] font-semibold text-es-muted uppercase tracking-[0.4px] shrink-0">Beds</span>
-      <div class="flex gap-1">
+      <div class="flex gap-1 overflow-x-auto no-scrollbar">
         @for (opt of bedroomsOptions; track opt.value) {
           <button type="button" class="filter-pill" [class.filter-pill--active]="bedroomsFilter() === opt.value"
             (click)="setBedrooms(opt.value)">{{ opt.label }}</button>
@@ -50,12 +48,12 @@
       </div>
     </div>
 
-    <div class="h-5 w-px bg-[#EBEBEB]"></div>
+    <div class="h-5 w-px bg-es-border-light hidden sm:block"></div>
 
     <!-- Rent filter -->
-    <div class="flex items-center gap-1.5">
+    <div class="flex items-center gap-1.5 max-w-full">
       <span class="text-[11px] font-semibold text-es-muted uppercase tracking-[0.4px] shrink-0">Rent</span>
-      <div class="flex gap-1">
+      <div class="flex gap-1 overflow-x-auto no-scrollbar">
         @for (opt of rentOptions; track opt.value) {
           <button type="button" class="filter-pill" [class.filter-pill--active]="rentFilter() === opt.value"
             (click)="setRent(opt.value)">{{ opt.label }}</button>
@@ -65,11 +63,11 @@
 
     <!-- Clear all -->
     @if (hasActiveFilters()) {
-      <div class="h-5 w-px bg-[#EBEBEB]"></div>
+      <div class="h-5 w-px bg-es-border-light hidden sm:block"></div>
       <button type="button" (click)="clearFilters()"
-        class="flex items-center gap-1 text-[12px] font-semibold cursor-pointer border-none bg-transparent"
-        style="color:var(--mat-sys-primary)">
-        <mat-icon style="font-size:14px;width:14px;height:14px">close</mat-icon>
+        class="flex items-center gap-1 text-[12px] font-semibold cursor-pointer border-none bg-transparent es-text-primary"
+       >
+        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">close</mat-icon>
         Clear all
       </button>
     }
@@ -84,7 +82,7 @@
     <!-- Results header -->
     <div class="mb-6">
       <h1 class="text-[22px] font-bold text-es-text tracking-tight leading-snug">
-        @if (stateFilter()) { Properties in {{ stateFilter() }} }
+        @if (searchFilter()) { Results for "{{ searchFilter() }}" }
         @else { All Properties }
       </h1>
       @if (!isLoading() && total() > 0) {

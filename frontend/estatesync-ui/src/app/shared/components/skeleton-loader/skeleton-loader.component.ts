@@ -1,10 +1,9 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
-import { NgFor } from '@angular/common';
 
 @Component({
   selector: 'app-skeleton-loader',
   standalone: true,
-  imports: [NgFor],
+  imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (type === 'table') {
