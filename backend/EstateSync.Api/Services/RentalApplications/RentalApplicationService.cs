@@ -202,26 +202,44 @@ public class RentalApplicationService : IRentalApplicationService
         return _mapper.MapToResponse(application);
     }
 
+    public async Task DeleteApplicationAsync(Guid applicationId, Guid tenantId, CancellationToken ct)
+    {
+        var application = await _rentalAppRepo.GetWithDetailsByIdAsync(applicationId);
+        if (application == null)
+            throw new NotFoundException("RentalApplication", applicationId);
 
-    
+        if (application.TenantId != tenantId)
+            throw new ForbiddenException("You are not authorized to cancel this application.");
+
+        if (application.Status != ApplicationStatus.Pending)
+            throw new BadRequestException("You can only cancel a pending application.");
+
+        await _rentalAppRepo.DeleteAsync(application);
+
+        var notification = new Notification
+        {
+            NotificationId = Guid.NewGuid(),
+            UserId = application.Property!.OwnerId,
+            Type = NotificationType.General,
+            Title = "Application Cancelled",
+            Message = $"A tenant has cancelled their application for '{application.Property.Title}'.",
+            EntityId = applicationId.ToString(),
+            EntityType = "RentalApplication",
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _notificationSender.SendAsync(notification);
+
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        _logger.LogInformation("Rental application {ApplicationId} cancelled by tenant {TenantId}", applicationId, tenantId);
+    }
+
     private async Task ValidateCreateApplicationAsync(Guid propertyId, User tenant, Property property, Guid tenantId, DateOnly moveInDate)
     {
         if (!tenant.IsKycVerified)
         {
             throw new ForbiddenException("You must complete KYC verification before applying for a rental property.");
-        }
-
-        if (property.RequiresVerifiedIncome && !tenant.IsFinanciallyVerified)
-        {
-            throw new ForbiddenException("This property requires a verified income profile. Please submit your financial profile first.");
-        }
-
-        if (property.RequiresVerifiedIncome && tenant.IsFinanciallyVerified
-            && tenant.VerifiedMonthlyIncome < property.MonthlyRent * 3)
-        {
-            _logger.LogWarning("Tenant {TenantId} has insufficient verified income (₹{VerifiedIncome}/month) for property {PropertyId} with rent ₹{MonthlyRent}/month",
-                tenantId, tenant.VerifiedMonthlyIncome, propertyId, property.MonthlyRent);
-            throw new ForbiddenException($"Your verified income (₹{tenant.VerifiedMonthlyIncome:N0}/month) does not meet the minimum requirement of 3× monthly rent (₹{property.MonthlyRent * 3:N0}) for this property.");
         }
 
         if (property.Status != PropertyStatus.Active && property.Status != PropertyStatus.AvailableSoon)

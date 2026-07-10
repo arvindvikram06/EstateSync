@@ -9,7 +9,6 @@ import { AdminService } from '@core/services/admin/admin.service';
 import { AdminDashboardStats } from '../../core/models/admin.model';
 import { AdminOverviewTabComponent } from './tabs/admin-overview-tab/admin-overview-tab.component';
 import { AdminKycTabComponent } from './tabs/admin-kyc-tab/admin-kyc-tab.component';
-import { AdminFinancialProfilesTabComponent } from './tabs/admin-financial-profiles-tab/admin-financial-profiles-tab.component';
 import { AdminPropertiesTabComponent } from './tabs/admin-properties-tab/admin-properties-tab.component';
 import { AdminLeasesTabComponent } from './tabs/admin-leases-tab/admin-leases-tab.component';
 import { AdminVerifiersTabComponent } from './tabs/admin-verifiers-tab/admin-verifiers-tab.component';
@@ -24,7 +23,6 @@ import { AdminAuditLogsTabComponent } from './tabs/admin-audit-logs-tab/admin-au
     DashboardLayoutComponent,
     AdminOverviewTabComponent,
     AdminKycTabComponent,
-    AdminFinancialProfilesTabComponent,
     AdminPropertiesTabComponent,
     AdminLeasesTabComponent,
     AdminVerifiersTabComponent,
@@ -53,9 +51,8 @@ export class AdminDashboardComponent implements OnInit {
 
   readonly navItems = computed<NavItem[]>(() => [
     { id: 'overview',           label: 'Overview',             icon: 'dashboard' },
-    { id: 'kyc',                label: 'KYC Verifications',    icon: 'verified_user' },
-    { id: 'financial-profiles', label: 'Financial Profiles',   icon: 'account_balance_wallet' },
-    { id: 'properties',         label: 'Property Approvals',   icon: 'home_work' },
+    { id: 'kyc',        label: 'KYC Verifications',   icon: 'verified_user' },
+    { id: 'properties', label: 'Property Approvals',  icon: 'home_work' },
     { id: 'leases',             label: 'Lease Approvals',      icon: 'article', badge: this.pendingLeaseCount() || undefined },
     { id: 'verifiers',          label: 'Verifiers',            icon: 'manage_accounts' },
     { id: 'financial',          label: 'Financial Dashboard',  icon: 'payments' },

@@ -44,47 +44,6 @@
   }
 }
 
-<!-- Financial Profile Banner (shown once KYC approved) -->
-@if (kycStatus() === 'Approved' && !kycLoading()) {
-  @if (finStore.step() === 'loading' || finStore.step() === 'intro' || finStore.step() === 'documents' || finStore.step() === 'details') {
-    <div class="kyc-banner kyc-banner--action mb-7">
-      <mat-icon class="!text-[24px] !w-[24px] !h-[24px] es-text-primary">account_balance_wallet</mat-icon>
-      <div class="flex-1">
-        <div class="es-text-strong es-text-primary">Complete Financial Verification</div>
-        <div class="kyc-banner__sub es-text-primary">Upload income documents to unlock property applications</div>
-      </div>
-      <button mat-flat-button color="primary" class="!rounded-full !text-xs !h-8" (click)="goToKyc()">
-        {{ finStore.step() === 'documents' || finStore.step() === 'details' ? 'Continue' : 'Start' }}
-      </button>
-    </div>
-  } @else if (finStore.step() === 'pending' || finStore.step() === 'done') {
-    <div class="kyc-banner kyc-banner--pending mb-7">
-      <mat-icon class="!text-[24px] !w-[24px] !h-[24px] es-text-warn-deep">hourglass_top</mat-icon>
-      <div class="flex-1">
-        <div class="es-text-strong es-text-warn-deep">Financial Profile Under Review</div>
-        <div class="kyc-banner__sub es-text-warn-deep">Our team will verify your income documents within 24–48 hours</div>
-      </div>
-    </div>
-  } @else if (finStore.step() === 'approved') {
-    <div class="kyc-banner kyc-banner--approved mb-7">
-      <mat-icon class="!text-[24px] !w-[24px] !h-[24px] es-text-success">verified</mat-icon>
-      <div class="flex-1">
-        <div class="es-text-strong es-text-success">Financial Profile Verified</div>
-        <div class="kyc-banner__sub es-text-success">Your income has been verified — you're fully ready to apply!</div>
-      </div>
-    </div>
-  } @else if (finStore.step() === 'rejected') {
-    <div class="kyc-banner kyc-banner--rejected mb-7">
-      <mat-icon class="!text-[24px] !w-[24px] !h-[24px] es-text-danger">cancel</mat-icon>
-      <div class="flex-1">
-        <div class="es-text-strong es-text-danger">Financial Profile Rejected</div>
-        <div class="kyc-banner__sub es-text-danger">Please re-submit with correct income documents</div>
-      </div>
-      <button mat-flat-button class="es-btn-danger-solid !rounded-full !text-xs !h-8" (click)="goToKyc()">Retry</button>
-    </div>
-  }
-}
-
 <!-- Become an Owner card (KYC approved, not yet an owner) -->
 @if (kycStatus() === 'Approved' && !isOwner() && !kycLoading()) {
   <div class="es-card px-6 py-5 mb-7 flex flex-col sm:flex-row sm:items-center gap-4">

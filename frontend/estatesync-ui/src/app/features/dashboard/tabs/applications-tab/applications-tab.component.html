@@ -32,10 +32,22 @@
             Applied {{ formatDate(app.appliedAt) }}
           </div>
         </div>
-        <div class="flex flex-col items-end gap-1 shrink-0">
+        <div class="flex flex-col items-end gap-2 shrink-0">
           <app-status-badge [status]="app.status" />
           @if (app.reviewedAt) {
             <span class="es-text-hint">{{ formatDate(app.reviewedAt) }}</span>
+          }
+          @if (app.status === 'Pending') {
+            <button mat-stroked-button class="cancel-app-btn"
+              [disabled]="cancelling() === app.applicationId"
+              (click)="cancel(app)">
+              @if (cancelling() === app.applicationId) {
+                <mat-progress-spinner diameter="14" mode="indeterminate" />
+              } @else {
+                <mat-icon>close</mat-icon>
+              }
+              Cancel
+            </button>
           }
         </div>
       </div>

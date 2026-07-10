@@ -9,7 +9,7 @@
 <p class="es-page-subtitle">Platform health and pending actions at a glance.</p>
 
 <!-- ── Pending action alerts ─────────────────────────────────────────────── -->
-@if ((stats()!.pendingKycCount + stats()!.pendingFinancialProfileCount + stats()!.pendingPropertyApprovalCount + stats()!.pendingLeaseApprovalCount + stats()!.openComplaintsCount) > 0) {
+@if ((stats()!.pendingKycCount + stats()!.pendingPropertyApprovalCount + stats()!.pendingLeaseApprovalCount + stats()!.openComplaintsCount) > 0) {
   <div class="es-card px-6 py-5 mb-7">
     <div class="text-sm font-bold text-es-text mb-3">Action required</div>
     <div class="flex flex-wrap gap-3">
@@ -17,12 +17,6 @@
         <button mat-stroked-button class="!rounded-full !text-xs" (click)="tabSwitch.emit('kyc')">
           <mat-icon class="!text-[16px] !w-[16px] !h-[16px] es-text-warning mr-1">pending</mat-icon>
           {{ stats()!.pendingKycCount }} KYC pending
-        </button>
-      }
-      @if (stats()!.pendingFinancialProfileCount > 0) {
-        <button mat-stroked-button class="!rounded-full !text-xs" (click)="tabSwitch.emit('financial-profiles')">
-          <mat-icon class="!text-[16px] !w-[16px] !h-[16px] es-text-warning mr-1">account_balance_wallet</mat-icon>
-          {{ stats()!.pendingFinancialProfileCount }} financial profiles
         </button>
       }
       @if (stats()!.pendingPropertyApprovalCount > 0) {

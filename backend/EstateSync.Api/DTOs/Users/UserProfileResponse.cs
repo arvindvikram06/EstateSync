@@ -9,7 +9,6 @@ public record UserProfileResponse
     public string PhoneNumber { get; init; } = string.Empty;
     public DateTime CreatedAt { get; init; }
     public bool IsKycVerified { get; init; }
-    public bool IsFinanciallyVerified { get; init; }
     public bool IsOwnerVerified { get; init; }
     public string? OwnerType { get; init; }
     public string? CompanyName { get; init; }

@@ -129,10 +129,10 @@ export class PropertyEditComponent implements OnInit {
     bathrooms:       [1,  [Validators.required, Validators.min(1)]],
     landArea:        [null as number | null],
     buildupArea:     [null as number | null],
-    monthlyRent:     [0,  [Validators.required, Validators.min(1)]],
-    securityDeposit: [0,  [Validators.required, Validators.min(0)]],
+    monthlyRent:     [0, [Validators.required, Validators.min(1)]],
+    securityDeposit: [0, [Validators.required, Validators.min(0)]],
     latInput:        [null as number | null],
-    lngInput:        [null as number | null],
+    lngInput:               [null as number | null],
   });
 
   constructor() {
@@ -197,10 +197,10 @@ export class PropertyEditComponent implements OnInit {
           bathrooms: p.bathrooms,
           landArea: p.landArea,
           buildupArea: p.buildupArea,
-          monthlyRent: p.monthlyRent,
+          monthlyRent:     p.monthlyRent,
           securityDeposit: p.securityDeposit,
-          latInput: p.latitude,
-          lngInput: p.longitude,
+          latInput:        p.latitude,
+          lngInput:               p.longitude,
         });
 
         const loadedKeys = new Set((p.amenities ?? []).map(a => normalize(a)));

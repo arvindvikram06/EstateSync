@@ -34,6 +34,7 @@ public class LeaseService : ILeaseService
     private readonly ILeaseDocumentService _leaseDocumentService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IUserRepository _userRepo;
+    private readonly ILeaseVacateNoticeRepository _vacateNoticeRepo;
 
     public LeaseService(
         ILeaseRepository leaseRepo,
@@ -48,7 +49,8 @@ public class LeaseService : ILeaseService
         ILogger<LeaseService> logger,
         ILeaseDocumentService leaseDocumentService,
         IHttpContextAccessor httpContextAccessor,
-        IUserRepository userRepo)
+        IUserRepository userRepo,
+        ILeaseVacateNoticeRepository vacateNoticeRepo)
     {
         _leaseRepo = leaseRepo ?? throw new ArgumentNullException(nameof(leaseRepo));
         _applicationRepo = applicationRepo ?? throw new ArgumentNullException(nameof(applicationRepo));
@@ -63,6 +65,7 @@ public class LeaseService : ILeaseService
         _leaseDocumentService = leaseDocumentService ?? throw new ArgumentNullException(nameof(leaseDocumentService));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
+        _vacateNoticeRepo = vacateNoticeRepo ?? throw new ArgumentNullException(nameof(vacateNoticeRepo));
     }
 
     public async Task<LeaseResponse> CreateLeaseAsync(CreateLeaseRequest request, Guid ownerId, CancellationToken ct)
@@ -547,6 +550,180 @@ public class LeaseService : ILeaseService
         await _unitOfWork.SaveChangesAsync(ct);
         _logger.LogInformation("Lease {LeaseId} terminated by {RequesterId}", leaseId, requesterId);
     }
+
+    public async Task<LeaseVacateNoticeResponse?> GetPendingVacateNoticeAsync(Guid leaseId, Guid userId, bool isAdmin, CancellationToken ct)
+    {
+        var lease = await _leaseRepo.GetWithDetailsByIdAsync(leaseId);
+        if (lease == null) throw new NotFoundException("Lease", leaseId);
+
+        if (!isAdmin && lease.TenantId != userId && lease.Property?.OwnerId != userId)
+            throw new ForbiddenException("You are not authorized to view this lease.");
+
+        var notice = await _vacateNoticeRepo.GetPendingByLeaseIdAsync(leaseId);
+        return notice == null ? null : MapVacateNoticeToResponse(notice);
+    }
+
+    public async Task<LeaseVacateNoticeResponse> SubmitVacateNoticeAsync(Guid leaseId, Guid tenantId, DateTime requestedExitDate, CancellationToken ct)
+    {
+        var lease = await _leaseRepo.GetWithDetailsByIdAsync(leaseId);
+        if (lease == null) throw new NotFoundException("Lease", leaseId);
+
+        if (lease.TenantId != tenantId)
+            throw new ForbiddenException("You are not the tenant of this lease.");
+
+        if (lease.Status != LeaseStatus.Active)
+            throw new BadRequestException("Only active leases can have a vacate notice submitted.");
+
+        if (requestedExitDate.Date <= DateTime.UtcNow.Date)
+            throw new BadRequestException("Requested exit date must be in the future.");
+
+        var existing = await _vacateNoticeRepo.GetPendingByLeaseIdAsync(leaseId);
+        if (existing != null)
+            throw new ConflictException("A pending vacate notice already exists for this lease.");
+
+        var noticePeriodDays = lease.NoticePeriodDays ?? 0;
+        var penaltyApplied = requestedExitDate.Date < DateTime.UtcNow.AddDays(noticePeriodDays).Date;
+        var penaltyAmount = penaltyApplied && lease.PenaltyPercentage.HasValue && lease.PenaltyPercentage > 0
+            ? Math.Round(lease.SecurityDeposit * lease.PenaltyPercentage.Value / 100, 2)
+            : 0m;
+
+        var notice = new LeaseVacateNotice
+        {
+            VacateNoticeId = Guid.NewGuid(),
+            LeaseId = leaseId,
+            TenantId = tenantId,
+            RequestedExitDate = requestedExitDate,
+            Status = VacateNoticeStatus.Pending,
+            PenaltyApplied = penaltyApplied,
+            PenaltyAmount = penaltyAmount
+        };
+        await _vacateNoticeRepo.AddAsync(notice);
+
+        var property = lease.Property!;
+        await _notificationSender.SendAsync(new Notification
+        {
+            NotificationId = Guid.NewGuid(),
+            UserId = property.OwnerId,
+            Type = NotificationType.VacateNoticeSubmitted,
+            Title = "Tenant Submitted Vacate Notice",
+            Message = penaltyApplied
+                ? $"Your tenant has submitted a vacate notice for '{property.Title}' with exit date {requestedExitDate:dd MMM yyyy}. A penalty of ₹{penaltyAmount:N0} will apply if you accept."
+                : $"Your tenant has submitted a vacate notice for '{property.Title}' with exit date {requestedExitDate:dd MMM yyyy}.",
+            EntityId = notice.VacateNoticeId.ToString(),
+            EntityType = "LeaseVacateNotice",
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _unitOfWork.SaveChangesAsync(ct);
+        _logger.LogInformation("Vacate notice {NoticeId} submitted for lease {LeaseId} by tenant {TenantId}", notice.VacateNoticeId, leaseId, tenantId);
+
+        return MapVacateNoticeToResponse(notice);
+    }
+
+    public async Task AcceptVacateNoticeAsync(Guid vacateNoticeId, Guid ownerId, CancellationToken ct)
+    {
+        var notice = await _vacateNoticeRepo.GetByIdWithDetailsAsync(vacateNoticeId);
+        if (notice == null) throw new NotFoundException("VacateNotice", vacateNoticeId);
+
+        var lease = notice.Lease ?? throw new NotFoundException("Lease", notice.LeaseId);
+        var property = lease.Property ?? throw new NotFoundException("Property", lease.PropertyId);
+
+        if (property.OwnerId != ownerId)
+            throw new ForbiddenException("You do not own this property.");
+
+        if (notice.Status != VacateNoticeStatus.Pending)
+            throw new BadRequestException("This vacate notice has already been responded to.");
+
+        notice.Status = VacateNoticeStatus.Accepted;
+
+        // Only now that the owner has accepted: raise the penalty bill if applicable
+        if (notice.PenaltyApplied && notice.PenaltyAmount > 0)
+        {
+            await _leaseBillRepo.AddAsync(new LeaseBill
+            {
+                LeaseBillId = Guid.NewGuid(),
+                LeaseId = lease.LeaseId,
+                BillType = LeaseBillType.Penalty,
+                Amount = notice.PenaltyAmount,
+                PendingAmount = notice.PenaltyAmount,
+                DueDate = notice.RequestedExitDate
+            });
+        }
+
+        lease.Status = LeaseStatus.Terminated;
+        lease.CancelledBy = ownerId;
+        lease.CancelledAt = DateTime.UtcNow;
+        lease.CancellationReason = $"Tenant vacate notice accepted. Exit date: {notice.RequestedExitDate:dd MMM yyyy}.";
+        lease.IsDepositForfeited = notice.PenaltyApplied;
+
+        if (property.Status == PropertyStatus.Leased || property.Status == PropertyStatus.AvailableSoon)
+            property.Status = PropertyStatus.Active;
+
+        await _notificationSender.SendAsync(new Notification
+        {
+            NotificationId = Guid.NewGuid(),
+            UserId = lease.TenantId,
+            Type = NotificationType.VacateNoticeAccepted,
+            Title = "Vacate Notice Accepted",
+            Message = notice.PenaltyApplied
+                ? $"Your vacate notice for '{property.Title}' has been accepted. A penalty of ₹{notice.PenaltyAmount:N0} has been billed due to short notice. Your security deposit is forfeited."
+                : $"Your vacate notice for '{property.Title}' has been accepted. Lease ends {notice.RequestedExitDate:dd MMM yyyy}. Your security deposit will be returned.",
+            EntityId = notice.VacateNoticeId.ToString(),
+            EntityType = "LeaseVacateNotice",
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _unitOfWork.SaveChangesAsync(ct);
+        _logger.LogInformation("Vacate notice {NoticeId} accepted. Lease {LeaseId} terminated.", vacateNoticeId, lease.LeaseId);
+    }
+
+    public async Task RejectVacateNoticeAsync(Guid vacateNoticeId, Guid ownerId, string reason, CancellationToken ct)
+    {
+        var notice = await _vacateNoticeRepo.GetByIdWithDetailsAsync(vacateNoticeId);
+        if (notice == null) throw new NotFoundException("VacateNotice", vacateNoticeId);
+
+        var lease = notice.Lease ?? throw new NotFoundException("Lease", notice.LeaseId);
+        var property = lease.Property ?? throw new NotFoundException("Property", lease.PropertyId);
+
+        if (property.OwnerId != ownerId)
+            throw new ForbiddenException("You do not own this property.");
+
+        if (notice.Status != VacateNoticeStatus.Pending)
+            throw new BadRequestException("This vacate notice has already been responded to.");
+
+        notice.Status = VacateNoticeStatus.Rejected;
+        notice.RejectionReason = reason;
+
+        await _notificationSender.SendAsync(new Notification
+        {
+            NotificationId = Guid.NewGuid(),
+            UserId = lease.TenantId,
+            Type = NotificationType.VacateNoticeRejected,
+            Title = "Vacate Notice Rejected",
+            Message = $"Your vacate notice for '{property.Title}' was rejected. Reason: {reason}",
+            EntityId = notice.VacateNoticeId.ToString(),
+            EntityType = "LeaseVacateNotice",
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _unitOfWork.SaveChangesAsync(ct);
+        _logger.LogInformation("Vacate notice {NoticeId} rejected by owner {OwnerId}", vacateNoticeId, ownerId);
+    }
+
+    private static LeaseVacateNoticeResponse MapVacateNoticeToResponse(LeaseVacateNotice notice) => new()
+    {
+        VacateNoticeId = notice.VacateNoticeId,
+        LeaseId = notice.LeaseId,
+        RequestedExitDate = notice.RequestedExitDate,
+        Status = notice.Status.ToString(),
+        PenaltyApplied = notice.PenaltyApplied,
+        PenaltyAmount = notice.PenaltyAmount,
+        RejectionReason = notice.RejectionReason,
+        CreatedAt = notice.CreatedAt
+    };
 
     private void ValidateCreateLeaseRequest(RentalApplication application, Guid ownerId)
     {

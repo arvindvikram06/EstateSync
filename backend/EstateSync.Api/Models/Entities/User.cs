@@ -20,8 +20,6 @@ public class User : BaseEntity
     
     public bool IsKycVerified { get; set; } = false;
     public bool IsOwnerVerified { get; set; } = false;
-    public bool IsFinanciallyVerified { get; set; } = false;
-    public decimal? VerifiedMonthlyIncome { get; set; }
 
     // Role extension profiles
     public OwnerProfile? OwnerProfile { get; set; }
@@ -44,8 +42,6 @@ public class User : BaseEntity
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public ICollection<KycVerification> KycVerifications { get; set; } = new List<KycVerification>();
     public ICollection<KycVerification> ReviewedKycVerifications { get; set; } = new List<KycVerification>();
-    public ICollection<TenantFinancialProfile> TenantFinancialProfiles { get; set; } = new List<TenantFinancialProfile>();
-    public ICollection<TenantFinancialProfile> ReviewedTenantFinancialProfiles { get; set; } = new List<TenantFinancialProfile>();
     public ICollection<Document> UploadedDocuments { get; set; } = new List<Document>();
     public ICollection<Property> Properties { get; set; } = new List<Property>();
     public ICollection<SavedProperty> SavedProperties { get; set; } = new List<SavedProperty>();

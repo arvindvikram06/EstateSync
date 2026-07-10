@@ -15,7 +15,7 @@ import * as L from 'leaflet';
 import { AdminService } from '@core/services/admin/admin.service';
 import { PropertyService } from '@core/services/property/property.service';
 import { PropertyDetailResponse, DocumentResponse } from '../../../core/models/property.model';
-import { KycVerificationResponse, KycDocumentSummary, FinancialProfileResponse } from '../../../core/models/admin.model';
+import { KycVerificationResponse, KycDocumentSummary } from '../../../core/models/admin.model';
 
 @Component({
   selector: 'app-doc-preview-dialog',
@@ -62,19 +62,17 @@ const DOC_LABELS: Record<string, string> = {
   OwnershipCertificate:   'Ownership Certificate',
 };
 
-const KYC_DOC_ORDER       = ['AadhaarFront', 'AadhaarBack', 'PanCard', 'AddressProof'];
-const FINANCIAL_DOC_ORDER = ['SalarySlip', 'BankStatement', 'EmploymentLetter', 'IncomeTaxReturn'];
+const KYC_DOC_ORDER = ['AadhaarFront', 'AadhaarBack', 'PanCard', 'AddressProof'];
 
 export interface AdminReviewDialogData {
   title: string;
   subtitle: string;
   entityId: string;
-  type: 'kyc' | 'financial-profile' | 'property' | 'lease';
+  type: 'kyc' | 'property' | 'lease';
   readOnly?: boolean;
   currentStatus?: string;
   currentRemarks?: string;
   kycItem?: KycVerificationResponse;
-  financialProfileItem?: FinancialProfileResponse;
 }
 
 @Component({
@@ -90,7 +88,7 @@ export interface AdminReviewDialogData {
     <div mat-dialog-title class="text-[18px] font-bold text-es-text">{{ data.title }}</div>
 
     <mat-dialog-content
-      [style.minWidth]="data.type === 'property' ? '780px' : (data.kycItem || data.financialProfileItem ? '580px' : '400px')"
+      [style.minWidth]="data.type === 'property' ? '780px' : (data.kycItem ? '580px' : '400px')"
       style="padding-top:16px;max-width:800px">
 
       <div class="flex flex-col gap-4">
@@ -321,77 +319,6 @@ export interface AdminReviewDialogData {
           }
         }
 
-        <!-- ── Financial profile details + documents ─────────────── -->
-        @if (data.financialProfileItem) {
-          <div class="es-tile">
-            <div class="es-label-upper mb-3">Profile Details</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div>
-                <div class="es-text-hint mb-0.5">Tenant</div>
-                <div class="es-text-strong">{{ data.financialProfileItem.tenantName }}</div>
-              </div>
-              <div>
-                <div class="es-text-hint mb-0.5">Email</div>
-                <div class="es-text-body">{{ data.financialProfileItem.tenantEmail }}</div>
-              </div>
-              <div>
-                <div class="es-text-hint mb-0.5">Employment Type</div>
-                <div class="es-text-strong">{{ data.financialProfileItem.employmentType }}</div>
-              </div>
-              @if (data.financialProfileItem.employerName) {
-                <div>
-                  <div class="es-text-hint mb-0.5">Employer</div>
-                  <div class="es-text-body">{{ data.financialProfileItem.employerName }}</div>
-                </div>
-              }
-              <div>
-                <div class="es-text-hint mb-0.5">Declared Monthly Income</div>
-                <div style="font-size:14px;font-weight:700;color:#222">
-                  {{ data.financialProfileItem.declaredMonthlyIncome > 0 ? '₹' + data.financialProfileItem.declaredMonthlyIncome.toLocaleString('en-IN') : '—' }}
-                </div>
-              </div>
-              <div>
-                <div class="es-text-hint mb-0.5">Submitted</div>
-                <div class="es-text-body">{{ data.financialProfileItem.createdAt | slice:0:10 }}</div>
-              </div>
-              @if (data.financialProfileItem.reviewedAt) {
-                <div>
-                  <div class="es-text-hint mb-0.5">Reviewed</div>
-                  <div class="es-text-body">{{ data.financialProfileItem.reviewedAt | slice:0:10 }}</div>
-                </div>
-              }
-            </div>
-          </div>
-
-          @if (data.financialProfileItem.documents.length > 0) {
-            <div class="es-tile">
-              <div class="es-label-upper mb-3">
-                Submitted Documents ({{ data.financialProfileItem.documents.length }})
-              </div>
-              <div class="flex flex-col gap-2">
-                @for (doc of orderedFinancialDocs(data.financialProfileItem.documents); track doc.documentId) {
-                  <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1px solid #EBEBEB;border-radius:8px;padding:10px 12px">
-                    <div class="flex items-center gap-2 min-w-0">
-                      <mat-icon style="font-size:18px;width:18px;height:18px;color:#6750A4;flex-shrink:0">description</mat-icon>
-                      <div class="min-w-0">
-                        <div style="font-size:13px;font-weight:500;color:#222">{{ docLabel(doc.documentType) }}</div>
-                        <div style="font-size:11px;color:#AAAAAA;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px">{{ doc.originalFileName }}</div>
-                      </div>
-                    </div>
-                    <button type="button" (click)="viewDoc(doc)"
-                      style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#6750A4;background:none;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-left:8px;padding:4px 0">
-                      <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">{{ isImage(doc) ? 'image' : 'open_in_new' }}</mat-icon>
-                      View
-                    </button>
-                  </div>
-                }
-              </div>
-            </div>
-          } @else {
-            <div style="font-size:13px;color:#AAAAAA;font-style:italic">No documents uploaded.</div>
-          }
-        }
-
         <!-- ── Decision (read-only or editable) ─────────────────── -->
         @if (data.readOnly) {
           <div class="es-tile">
@@ -585,12 +512,6 @@ export class AdminReviewDialogComponent implements OnInit, OnDestroy {
     return KYC_DOC_ORDER.map(t => docs.find(d => d.documentType === t)).filter(Boolean) as typeof docs;
   }
 
-  orderedFinancialDocs(docs: FinancialProfileResponse['documents']): typeof docs {
-    const ordered = FINANCIAL_DOC_ORDER.map(t => docs.find(d => d.documentType === t)).filter(Boolean) as typeof docs;
-    const rest = docs.filter(d => !FINANCIAL_DOC_ORDER.includes(d.documentType));
-    return [...ordered, ...rest];
-  }
-
   isImage(doc: KycDocumentSummary): boolean {
     return this._mimeIsImage(doc.mimeType, doc.originalFileName);
   }
@@ -639,11 +560,6 @@ export class AdminReviewDialogComponent implements OnInit, OnDestroy {
     let obs$;
     if (this.data.type === 'kyc') {
       obs$ = this.adminService.reviewKyc(this.data.entityId, {
-        status: this.form.value.status as 'Approved' | 'Rejected',
-        reviewRemarks: this.form.value.remarks ?? '',
-      });
-    } else if (this.data.type === 'financial-profile') {
-      obs$ = this.adminService.reviewFinancialProfile(this.data.entityId, {
         status: this.form.value.status as 'Approved' | 'Rejected',
         reviewRemarks: this.form.value.remarks ?? '',
       });

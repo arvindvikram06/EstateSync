@@ -1,5 +1,5 @@
 <h2 class="text-2xl font-bold tracking-tight text-es-text mb-1">Verifications</h2>
-<p class="text-sm text-es-muted mb-7">Manage your Identity and Financial verification status.</p>
+<p class="text-sm text-es-muted mb-7">Manage your Identity verification status.</p>
 
 <!-- Identity Verification Card -->
 <div class="border border-es-border-light rounded-xl p-5 bg-white mb-4 flex items-center justify-between shadow-sm">
@@ -24,34 +24,3 @@
     </a>
   }
 </div>
-
-<!-- Financial Profile Card (only shown after KYC approved) -->
-@if (kycStore.kyc()?.status === 'Approved') {
-  <div class="border border-es-border-light rounded-xl p-5 bg-white flex items-center justify-between shadow-sm">
-    <div>
-      <h3 class="font-semibold text-[15px] mb-1">Financial Profile</h3>
-      <p class="text-sm text-es-muted m-0">
-        Status:&nbsp;
-        @if (finStore.step() === 'loading') {
-          <strong class="text-es-muted">Loading…</strong>
-        } @else if (finStore.step() === 'approved') {
-          <strong class="text-es-success">Approved</strong>
-        } @else if (finStore.step() === 'pending') {
-          <strong class="text-es-warn">Pending Review</strong>
-        } @else if (finStore.step() === 'rejected') {
-          <strong class="text-es-danger">Rejected</strong>
-        } @else {
-          <strong class="text-es-muted">Not started</strong>
-        }
-      </p>
-    </div>
-    @if (finStore.step() !== 'pending' && finStore.step() !== 'loading') {
-      <a mat-stroked-button [color]="finStore.step() === 'approved' ? '' : 'primary'" routerLink="/kyc">
-        @if (finStore.step() === 'approved') { Update Financial Profile }
-        @else if (finStore.step() === 'rejected') { Retry Financial Profile }
-        @else { Complete Financial Profile }
-      </a>
-    }
-  </div>
-}
-

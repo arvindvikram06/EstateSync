@@ -143,7 +143,7 @@ public class PropertyMapper
         if (patch.Title       != null)    { entity.Title         = patch.Title;                changed = true; }
         if (patch.Description != null)    { entity.Description   = patch.Description;          changed = true; }
         if (patch.MonthlyRent .HasValue)  { entity.MonthlyRent   = patch.MonthlyRent.Value;    changed = true; }
-        if (patch.SecurityDeposit.HasValue) { entity.SecurityDeposit = patch.SecurityDeposit.Value; changed = true; }
+        if (patch.SecurityDeposit.HasValue)      { entity.SecurityDeposit      = patch.SecurityDeposit.Value;      changed = true; }
         if (patch.Amenities   != null)
         {
             entity.Amenities = patch.Amenities

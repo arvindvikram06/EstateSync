@@ -1,9 +1,7 @@
 <div class="kyc-page">
   @if (store.step() === 'loading') {
     <app-page-spinner />
-  } @else if (store.step() !== 'approved') {
-    <app-identity-wizard />
   } @else {
-    <app-financial-wizard />
+    <app-identity-wizard />
   }
 </div>

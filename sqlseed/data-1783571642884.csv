@@ -1,0 +1,2 @@
+"Id","OwnerId","StripeAccountId","CreatedAt","UpdatedAt","DeletedAt","ChargesEnabled","DetailsSubmitted","LastSyncedAt","PayoutsEnabled"
+"019f2cb2-7049-7b06-addd-b1998e13e00c","3d5945dc-624c-456d-a516-1fdc5ca7edc6","acct_1TpQumDO3esnlq00","2026-07-04 10:35:19.536695","2026-07-04 18:11:03.835075",NULL,True,True,"2026-07-04 18:11:03.834763",True

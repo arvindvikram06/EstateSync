@@ -10,9 +10,14 @@ export class ComplaintService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/api/v1/complaints`;
 
-  /** The backend scopes results by the caller's role, so one method serves tenants, owners, and admins. */
-  getComplaints(): Observable<ApiResponse<ComplaintResponse[]>> {
-    return this.http.get<ApiResponse<ComplaintResponse[]>>(this.baseUrl);
+  /** Complaints the current user RAISED (tenant dashboard). */
+  getTenantComplaints(): Observable<ApiResponse<ComplaintResponse[]>> {
+    return this.http.get<ApiResponse<ComplaintResponse[]>>(`${this.baseUrl}/tenant`);
+  }
+
+  /** Complaints AGAINST the current user's properties (owner dashboard). */
+  getOwnerComplaints(): Observable<ApiResponse<ComplaintResponse[]>> {
+    return this.http.get<ApiResponse<ComplaintResponse[]>>(`${this.baseUrl}/owner`);
   }
 
   createComplaint(body: CreateComplaintRequest): Observable<ApiResponse<ComplaintResponse>> {

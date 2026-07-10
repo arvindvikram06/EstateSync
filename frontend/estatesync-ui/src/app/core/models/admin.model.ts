@@ -11,7 +11,6 @@ export interface AdminDashboardStats {
   totalTenants: number;
   totalVerifiers: number;
   pendingKycCount: number;
-  pendingFinancialProfileCount: number;
   pendingPropertyApprovalCount: number;
   pendingLeaseApprovalCount: number;
   openComplaintsCount: number;
@@ -57,22 +56,6 @@ export interface KycDocumentSummary {
 export interface ReviewVerificationRequest {
   status: 'Approved' | 'Rejected';
   reviewRemarks: string;
-}
-
-// Financial profile review
-export interface FinancialProfileResponse {
-  profileId: string;
-  tenantId: string;
-  tenantName: string;
-  tenantEmail: string;
-  status: 'Draft' | 'Pending' | 'Approved' | 'Rejected';
-  employmentType: string;
-  employerName: string | null;
-  declaredMonthlyIncome: number;
-  reviewRemarks: string | null;
-  reviewedAt: string | null;
-  createdAt: string;
-  documents: KycDocumentSummary[];
 }
 
 // Property approval

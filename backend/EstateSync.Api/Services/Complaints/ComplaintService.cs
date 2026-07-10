@@ -193,35 +193,15 @@ public class ComplaintService : IComplaintService
         return _mapper.MapToResponse(complaint);
     }
 
-    public async Task<IEnumerable<ComplaintResponse>> GetMyComplaintsAsync(Guid userId, CancellationToken ct = default)
+    public async Task<IEnumerable<ComplaintResponse>> GetTenantComplaintsAsync(Guid tenantId, CancellationToken ct = default)
     {
-        var user = await _userRepo.GetByIdWithRolesAsync(userId);
-        if (user == null)
-        {
-            throw new NotFoundException("User", userId);
-        }
+        var complaints = await _complaintRepo.GetByTenantIdAsync(tenantId);
+        return complaints.Select(_mapper.MapToResponse);
+    }
 
-        bool isAdmin = user.UserRoles.Any(ur => ur.Role != null && ur.Role.Name == Roles.Admin);
-        bool isOwner = user.UserRoles.Any(ur => ur.Role != null && ur.Role.Name == Roles.Owner);
-
-        IEnumerable<Complaint> complaints;
-
-        if (isAdmin)
-        {
-            // Admin listing UI uses the paged /admin endpoint; this fallback is
-            // bounded to the most recent page so it can never load the full table.
-            var (items, _) = await _complaintRepo.GetPagedForAdminAsync(null, null, 1, 200, ct);
-            complaints = items;
-        }
-        else if (isOwner)
-        {
-            complaints = await _complaintRepo.GetByOwnerIdAsync(userId);
-        }
-        else
-        {
-            complaints = await _complaintRepo.GetByTenantIdAsync(userId);
-        }
-
+    public async Task<IEnumerable<ComplaintResponse>> GetOwnerComplaintsAsync(Guid ownerId, CancellationToken ct = default)
+    {
+        var complaints = await _complaintRepo.GetByOwnerIdAsync(ownerId);
         return complaints.Select(_mapper.MapToResponse);
     }
 

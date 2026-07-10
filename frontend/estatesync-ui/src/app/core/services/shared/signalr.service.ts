@@ -6,7 +6,6 @@ import { TokenService } from '@core/services/auth/token.service';
 import { AuthService } from '@core/services/auth/auth.service';
 import { NotificationResponse } from '../../models/notification.model';
 import { KycStore } from '../../stores/kyc.store';
-import { FinancialStore } from '../../stores/financial.store';
 import { PropertyService } from '@core/services/property/property.service';
 
 @Injectable({ providedIn: 'root' })
@@ -15,7 +14,6 @@ export class SignalRService implements OnDestroy {
   private readonly tokenService = inject(TokenService);
   private readonly authService = inject(AuthService);
   private readonly kycStore = inject(KycStore);
-  private readonly finStore = inject(FinancialStore);
   private readonly propertyService = inject(PropertyService);
   private readonly ngZone = inject(NgZone);
 
@@ -48,7 +46,6 @@ export class SignalRService implements OnDestroy {
         case 'VerificationRejected':
           this.authService.syncProfile().subscribe();
           this.kycStore.loadExisting();
-          this.finStore.loadExisting();
           break;
         case 'PropertyApproved':
         case 'PropertyRejected':

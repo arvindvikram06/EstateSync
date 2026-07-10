@@ -20,10 +20,18 @@ describe('ComplaintService', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('GETs complaints scoped to the current user role', () => {
-    service.getComplaints().subscribe();
+  it('GETs tenant complaints from the /tenant route', () => {
+    service.getTenantComplaints().subscribe();
 
-    const req = httpMock.expectOne(BASE);
+    const req = httpMock.expectOne(`${BASE}/tenant`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ success: true, data: [] });
+  });
+
+  it('GETs owner complaints from the /owner route', () => {
+    service.getOwnerComplaints().subscribe();
+
+    const req = httpMock.expectOne(`${BASE}/owner`);
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: [] });
   });

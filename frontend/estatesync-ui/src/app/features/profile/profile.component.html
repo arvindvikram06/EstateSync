@@ -57,13 +57,6 @@
           </div>
           <app-status-badge [status]="profile()!.isKycVerified ? 'Verified' : 'Pending'" />
         </div>
-        <div class="flex items-center justify-between py-2 border-0 border-b border-solid border-es-divider">
-          <div class="flex items-center gap-2">
-            <mat-icon class="!text-[20px] !w-[20px] !h-[20px] text-es-muted">account_balance_wallet</mat-icon>
-            <span class="text-sm text-es-text">Financial profile</span>
-          </div>
-          <app-status-badge [status]="profile()!.isFinanciallyVerified ? 'Verified' : 'Pending'" />
-        </div>
         <div class="flex items-center justify-between py-2">
           <div class="flex items-center gap-2">
             <mat-icon class="!text-[20px] !w-[20px] !h-[20px] text-es-muted">home_work</mat-icon>

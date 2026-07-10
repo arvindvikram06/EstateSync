@@ -1,6 +1,5 @@
 using System.Linq;
 using EstateSync.Api.DTOs.Kyc;
-using EstateSync.Api.DTOs.TenantFinancialProfile;
 using EstateSync.Api.DTOs.Users;
 using EstateSync.Api.Models;
 
@@ -44,25 +43,4 @@ public class UserMapper
         };
     }
 
-    public TenantFinancialProfileResponse MapToFinancialProfileResponse(TenantFinancialProfile p)
-    {
-        return new TenantFinancialProfileResponse
-        {
-            ProfileId = p.ProfileId,
-            TenantId = p.TenantId,
-            TenantName = p.Tenant?.FullName ?? string.Empty,
-            TenantEmail = p.Tenant?.Email ?? string.Empty,
-            EmploymentType = p.EmploymentType.ToString(),
-            EmployerName = p.EmployerName,
-            DeclaredMonthlyIncome = p.DeclaredMonthlyIncome,
-            Status = p.Status.ToString(),
-            ReviewRemarks = p.ReviewRemarks,
-            ReviewedAt = p.ReviewedAt,
-            CreatedAt = p.CreatedAt,
-            Documents = p.TenantFinancialDocuments
-                .Where(d => d.Document != null)
-                .Select(d => MapToDocumentResponse(d.Document!))
-                .ToList()
-        };
-    }
 }

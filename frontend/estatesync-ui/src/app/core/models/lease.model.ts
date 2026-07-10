@@ -80,3 +80,22 @@ export interface AdminLeaseApprovalRequest {
   approve: boolean;
   remarks?: string;
 }
+
+export interface SubmitVacateNoticeRequest {
+  requestedExitDate: string; // ISO date string
+}
+
+export interface RejectVacateNoticeRequest {
+  reason: string;
+}
+
+export interface LeaseVacateNoticeResponse {
+  vacateNoticeId: string;
+  leaseId: string;
+  requestedExitDate: string;
+  status: 'Pending' | 'Accepted' | 'Rejected';
+  penaltyApplied: boolean;
+  penaltyAmount: number;
+  rejectionReason: string | null;
+  createdAt: string;
+}

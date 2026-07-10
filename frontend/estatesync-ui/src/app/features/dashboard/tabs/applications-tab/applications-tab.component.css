@@ -17,6 +17,24 @@
   border-color: var(--es-primary-tint-border);
 }
 
+.cancel-app-btn {
+  border-radius: 40px !important;
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 0 10px !important;
+  line-height: 28px !important;
+  color: #DC2626 !important;
+  border-color: #FECACA !important;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.cancel-app-btn mat-icon {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
 .app-icon {
   width: 40px;
   height: 40px;

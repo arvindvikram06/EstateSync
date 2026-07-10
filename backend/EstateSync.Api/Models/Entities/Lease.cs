@@ -65,6 +65,6 @@ public class Lease : BaseEntity
 
     public ICollection<LeaseDocument> LeaseDocuments { get; set; } = new List<LeaseDocument>();
     public ICollection<LeaseBill> LeaseBills { get; set; } = new List<LeaseBill>();
-    public ICollection<RentIncreaseProposal> RentIncreaseProposals { get; set; } = new List<RentIncreaseProposal>();
     public ICollection<Complaint> Complaints { get; set; } = new List<Complaint>();
+    public ICollection<LeaseVacateNotice> VacateNotices { get; set; } = new List<LeaseVacateNotice>();
 }

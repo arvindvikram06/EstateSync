@@ -27,7 +27,6 @@ export interface UserProfileResponse {
   phoneNumber: string;
   createdAt: string;
   isKycVerified: boolean;
-  isFinanciallyVerified: boolean;
   isOwnerVerified: boolean;
   ownerType?: OwnerType;
   companyName?: string;

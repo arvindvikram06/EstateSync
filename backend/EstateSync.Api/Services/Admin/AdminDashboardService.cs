@@ -36,7 +36,6 @@ public class AdminDashboardService : IAdminDashboardService
             TotalTenants                 = roleCounts.GetValueOrDefault(Roles.Tenant),
             TotalVerifiers               = roleCounts.GetValueOrDefault(Roles.Verifier),
             PendingKycCount              = kycBreakdown.GetValueOrDefault("Pending"),
-            PendingFinancialProfileCount = await _statsRepo.GetPendingFinancialProfileCountAsync(ct),
             PendingPropertyApprovalCount = propertyBreakdown.GetValueOrDefault("PendingApproval"),
             PendingLeaseApprovalCount    = leaseBreakdown.GetValueOrDefault("PendingAdminApproval"),
             OpenComplaintsCount          = complaintBreakdown.GetValueOrDefault("Open"),

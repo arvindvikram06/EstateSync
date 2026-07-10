@@ -1,3 +1,4 @@
+
 /* ── Tailwind ────────────────────────────────────────────────── */
 @tailwind base;
 @tailwind components;
@@ -29,17 +30,11 @@ body {
   --es-brand-rgb: 255 56 92; /* keep in sync with --es-brand; enables Tailwind alpha modifiers */
   --es-brand-dark: #D4145A;
   --es-bg: #F7F7F7;
-  --es-surface: #FFFFFF;
   --es-border: #DDDDDD;
   --es-text: #222222;
   --es-text-secondary: #717171;
-  --es-shadow-sm: 0 1px 2px rgb(0, 0, 0, 0.06), 0 4px 12px rgb(0, 0, 0, 0.08);
-  --es-shadow-md: 0 6px 24px rgb(0, 0, 0, 0.13);
-  --es-shadow-hover: 0 8px 28px rgb(0, 0, 0, 0.16);
   --es-radius: 16px;
   --es-radius-md: 12px;
-  --es-radius-sm: 8px;
-  --es-radius-pill: 40px;
   --es-border-light: #EBEBEB;
   --es-text-muted: #AAAAAA;
   --es-success: #059669;
@@ -57,6 +52,7 @@ body {
   /* status badge/banner text palette */
   --es-status-green: #065F46;
   --es-status-amber: #92400E;
+  --es-status-orange: #9A3412;
   --es-status-blue: #1D4ED8;
   --es-status-grey: #6B7280;
   --es-status-red: #991B1B;
@@ -67,6 +63,7 @@ body {
   /* status badge/banner backgrounds */
   --es-green-bg: #D1FAE5;
   --es-amber-bg: #FEF3C7;
+  --es-orange-bg: #FFEDD5;
   --es-blue-bg: #DBEAFE;
   --es-grey-bg: #F3F4F6;
   --es-red-bg: #FEE2E2;

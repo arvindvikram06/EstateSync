@@ -359,6 +359,55 @@
         </div>
       }
 
+      <!-- Vacate notice section -->
+      @if (vacateNotice(); as notice) {
+        <div class="detail-section">
+          <div class="detail-section__title">Vacate Notice</div>
+          <div class="rounded-xl p-4"
+            [class]="notice.status === 'Pending' ? 'notice-pending' : notice.status === 'Accepted' ? 'notice-accepted' : 'notice-rejected'">
+            <div class="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <div class="text-sm font-semibold text-es-text mb-1">
+                  Requested exit: {{ formatDate(notice.requestedExitDate) }}
+                </div>
+                @if (notice.penaltyApplied) {
+                  <div class="text-xs" style="color:var(--es-warning-deep)">
+                    Penalty applies: ₹{{ notice.penaltyAmount | number:'1.0-0' }}
+                  </div>
+                } @else {
+                  <div class="text-xs text-es-muted">No penalty — notice period met</div>
+                }
+                @if (notice.rejectionReason) {
+                  <div class="text-xs text-es-muted mt-1">Reason: {{ notice.rejectionReason }}</div>
+                }
+              </div>
+              <span class="es-badge es-badge--{{ notice.status === 'Pending' ? 'pending' : notice.status === 'Accepted' ? 'approved' : 'rejected' }} self-start">
+                {{ notice.status }}
+              </span>
+            </div>
+            @if (isOwnerViewer() && notice.status === 'Pending') {
+              @if (vacateError()) {
+                <p class="text-xs mt-3 mb-0" style="color:#DC2626">{{ vacateError() }}</p>
+              }
+              <div class="flex gap-2 mt-3">
+                <button mat-flat-button color="primary" class="!rounded-full !text-xs !h-8 !px-4"
+                  [disabled]="vacateActionId() !== null"
+                  (click)="acceptVacateNotice()">
+                  @if (vacateActionId() === 'accept') { <mat-spinner diameter="14" class="inline-block mr-1" /> }
+                  Accept & Terminate
+                </button>
+                <button mat-stroked-button class="!rounded-full !text-xs !h-8 !px-4 es-btn-danger"
+                  [disabled]="vacateActionId() !== null"
+                  (click)="rejectVacateNotice()">
+                  @if (vacateActionId() === 'reject') { <mat-spinner diameter="14" class="inline-block mr-1" /> }
+                  Reject
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
       <!-- Void button -->
       @if (canVoid()) {
         <div class="flex justify-end">

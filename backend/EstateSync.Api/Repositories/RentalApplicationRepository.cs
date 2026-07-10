@@ -15,8 +15,6 @@ public class RentalApplicationRepository : BaseRepository<RentalApplication>, IR
     {
     }
 
-    // Tracked on purpose: LeaseService mutates these entities (rejecting other
-    // applications on lease activation) and persists via SaveChangesAsync.
     public async Task<IEnumerable<RentalApplication>> GetByPropertyIdForUpdateAsync(Guid propertyId)
     {
         return await _dbSet
@@ -24,14 +22,6 @@ public class RentalApplicationRepository : BaseRepository<RentalApplication>, IR
             .ToListAsync();
     }
 
-    // Reserved for future modules — not yet called by any service
-    // public async Task<IEnumerable<RentalApplication>> GetByTenantIdAsync(Guid tenantId)
-    // {
-    //     return await _dbSet
-    //         .AsNoTracking()
-    //         .Where(ra => ra.TenantId == tenantId)
-    //         .ToListAsync();
-    // }
 
     public async Task<bool> HasTenantAppliedAsync(Guid propertyId, Guid tenantId)
     {

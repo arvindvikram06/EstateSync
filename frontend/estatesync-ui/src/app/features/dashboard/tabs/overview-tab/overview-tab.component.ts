@@ -14,7 +14,6 @@ import { LeaseService } from '@core/services/leasing/lease.service';
 import { PaymentService } from '@core/services/payment/payment.service';
 import { ComplaintService } from '@core/services/complaint/complaint.service';
 import { KycVerificationResponse } from '../../../../core/models/kyc.model';
-import { FinancialStore } from '../../../../core/stores/financial.store';
 import { BecomeOwnerDialogComponent } from './become-owner-dialog.component';
 
 @Component({
@@ -38,8 +37,7 @@ export class OverviewTabComponent implements OnInit {
   private readonly leaseSvc     = inject(LeaseService);
   private readonly billSvc      = inject(PaymentService);
   private readonly complaintSvc = inject(ComplaintService);
-  private readonly destroyRef   = inject(DestroyRef);
-  readonly finStore             = inject(FinancialStore);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly user    = this.authService.currentUser;
   readonly isOwner = this.authService.isOwner;
@@ -55,7 +53,7 @@ export class OverviewTabComponent implements OnInit {
       apps:      this.appSvc.getMyApplications(),
       leases:    this.leaseSvc.getMyLeases(),
       bills:     this.billSvc.getTenantBills(),
-      complaints:this.complaintSvc.getComplaints(),
+      complaints:this.complaintSvc.getTenantComplaints(),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ apps, leases, bills, complaints }) => {
         this.stats.set({

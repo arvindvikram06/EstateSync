@@ -203,4 +203,53 @@ public class LeasesController : ControllerBase
         await _leaseService.RejectRenewalAsync(id, ownerId, ct);
         return Ok(new ApiResponse<object> { Message = "Renewal rejected successfully." });
     }
+
+    [HttpGet("{id:guid}/vacate-notice")]
+    [Authorize]
+    public async Task<ActionResult<ApiResponse<LeaseVacateNoticeResponse>>> GetVacateNotice(Guid id, CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        var isAdmin = User.IsInRole("Admin");
+        var result = await _leaseService.GetPendingVacateNoticeAsync(id, userId, isAdmin, ct);
+        if (result == null)
+            return Ok(new ApiResponse<LeaseVacateNoticeResponse> { Data = null!, Message = "No pending vacate notice." });
+        return Ok(new ApiResponse<LeaseVacateNoticeResponse> { Data = result });
+    }
+
+    [HttpPost("{id:guid}/vacate-notice")]
+    [Authorize(Roles = "Tenant")]
+    public async Task<ActionResult<ApiResponse<LeaseVacateNoticeResponse>>> SubmitVacateNotice(
+        Guid id,
+        [FromBody] SubmitVacateNoticeRequest request,
+        CancellationToken ct)
+    {
+        var tenantId = User.GetUserId();
+        var result = await _leaseService.SubmitVacateNoticeAsync(id, tenantId, request.RequestedExitDate, ct);
+        return StatusCode(StatusCodes.Status201Created, new ApiResponse<LeaseVacateNoticeResponse>
+        {
+            Data = result,
+            Message = "Vacate notice submitted successfully."
+        });
+    }
+
+    [HttpPost("/api/v1/vacate-notices/{vacateNoticeId:guid}/accept")]
+    [Authorize(Roles = "Owner")]
+    public async Task<ActionResult<ApiResponse<object>>> AcceptVacateNotice(Guid vacateNoticeId, CancellationToken ct)
+    {
+        var ownerId = User.GetUserId();
+        await _leaseService.AcceptVacateNoticeAsync(vacateNoticeId, ownerId, ct);
+        return Ok(new ApiResponse<object> { Message = "Vacate notice accepted. Lease has been terminated." });
+    }
+
+    [HttpPost("/api/v1/vacate-notices/{vacateNoticeId:guid}/reject")]
+    [Authorize(Roles = "Owner")]
+    public async Task<ActionResult<ApiResponse<object>>> RejectVacateNotice(
+        Guid vacateNoticeId,
+        [FromBody] RejectVacateNoticeRequest request,
+        CancellationToken ct)
+    {
+        var ownerId = User.GetUserId();
+        await _leaseService.RejectVacateNoticeAsync(vacateNoticeId, ownerId, request.Reason, ct);
+        return Ok(new ApiResponse<object> { Message = "Vacate notice rejected." });
+    }
 }

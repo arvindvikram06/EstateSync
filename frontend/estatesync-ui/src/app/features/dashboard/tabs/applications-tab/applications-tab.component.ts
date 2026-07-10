@@ -6,13 +6,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RentalApplicationService } from '@core/services/leasing/rental-application.service';
+import { ErrorHandlerService } from '@core/services/shared/error-handler.service';
 import { RentalApplicationResponse } from '../../../../core/models/rental-application.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { formatDate } from '../../../../core/utils/format.utils';
 
-type FilterStatus = 'All' | 'Pending' | 'Approved' | 'Rejected' | 'Withdrawn';
+type FilterStatus = 'All' | 'Pending' | 'Approved' | 'Rejected';
 
 @Component({
   selector: 'app-applications-tab',
@@ -23,14 +24,16 @@ type FilterStatus = 'All' | 'Pending' | 'Approved' | 'Rejected' | 'Withdrawn';
   styleUrl: './applications-tab.component.css',
 })
 export class ApplicationsTabComponent implements OnInit {
-  private readonly svc        = inject(RentalApplicationService);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly svc          = inject(RentalApplicationService);
+  private readonly errorHandler = inject(ErrorHandlerService);
+  private readonly destroyRef   = inject(DestroyRef);
 
-  readonly all         = signal<RentalApplicationResponse[]>([]);
-  readonly loading     = signal(true);
-  readonly activeFilter= signal<FilterStatus>('All');
+  readonly all          = signal<RentalApplicationResponse[]>([]);
+  readonly loading      = signal(true);
+  readonly cancelling   = signal<string | null>(null);
+  readonly activeFilter = signal<FilterStatus>('All');
 
-  readonly filters: FilterStatus[] = ['All', 'Pending', 'Approved', 'Rejected', 'Withdrawn'];
+  readonly filters: FilterStatus[] = ['All', 'Pending', 'Approved', 'Rejected'];
 
   readonly formatDate = formatDate;
 
@@ -48,4 +51,21 @@ export class ApplicationsTabComponent implements OnInit {
   }
 
   setFilter(f: FilterStatus): void { this.activeFilter.set(f); }
+
+  cancel(app: RentalApplicationResponse): void {
+    if (app.status !== 'Pending' || this.cancelling() !== null) return;
+    this.cancelling.set(app.applicationId);
+    this.svc.cancelApplication(app.applicationId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.all.update(list => list.filter(a => a.applicationId !== app.applicationId));
+          this.cancelling.set(null);
+        },
+        error: err => {
+          this.errorHandler.handleError(err);
+          this.cancelling.set(null);
+        },
+      });
+  }
 }

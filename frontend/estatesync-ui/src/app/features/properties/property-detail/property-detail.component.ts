@@ -22,6 +22,7 @@ import * as L from 'leaflet';
   standalone: true,
   imports: [
     RouterLink,
+
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
@@ -44,8 +45,6 @@ export class PropertyDetailComponent implements OnInit {
   readonly loading     = signal(true);
   readonly error       = signal<string | null>(null);
   readonly applied     = signal(false);
-  // AuthService is the source of truth for KYC status (kept current by
-  // syncProfile on verification notifications) — no extra KYC fetch needed.
   readonly kycApproved = this.authService.isKycVerified;
 
   readonly user       = this.authService.currentUser;

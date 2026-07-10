@@ -17,7 +17,7 @@ export interface ComplaintDetailDialogData {
   imports: [MatDialogModule, MatButtonModule, MatIconModule, StatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="p-7 min-w-[440px] max-w-[560px]">
+    <div class="p-5 sm:p-7 w-full">
 
       <!-- Header -->
       <div class="flex items-start justify-between gap-3 mb-1">

@@ -13,7 +13,8 @@ public interface IComplaintService
     Task<ComplaintResponse> CreateComplaintAsync(Guid tenantId, CreateComplaintRequest request, CancellationToken ct = default);
     Task<ComplaintResponse> UpdateComplaintStatusAsync(Guid userId, Guid complaintId, UpdateComplaintStatusRequest request, CancellationToken ct = default);
     Task<ComplaintResponse> GetByIdAsync(Guid complaintId, Guid userId, CancellationToken ct = default);
-    Task<IEnumerable<ComplaintResponse>> GetMyComplaintsAsync(Guid userId, CancellationToken ct = default);
+    Task<IEnumerable<ComplaintResponse>> GetTenantComplaintsAsync(Guid tenantId, CancellationToken ct = default);
+    Task<IEnumerable<ComplaintResponse>> GetOwnerComplaintsAsync(Guid ownerId, CancellationToken ct = default);
     Task<ComplaintResponse> UploadComplaintImageAsync(Guid tenantId, Guid complaintId, IFormFile file, CancellationToken ct = default);
     Task<PagedResponse<ComplaintResponse>> GetPagedForAdminAsync(string? status, string? priority, int page, int limit, CancellationToken ct = default);
 }

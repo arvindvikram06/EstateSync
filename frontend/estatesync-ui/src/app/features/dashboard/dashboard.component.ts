@@ -1,9 +1,8 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, effect, DestroyRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { KycStore } from '../../core/stores/kyc.store';
-import { FinancialStore } from '../../core/stores/financial.store';
 import { PaymentService } from '@core/services/payment/payment.service';
 import { LeaseBillResponse } from '../../core/models/lease-bill.model';
 import { DashboardLayoutComponent, NavItem } from '../../shared/components/dashboard-layout/dashboard-layout.component';
@@ -31,19 +30,13 @@ import { VerificationsTabComponent } from './tabs/verifications-tab/verification
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.component.html',})
 export class DashboardComponent implements OnInit {
-  readonly kycStore              = inject(KycStore);
-  readonly finStore              = inject(FinancialStore);
+  readonly kycStore               = inject(KycStore);
   private readonly paymentService = inject(PaymentService);
   private readonly destroyRef    = inject(DestroyRef);
   private readonly route         = inject(ActivatedRoute);
   private readonly router        = inject(Router);
 
   constructor() {
-    effect(() => {
-      if (this.kycStore.kyc()?.status === 'Approved' && this.finStore.step() === 'loading') {
-        this.finStore.loadExisting();
-      }
-    });
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {
       const tab = params.get('tab');
       if (tab) this.activeTab.set(tab);
@@ -80,7 +73,6 @@ export class DashboardComponent implements OnInit {
   readonly kycIsLoading = computed(() => this.kycStore.step() === 'loading');
 
   ngOnInit(): void {
-    this.finStore.reset();
     this.kycStore.loadExisting();
     this.paymentService.getTenantBills()
       .pipe(takeUntilDestroyed(this.destroyRef))

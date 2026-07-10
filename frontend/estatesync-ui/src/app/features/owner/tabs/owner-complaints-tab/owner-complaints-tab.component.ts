@@ -29,12 +29,6 @@ function nextLabel(current: ComplaintResponse['status']): string {
   return '';
 }
 
-const PRIORITY_STYLE: Record<ComplaintResponse['priority'], { bg: string; color: string }> = {
-  Critical: { bg: '#FEE2E2', color: '#991B1B' },
-  High:     { bg: '#FFEDD5', color: '#9A3412' },
-  Medium:   { bg: '#FEF3C7', color: '#92400E' },
-  Low:      { bg: '#F3F4F6', color: '#6B7280' },
-};
 
 @Component({
   selector: 'app-owner-complaints-tab',
@@ -45,7 +39,7 @@ const PRIORITY_STYLE: Record<ComplaintResponse['priority'], { bg: string; color:
   styleUrl: './owner-complaints-tab.component.css',
 })
 export class OwnerComplaintsTabComponent implements OnInit {
-  readonly svc = inject(ComplaintService);
+  private readonly svc = inject(ComplaintService);
   private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -68,11 +62,10 @@ export class OwnerComplaintsTabComponent implements OnInit {
     }));
   });
 
-  readonly formatDate     = formatDate;
-  readonly priorityStyle  = PRIORITY_STYLE;
+  readonly formatDate = formatDate;
 
   ngOnInit(): void {
-    this.svc.getComplaints().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.svc.getOwnerComplaints().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => { this.complaints.set(res.data ?? []); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
@@ -93,11 +86,6 @@ export class OwnerComplaintsTabComponent implements OnInit {
         },
         error: () => this.updatingId.set(null),
       });
-  }
-
-  openImage(url: string, event: MouseEvent): void {
-    event.stopPropagation();
-    window.open(this.svc.fileUrl(url), '_blank');
   }
 
   openDetail(c: ComplaintResponse): void {

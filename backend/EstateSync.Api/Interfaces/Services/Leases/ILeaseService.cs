@@ -24,4 +24,8 @@ public interface ILeaseService
     Task ApproveRenewalAsync(Guid leaseId, Guid ownerId, DateTime newEndDate, CancellationToken ct);
     Task RejectRenewalAsync(Guid leaseId, Guid ownerId, CancellationToken ct);
     Task TerminateLeaseAsync(Guid leaseId, Guid requesterId, bool isAdmin, string reason, bool forfeitDeposit, CancellationToken ct);
+    Task<LeaseVacateNoticeResponse?> GetPendingVacateNoticeAsync(Guid leaseId, Guid userId, bool isAdmin, CancellationToken ct);
+    Task<LeaseVacateNoticeResponse> SubmitVacateNoticeAsync(Guid leaseId, Guid tenantId, DateTime requestedExitDate, CancellationToken ct);
+    Task AcceptVacateNoticeAsync(Guid vacateNoticeId, Guid ownerId, CancellationToken ct);
+    Task RejectVacateNoticeAsync(Guid vacateNoticeId, Guid ownerId, string reason, CancellationToken ct);
 }

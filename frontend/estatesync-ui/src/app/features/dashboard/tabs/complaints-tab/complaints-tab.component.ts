@@ -48,7 +48,7 @@ export class ComplaintsTabComponent implements OnInit {
   readonly formatDate = formatDate;
 
   ngOnInit(): void {
-    this.svc.getComplaints().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.svc.getTenantComplaints().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => { this.complaints.set(res.data ?? []); this.loading.set(false); },
       error: () => this.loading.set(false),
     });

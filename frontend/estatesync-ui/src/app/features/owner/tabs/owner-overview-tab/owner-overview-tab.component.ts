@@ -82,7 +82,7 @@ export class OwnerOverviewTabComponent implements OnInit {
       props:      this.propertySvc.getMyProperties(),
       apps:       this.applicationSvc.getOwnerApplications(),
       leases:     this.leaseSvc.getOwnerLeases(),
-      complaints: this.complaintSvc.getComplaints(),
+      complaints: this.complaintSvc.getOwnerComplaints(),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: ({ props, apps, leases, complaints }) => {
         this.properties.set(props.data ?? []);

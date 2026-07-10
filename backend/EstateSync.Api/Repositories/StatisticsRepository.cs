@@ -27,9 +27,6 @@ public class StatisticsRepository : IStatisticsRepository
             .Select(g => new { Role = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.Role, x => x.Count, ct);
 
-    public Task<int> GetPendingFinancialProfileCountAsync(CancellationToken ct = default)
-        => _db.TenantFinancialProfiles.CountAsync(f => f.Status == ApprovalStatus.Pending, ct);
-
     public async Task<(decimal TotalRevenue, decimal TotalPlatformFees)> GetRevenueThisMonthAsync(CancellationToken ct = default)
     {
         var start = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);

@@ -32,8 +32,6 @@ public class Property : BaseEntity
     public User? ApproveBy { get; set; }
     public string? ApproveRemarks { get; set; }
 
-    public bool RequiresVerifiedIncome { get; set; } = false;
-
     public List<string> Amenities { get; set; } = new List<string>();
     public ICollection<PropertyImage> PropertyImages { get; set; } = new List<PropertyImage>();
     public ICollection<SavedProperty> SavedProperties { get; set; } = new List<SavedProperty>();

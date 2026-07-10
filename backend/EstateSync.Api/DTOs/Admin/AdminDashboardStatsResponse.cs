@@ -14,7 +14,6 @@ public record AdminDashboardStatsResponse
 
     // Pending action counts (for shortcuts)
     public int PendingKycCount { get; init; }
-    public int PendingFinancialProfileCount { get; init; }
     public int PendingPropertyApprovalCount { get; init; }
     public int PendingLeaseApprovalCount { get; init; }
     public int OpenComplaintsCount { get; init; }

@@ -29,4 +29,8 @@ export class RentalApplicationService {
   getApplicationById(id: string): Observable<ApiResponse<OwnerApplicationResponse>> {
     return this.http.get<ApiResponse<OwnerApplicationResponse>>(`${this.baseUrl}/${id}`);
   }
+
+  cancelApplication(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }

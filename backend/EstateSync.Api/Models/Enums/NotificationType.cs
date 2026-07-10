@@ -18,9 +18,6 @@ public enum NotificationType
     ComplaintRaised,
     ComplaintUpdated,
     ComplaintResolved,
-    RentIncreaseProposed,
-    RentIncreaseAccepted,
-    RentIncreaseRelieved,
     VerificationApproved,
     VerificationRejected,
     DocumentUploaded,
@@ -30,5 +27,8 @@ public enum NotificationType
     DepositReturnReminder,
     LeaseRenewalRequested,
     LeaseRenewalApproved,
-    LeaseRenewalRejected
+    LeaseRenewalRejected,
+    VacateNoticeSubmitted,
+    VacateNoticeAccepted,
+    VacateNoticeRejected
 }

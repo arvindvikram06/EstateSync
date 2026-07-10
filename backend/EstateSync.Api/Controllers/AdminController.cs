@@ -8,13 +8,11 @@ using EstateSync.Api.DTOs.Admin;
 using EstateSync.Api.DTOs.Complaints;
 using EstateSync.Api.DTOs.Kyc;
 using EstateSync.Api.DTOs.Properties;
-using EstateSync.Api.DTOs.TenantFinancialProfile;
 using EstateSync.Api.Extensions;
 using EstateSync.Api.Interfaces.Services.Admin;
 using EstateSync.Api.Interfaces.Services.Complaints;
 using EstateSync.Api.Interfaces.Services.Kyc;
 using EstateSync.Api.Interfaces.Services.Properties;
-using EstateSync.Api.Interfaces.Services.TenantFinancialProfile;
 using EstateSync.Api.Models;
 
 namespace EstateSync.Api.Controllers;
@@ -26,7 +24,6 @@ public class AdminController : ControllerBase
 {
     private readonly IPropertyApprovalService _propertyApprovalService;
     private readonly IKycService _kycService;
-    private readonly ITenantFinancialProfileService _financialProfileService;
     private readonly IAdminService _adminService;
     private readonly IAdminDashboardService _dashboardService;
     private readonly IAdminFinancialService _financialService;
@@ -35,7 +32,6 @@ public class AdminController : ControllerBase
     public AdminController(
         IPropertyApprovalService propertyApprovalService,
         IKycService kycService,
-        ITenantFinancialProfileService financialProfileService,
         IAdminService adminService,
         IAdminDashboardService dashboardService,
         IAdminFinancialService financialService,
@@ -43,7 +39,6 @@ public class AdminController : ControllerBase
     {
         _propertyApprovalService = propertyApprovalService ?? throw new ArgumentNullException(nameof(propertyApprovalService));
         _kycService              = kycService              ?? throw new ArgumentNullException(nameof(kycService));
-        _financialProfileService = financialProfileService ?? throw new ArgumentNullException(nameof(financialProfileService));
         _adminService            = adminService            ?? throw new ArgumentNullException(nameof(adminService));
         _dashboardService        = dashboardService        ?? throw new ArgumentNullException(nameof(dashboardService));
         _financialService        = financialService        ?? throw new ArgumentNullException(nameof(financialService));
@@ -89,37 +84,6 @@ public class AdminController : ControllerBase
     {
         await _kycService.ReviewAsync(id, User.GetUserId(), request.Status.ToString(), request.ReviewRemarks, ct);
         return Ok(new ApiResponse<object> { Message = "KYC request reviewed successfully." });
-    }
-
-    // ── Tenant Financial Profile — Admin and Verifier ─────────────────────────
-
-    [HttpGet("financial-profiles")]
-    [Authorize(Roles = "Admin,Verifier")]
-    public async Task<ActionResult<PagedResponse<TenantFinancialProfileResponse>>> GetFinancialProfiles(
-        [FromQuery] string? status,
-        [FromQuery] int page = 1,
-        [FromQuery] int limit = 20,
-        CancellationToken ct = default)
-    {
-        var result = await _financialProfileService.GetPagedAsync(status, page, limit, ct);
-        return Ok(result);
-    }
-
-    [HttpGet("financial-profiles/{id:guid}")]
-    [Authorize(Roles = "Admin,Verifier")]
-    public async Task<ActionResult<ApiResponse<TenantFinancialProfileResponse>>> GetFinancialProfileById(Guid id, CancellationToken ct)
-    {
-        var result = await _financialProfileService.GetByIdForAdminAsync(id, ct);
-        return Ok(new ApiResponse<TenantFinancialProfileResponse> { Data = result });
-    }
-
-    [HttpPut("financial-profiles/{id:guid}/review")]
-    [Authorize(Roles = "Admin,Verifier")]
-    public async Task<ActionResult<ApiResponse<object>>> ReviewFinancialProfile(
-        Guid id, [FromBody] ReviewVerificationRequest request, CancellationToken ct)
-    {
-        await _financialProfileService.ReviewAsync(id, User.GetUserId(), request.Status.ToString(), request.ReviewRemarks, ct);
-        return Ok(new ApiResponse<object> { Message = "Financial profile reviewed successfully." });
     }
 
     // ── Properties ────────────────────────────────────────────────────────────

@@ -12,6 +12,9 @@ import {
   VoidLeaseRequest,
   TerminateLeaseRequest,
   AdminLeaseApprovalRequest,
+  SubmitVacateNoticeRequest,
+  RejectVacateNoticeRequest,
+  LeaseVacateNoticeResponse,
 } from '../../models/lease.model';
 import { LeaseBillDetail, PaymentRecord } from '../../models/lease-bill.model';
 
@@ -77,5 +80,21 @@ export class LeaseService {
 
   rejectRenewal(id: string): Observable<ApiResponse<void>> {
     return this.http.post<ApiResponse<void>>(`${this.baseUrl}/${id}/reject-renewal`, {});
+  }
+
+  getVacateNotice(leaseId: string): Observable<ApiResponse<LeaseVacateNoticeResponse | null>> {
+    return this.http.get<ApiResponse<LeaseVacateNoticeResponse | null>>(`${this.baseUrl}/${leaseId}/vacate-notice`);
+  }
+
+  submitVacateNotice(leaseId: string, body: SubmitVacateNoticeRequest): Observable<ApiResponse<LeaseVacateNoticeResponse>> {
+    return this.http.post<ApiResponse<LeaseVacateNoticeResponse>>(`${this.baseUrl}/${leaseId}/vacate-notice`, body);
+  }
+
+  acceptVacateNotice(vacateNoticeId: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${environment.apiUrl}/api/v1/vacate-notices/${vacateNoticeId}/accept`, {});
+  }
+
+  rejectVacateNotice(vacateNoticeId: string, body: RejectVacateNoticeRequest): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${environment.apiUrl}/api/v1/vacate-notices/${vacateNoticeId}/reject`, body);
   }
 }

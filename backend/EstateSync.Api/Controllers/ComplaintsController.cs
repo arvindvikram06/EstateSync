@@ -57,13 +57,28 @@ public class ComplaintsController : ControllerBase
         return Ok(new ApiResponse<ComplaintResponse> { Data = result });
     }
 
-    [HttpGet]
-    public async Task<ActionResult<ApiResponse<IEnumerable<ComplaintResponse>>>> GetMyComplaints(CancellationToken ct)
+    // Explicit per-view routes: a user holding both roles sees only the
+    // complaints they RAISED on the tenant dashboard and only the complaints
+    // AGAINST their properties on the owner dashboard.
+    [HttpGet("tenant")]
+    [Authorize(Roles = "Tenant")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<ComplaintResponse>>>> GetTenantComplaints(CancellationToken ct)
     {
         var userId = User.GetUserId();
         if (userId == Guid.Empty) throw new UnauthorizedAccessException();
 
-        var result = await _complaintService.GetMyComplaintsAsync(userId, ct);
+        var result = await _complaintService.GetTenantComplaintsAsync(userId, ct);
+        return Ok(new ApiResponse<IEnumerable<ComplaintResponse>> { Data = result });
+    }
+
+    [HttpGet("owner")]
+    [Authorize(Roles = "Owner")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<ComplaintResponse>>>> GetOwnerComplaints(CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        if (userId == Guid.Empty) throw new UnauthorizedAccessException();
+
+        var result = await _complaintService.GetOwnerComplaintsAsync(userId, ct);
         return Ok(new ApiResponse<IEnumerable<ComplaintResponse>> { Data = result });
     }
 

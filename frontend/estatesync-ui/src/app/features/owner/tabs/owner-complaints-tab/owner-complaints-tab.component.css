@@ -5,6 +5,12 @@
   border: 1px solid var(--es-border-light);
   border-radius: 12px;
   padding: 16px 20px;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.complaint-card:hover {
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.07);
+  border-color: var(--es-primary-tint-border);
 }
 
 .card-top {
@@ -22,12 +28,24 @@
   margin-top: 10px;
 }
 
+.badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .priority-chip {
   font-size: 11px;
   font-weight: 700;
   padding: 2px 10px;
   border-radius: 20px;
 }
+
+.priority-chip--critical { background: var(--es-red-bg);    color: var(--es-status-red); }
+.priority-chip--high     { background: var(--es-orange-bg); color: var(--es-status-orange); }
+.priority-chip--medium   { background: var(--es-amber-bg);  color: var(--es-status-amber); }
+.priority-chip--low      { background: var(--es-grey-bg);   color: var(--es-status-grey); }
 
 .type-chip {
   font-size: 11px;

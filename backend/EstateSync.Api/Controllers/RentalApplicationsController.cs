@@ -115,5 +115,14 @@ public class RentalApplicationsController : ControllerBase
         });
     }
 
+    [HttpDelete("{applicationId:guid}")]
+    [Authorize(Roles = "Tenant")]
+    public async Task<IActionResult> DeleteApplication(Guid applicationId, CancellationToken ct)
+    {
+        var tenantId = User.GetUserId();
+        await _rentalAppService.DeleteApplicationAsync(applicationId, tenantId, ct);
+        return NoContent();
+    }
+
 }
 

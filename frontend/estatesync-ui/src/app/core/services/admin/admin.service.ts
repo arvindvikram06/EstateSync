@@ -7,7 +7,6 @@ import {
   AdminDashboardStats,
   KycVerificationResponse,
   ReviewVerificationRequest,
-  FinancialProfileResponse,
   PropertySummaryResponse,
   ApprovePropertyRequest,
   StaffResponse,
@@ -47,22 +46,6 @@ export class AdminService {
 
   reviewKyc(id: string, req: ReviewVerificationRequest): Observable<ApiResponse<object>> {
     return this.http.put<ApiResponse<object>>(`${this.base}/kyc-requests/${id}/review`, req);
-  }
-
-  // ── Financial Profiles ─────────────────────────────────────────────────────
-
-  getFinancialProfiles(status?: string, page = 1, limit = 20): Observable<PagedResponse<FinancialProfileResponse>> {
-    let params = new HttpParams().set('page', page).set('limit', limit);
-    if (status) params = params.set('status', status);
-    return this.http.get<PagedResponse<FinancialProfileResponse>>(`${this.base}/financial-profiles`, { params });
-  }
-
-  getFinancialProfileById(id: string): Observable<ApiResponse<FinancialProfileResponse>> {
-    return this.http.get<ApiResponse<FinancialProfileResponse>>(`${this.base}/financial-profiles/${id}`);
-  }
-
-  reviewFinancialProfile(id: string, req: ReviewVerificationRequest): Observable<ApiResponse<object>> {
-    return this.http.put<ApiResponse<object>>(`${this.base}/financial-profiles/${id}/review`, req);
   }
 
   // ── Properties ─────────────────────────────────────────────────────────────

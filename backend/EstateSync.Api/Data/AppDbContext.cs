@@ -27,8 +27,6 @@ public partial class AppDbContext : DbContext
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<KycVerification> KycVerifications => Set<KycVerification>();
     public DbSet<KycDocument> KycDocuments => Set<KycDocument>();
-    public DbSet<TenantFinancialProfile> TenantFinancialProfiles => Set<TenantFinancialProfile>();
-    public DbSet<TenantFinancialDocument> TenantFinancialDocuments => Set<TenantFinancialDocument>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<Property> Properties => Set<Property>();
     public DbSet<PropertyImage> PropertyImages => Set<PropertyImage>();
@@ -39,7 +37,7 @@ public partial class AppDbContext : DbContext
     public DbSet<Lease> Leases => Set<Lease>();
     public DbSet<LeaseBill> LeaseBills => Set<LeaseBill>();
     public DbSet<Payment> Payments => Set<Payment>();
-    public DbSet<RentIncreaseProposal> RentIncreaseProposals => Set<RentIncreaseProposal>();
+    public DbSet<LeaseVacateNotice> LeaseVacateNotices => Set<LeaseVacateNotice>();
     public DbSet<Complaint> Complaints => Set<Complaint>();
     public DbSet<ComplaintImage> ComplaintImages => Set<ComplaintImage>();
     public DbSet<Notification> Notifications => Set<Notification>();
@@ -59,7 +57,6 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<User>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<OwnerProfile>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<KycVerification>().HasQueryFilter(x => x.DeletedAt == null);
-        modelBuilder.Entity<TenantFinancialProfile>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<Document>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<Property>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<RentalApplication>().HasQueryFilter(x => x.DeletedAt == null);
@@ -71,7 +68,7 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<OwnerSettlement>().HasQueryFilter(x => x.DeletedAt == null);
 
         modelBuilder.Entity<LeaseBill>().HasQueryFilter(x => x.DeletedAt == null && (x.Lease == null || x.Lease.DeletedAt == null));
-        modelBuilder.Entity<RentIncreaseProposal>().HasQueryFilter(x => x.DeletedAt == null && (x.Lease == null || x.Lease.DeletedAt == null));
+        modelBuilder.Entity<LeaseVacateNotice>().HasQueryFilter(x => x.DeletedAt == null && (x.Lease == null || x.Lease.DeletedAt == null));
         modelBuilder.Entity<Notification>().HasQueryFilter(x => x.DeletedAt == null);
 
         modelBuilder.Entity<PropertyImage>().HasQueryFilter(x => x.Property != null && x.Property.DeletedAt == null);
@@ -85,6 +82,5 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<RefreshToken>().HasQueryFilter(x => x.User != null && x.User.DeletedAt == null);
     
         modelBuilder.Entity<KycDocument>().HasQueryFilter(x => x.Document != null && x.Document.DeletedAt == null);
-        modelBuilder.Entity<TenantFinancialDocument>().HasQueryFilter(x => x.Document != null && x.Document.DeletedAt == null);
     }
 }

@@ -525,6 +525,55 @@ namespace EstateSync.Api.Migrations
                     b.ToTable("LeaseDocuments", (string)null);
                 });
 
+            modelBuilder.Entity("EstateSync.Api.Models.LeaseVacateNotice", b =>
+                {
+                    b.Property<Guid>("VacateNoticeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid>("LeaseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("PenaltyAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("PenaltyApplied")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("RequestedExitDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("VacateNoticeId")
+                        .HasName("PK_VacateNoticeId");
+
+                    b.HasIndex("LeaseId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("LeaseVacateNotices", (string)null);
+                });
+
             modelBuilder.Entity("EstateSync.Api.Models.Notification", b =>
                 {
                     b.Property<Guid>("NotificationId")
@@ -822,9 +871,6 @@ namespace EstateSync.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<bool>("RequiresVerifiedIncome")
-                        .HasColumnType("boolean");
-
                     b.Property<decimal>("SecurityDeposit")
                         .HasColumnType("numeric");
 
@@ -962,56 +1008,6 @@ namespace EstateSync.Api.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens", (string)null);
-                });
-
-            modelBuilder.Entity("EstateSync.Api.Models.RentIncreaseProposal", b =>
-                {
-                    b.Property<Guid>("ProposalId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<decimal>("CurrentRent")
-                        .HasColumnType("numeric");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<DateTime>("EffectiveDate")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<Guid>("LeaseId")
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("NewRent")
-                        .HasColumnType("numeric");
-
-                    b.Property<Guid>("ProposedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Remarks")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.HasKey("ProposalId")
-                        .HasName("PK_ProposalId");
-
-                    b.HasIndex("LeaseId");
-
-                    b.HasIndex("ProposedById");
-
-                    b.ToTable("RentIncreaseProposals", (string)null);
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.RentalApplication", b =>
@@ -1223,87 +1219,6 @@ namespace EstateSync.Api.Migrations
                     b.ToTable("StripeCustomerProfiles", (string)null);
                 });
 
-            modelBuilder.Entity("EstateSync.Api.Models.TenantFinancialDocument", b =>
-                {
-                    b.Property<Guid>("ProfileId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("DocumentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.HasKey("ProfileId", "DocumentId")
-                        .HasName("PK_TenantFinancialDocument");
-
-                    b.HasIndex("DocumentId");
-
-                    b.ToTable("TenantFinancialDocuments", (string)null);
-                });
-
-            modelBuilder.Entity("EstateSync.Api.Models.TenantFinancialProfile", b =>
-                {
-                    b.Property<Guid>("ProfileId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<decimal>("DeclaredMonthlyIncome")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("EmployerName")
-                        .HasMaxLength(250)
-                        .HasColumnType("character varying(250)");
-
-                    b.Property<string>("EmploymentType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("ReviewRemarks")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<Guid?>("ReviewedById")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.HasKey("ProfileId")
-                        .HasName("PK_TenantFinancialProfileId");
-
-                    b.HasIndex("ReviewedById");
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("TenantFinancialProfiles", (string)null);
-                });
-
             modelBuilder.Entity("EstateSync.Api.Models.User", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -1347,11 +1262,6 @@ namespace EstateSync.Api.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
 
-                    b.Property<bool>("IsFinanciallyVerified")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
                     b.Property<bool>("IsKycVerified")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -1381,10 +1291,6 @@ namespace EstateSync.Api.Migrations
                     b.Property<Guid?>("UpdatedById")
                         .HasColumnType("uuid");
 
-                    b.Property<decimal?>("VerifiedMonthlyIncome")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
                     b.HasKey("UserId")
                         .HasName("PK_UserId");
 
@@ -1413,7 +1319,6 @@ namespace EstateSync.Api.Migrations
                             FullName = "System Admin",
                             IsActive = true,
                             IsEmailVerified = false,
-                            IsFinanciallyVerified = false,
                             IsKycVerified = true,
                             IsOwnerVerified = false,
                             PasswordHash = "$2a$12$ADKm2THOwyVdzzrREUVdjuvfxion06o.yHrByLvC6Gf0Fd5/PHlfq",
@@ -1600,6 +1505,25 @@ namespace EstateSync.Api.Migrations
                     b.Navigation("Lease");
                 });
 
+            modelBuilder.Entity("EstateSync.Api.Models.LeaseVacateNotice", b =>
+                {
+                    b.HasOne("EstateSync.Api.Models.Lease", "Lease")
+                        .WithMany("VacateNotices")
+                        .HasForeignKey("LeaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EstateSync.Api.Models.User", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Lease");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("EstateSync.Api.Models.Notification", b =>
                 {
                     b.HasOne("EstateSync.Api.Models.User", "User")
@@ -1711,25 +1635,6 @@ namespace EstateSync.Api.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("EstateSync.Api.Models.RentIncreaseProposal", b =>
-                {
-                    b.HasOne("EstateSync.Api.Models.Lease", "Lease")
-                        .WithMany("RentIncreaseProposals")
-                        .HasForeignKey("LeaseId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("EstateSync.Api.Models.User", "ProposedBy")
-                        .WithMany()
-                        .HasForeignKey("ProposedById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Lease");
-
-                    b.Navigation("ProposedBy");
-                });
-
             modelBuilder.Entity("EstateSync.Api.Models.RentalApplication", b =>
                 {
                     b.HasOne("EstateSync.Api.Models.Property", "Property")
@@ -1786,43 +1691,6 @@ namespace EstateSync.Api.Migrations
                         .HasForeignKey("EstateSync.Api.Models.StripeCustomerProfile", "TenantId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("EstateSync.Api.Models.TenantFinancialDocument", b =>
-                {
-                    b.HasOne("EstateSync.Api.Models.Document", "Document")
-                        .WithMany()
-                        .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("EstateSync.Api.Models.TenantFinancialProfile", "TenantFinancialProfile")
-                        .WithMany("TenantFinancialDocuments")
-                        .HasForeignKey("ProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Document");
-
-                    b.Navigation("TenantFinancialProfile");
-                });
-
-            modelBuilder.Entity("EstateSync.Api.Models.TenantFinancialProfile", b =>
-                {
-                    b.HasOne("EstateSync.Api.Models.User", "ReviewedBy")
-                        .WithMany("ReviewedTenantFinancialProfiles")
-                        .HasForeignKey("ReviewedById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("EstateSync.Api.Models.User", "Tenant")
-                        .WithMany("TenantFinancialProfiles")
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ReviewedBy");
 
                     b.Navigation("Tenant");
                 });
@@ -1888,7 +1756,7 @@ namespace EstateSync.Api.Migrations
 
                     b.Navigation("LeaseDocuments");
 
-                    b.Navigation("RentIncreaseProposals");
+                    b.Navigation("VacateNotices");
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.LeaseBill", b =>
@@ -1921,11 +1789,6 @@ namespace EstateSync.Api.Migrations
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("EstateSync.Api.Models.TenantFinancialProfile", b =>
-                {
-                    b.Navigation("TenantFinancialDocuments");
-                });
-
             modelBuilder.Entity("EstateSync.Api.Models.User", b =>
                 {
                     b.Navigation("KycVerifications");
@@ -1946,15 +1809,11 @@ namespace EstateSync.Api.Migrations
 
                     b.Navigation("ReviewedKycVerifications");
 
-                    b.Navigation("ReviewedTenantFinancialProfiles");
-
                     b.Navigation("SavedProperties");
 
                     b.Navigation("StripeConnectedAccount");
 
                     b.Navigation("StripeCustomerProfile");
-
-                    b.Navigation("TenantFinancialProfiles");
 
                     b.Navigation("UploadedDocuments");
 

@@ -10,7 +10,6 @@ public interface IStatisticsRepository
     Task<int> GetTotalUsersAsync(CancellationToken ct = default);
     /// <summary>All role counts in one grouped query (keyed by role name).</summary>
     Task<Dictionary<string, int>> GetUserCountsByRoleAsync(CancellationToken ct = default);
-    Task<int> GetPendingFinancialProfileCountAsync(CancellationToken ct = default);
     Task<(decimal TotalRevenue, decimal TotalPlatformFees)> GetRevenueThisMonthAsync(CancellationToken ct = default);
     Task<Dictionary<string, int>> GetPropertyStatusBreakdownAsync(CancellationToken ct = default);
     Task<Dictionary<string, int>> GetLeaseStatusBreakdownAsync(CancellationToken ct = default);

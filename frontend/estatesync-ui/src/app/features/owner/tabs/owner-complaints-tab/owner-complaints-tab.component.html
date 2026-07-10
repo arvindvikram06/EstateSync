@@ -7,7 +7,7 @@
       class="filter-pill"
       [class.filter-pill--active]="activeFilter() === f"
       (click)="activeFilter.set(f)">
-      {{ f }}
+      {{ f === 'InProgress' ? 'In Progress' : f }}
     </button>
   }
 </div>
@@ -23,41 +23,30 @@
   <div class="flex flex-col gap-3">
     @for (c of filtered(); track c.complaintId) {
       <div class="complaint-card cursor-pointer" (click)="openDetail(c)">
+
+        <!-- Title row -->
         <div class="card-top">
           <div class="flex-1 min-w-0">
             <div class="es-detail-value truncate">{{ c.title }}</div>
-            <div class="es-text-xs mt-0.5 truncate">
-              <mat-icon class="!text-[13px] !w-[13px] !h-[13px] align-middle">home</mat-icon>
+            <div class="es-text-xs mt-0.5 flex items-center gap-1 truncate">
+              <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">home</mat-icon>
               {{ c.propertyTitle }}
             </div>
           </div>
-          <div class="flex items-center gap-2">
-            <!-- Priority chip -->
-            <span class="priority-chip"
-              [style.background]="priorityStyle[c.priority].bg"
-              [style.color]="priorityStyle[c.priority].color">
+          <div class="badge-row">
+            <span class="priority-chip" [class]="'priority-chip priority-chip--' + c.priority.toLowerCase()">
               {{ c.priority }}
             </span>
             <app-status-badge [status]="c.status" />
           </div>
         </div>
 
-        <p class="line-clamp-2 text-[13px] text-es-soft my-2.5">
-          {{ c.description }}
-        </p>
+        <!-- Description preview -->
+        <p class="line-clamp-2 text-[13px] text-es-soft mt-2.5 mb-0">{{ c.description }}</p>
 
-        @if (c.images.length) {
-          <div class="flex items-center gap-2 mb-2.5 flex-wrap">
-            @for (img of c.images; track img.complaintImageId) {
-              <img [src]="svc.fileUrl(img.imageUrl)" alt="Complaint photo" loading="lazy"
-                class="w-14 h-14 object-cover rounded-lg border border-solid border-es-border-light cursor-pointer"
-                (click)="openImage(img.imageUrl, $event)" />
-            }
-          </div>
-        }
-
+        <!-- Footer -->
         <div class="card-bottom">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
             <span class="type-chip">{{ c.complaintType }}</span>
             <span class="es-text-hint">{{ formatDate(c.createdAt) }}</span>
           </div>
@@ -73,6 +62,7 @@
             </button>
           }
         </div>
+
       </div>
     }
   </div>

@@ -156,6 +156,13 @@ public partial class AppDbContext
         await base.SaveChangesAsync();
     }
 
+    internal async Task<int> SaveSeedDataAsync(CancellationToken ct = default)
+    {
+        _isSaving = true;
+        try { return await base.SaveChangesAsync(ct); }
+        finally { _isSaving = false; }
+    }
+
     public override int SaveChanges()
     {
         if (_isSaving) return base.SaveChanges();

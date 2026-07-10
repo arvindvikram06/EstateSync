@@ -22,8 +22,6 @@ using EstateSync.Api.Interfaces.Services.Kyc;
 using EstateSync.Api.Services.Kyc;
 using EstateSync.Api.Interfaces.Services.RentalApplications;
 using EstateSync.Api.Services.RentalApplications;
-using EstateSync.Api.Interfaces.Services.TenantFinancialProfile;
-using EstateSync.Api.Services.TenantFinancialProfile;
 using EstateSync.Api.Interfaces.Services.Leases;
 using EstateSync.Api.Services.Leases;
 using QuestPDF.Infrastructure;
@@ -137,11 +135,11 @@ builder.Services.AddScoped<ILeaseRepository, LeaseRepository>();
 builder.Services.AddScoped<ILeaseBillRepository, LeaseBillRepository>();
 builder.Services.AddScoped<IRentalApplicationRepository, RentalApplicationRepository>();
 builder.Services.AddScoped<IComplaintRepository, ComplaintRepository>();
+builder.Services.AddScoped<ILeaseVacateNoticeRepository, LeaseVacateNoticeRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IKycVerificationRepository, KycVerificationRepository>();
-builder.Services.AddScoped<ITenantFinancialProfileRepository, TenantFinancialProfileRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IStripeConnectedAccountRepository, StripeConnectedAccountRepository>();
@@ -172,7 +170,6 @@ builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<IKycService, KycService>();
 builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
 builder.Services.AddScoped<IRentalApplicationService, RentalApplicationService>();
-builder.Services.AddScoped<ITenantFinancialProfileService, TenantFinancialProfileService>();
 builder.Services.AddScoped<ILeaseService, LeaseService>();
 builder.Services.AddScoped<ILeaseDocumentService, LeaseDocumentService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
@@ -215,6 +212,12 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
+}
+
+// Seed test database on first run (only when SeedDb connection string is configured)
+using (var scope = app.Services.CreateScope())
+{
+    await DbSeeder.SeedAsync(scope.ServiceProvider);
 }
 
 // Configure Stripe Global API Key

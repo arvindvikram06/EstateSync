@@ -70,7 +70,6 @@ public class UserService : IUserService
             PhoneNumber     = user.PhoneNumber,
             CreatedAt       = user.CreatedAt,
             IsKycVerified   = user.IsKycVerified,
-            IsFinanciallyVerified = user.IsFinanciallyVerified,
             IsOwnerVerified = user.IsOwnerVerified,
             OwnerType       = user.OwnerProfile?.OwnerType.ToString(),
             CompanyName     = user.OwnerProfile?.CompanyName,

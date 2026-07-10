@@ -1,6 +1,7 @@
 import {
   Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, DestroyRef
 } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,7 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { LeaseService } from '@core/services/leasing/lease.service';
 import { PaymentService } from '@core/services/payment/payment.service';
 import { AuthService } from '@core/services/auth/auth.service';
-import { LeaseDetailResponse } from '../../../core/models/lease.model';
+import { LeaseDetailResponse, LeaseVacateNoticeResponse } from '../../../core/models/lease.model';
 import { LeaseBillDetail, PaymentRecord } from '../../../core/models/lease-bill.model';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -27,7 +28,7 @@ import {
 @Component({
   selector: 'app-lease-detail',
   standalone: true,
-  imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent],
+  imports: [DecimalPipe, RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './lease-detail.component.html',
   styleUrl: './lease-detail.component.css'
@@ -52,6 +53,9 @@ export class LeaseDetailComponent implements OnInit {
   readonly payingBillId    = signal<string | null>(null);
   readonly payError        = signal<string | null>(null);
   readonly hashCopied      = signal(false);
+  readonly vacateNotice    = signal<LeaseVacateNoticeResponse | null>(null);
+  readonly vacateActionId  = signal<'accept' | 'reject' | null>(null);
+  readonly vacateError     = signal<string | null>(null);
 
   readonly formatDate     = formatDate;
   readonly formatCurrency = formatCurrency;
@@ -88,6 +92,17 @@ export class LeaseDetailComponent implements OnInit {
       (l.ownerId === uid || this.auth.isAdmin());
   });
 
+  readonly hasPendingVacateNotice = computed(() => {
+    const n = this.vacateNotice();
+    return !!n && n.status === 'Pending';
+  });
+
+  readonly isOwnerViewer = computed(() => {
+    const l = this.lease();
+    const uid = this.uid();
+    return !!l && !!uid && l.ownerId === uid;
+  });
+
   readonly backLink = computed(() => {
     const l = this.lease();
     const uid = this.uid();
@@ -111,6 +126,7 @@ export class LeaseDetailComponent implements OnInit {
     this.loadLease(id);
     this.loadBills(id);
     this.loadPayments(id);
+    this.loadVacateNotice(id);
   }
 
   private loadLease(id: string): void {
@@ -131,6 +147,50 @@ export class LeaseDetailComponent implements OnInit {
     this.svc.getLeasePayments(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => { this.payments.set(res.data ?? []); this.paymentsLoading.set(false); },
       error: () => { this.payments.set([]); this.paymentsLoading.set(false); }
+    });
+  }
+
+  private loadVacateNotice(id: string): void {
+    this.svc.getVacateNotice(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: res => this.vacateNotice.set(res.data ?? null),
+      error: () => {},
+    });
+  }
+
+  acceptVacateNotice(): void {
+    const notice = this.vacateNotice();
+    if (!notice) return;
+    this.vacateActionId.set('accept');
+    this.vacateError.set(null);
+    this.svc.acceptVacateNotice(notice.vacateNoticeId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.vacateActionId.set(null);
+        this.vacateNotice.update(n => n ? { ...n, status: 'Accepted' } : n);
+        this.lease.update(l => l ? { ...l, status: 'Terminated' } : l);
+      },
+      error: err => {
+        this.vacateActionId.set(null);
+        this.vacateError.set(err?.error?.detail ?? err?.error?.message ?? 'Failed to accept notice.');
+      },
+    });
+  }
+
+  rejectVacateNotice(): void {
+    const notice = this.vacateNotice();
+    if (!notice) return;
+    const reason = prompt('Reason for rejection (required):');
+    if (!reason?.trim()) return;
+    this.vacateActionId.set('reject');
+    this.vacateError.set(null);
+    this.svc.rejectVacateNotice(notice.vacateNoticeId, { reason }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.vacateActionId.set(null);
+        this.vacateNotice.update(n => n ? { ...n, status: 'Rejected' } : n);
+      },
+      error: err => {
+        this.vacateActionId.set(null);
+        this.vacateError.set(err?.error?.detail ?? err?.error?.message ?? 'Failed to reject notice.');
+      },
     });
   }
 

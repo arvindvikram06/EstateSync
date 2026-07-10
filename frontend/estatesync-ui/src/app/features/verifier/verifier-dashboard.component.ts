@@ -5,8 +5,6 @@ import { DashboardLayoutComponent, NavItem } from '../../shared/components/dashb
 import { AuthService } from '@core/services/auth/auth.service';
 import { VerifierOverviewTabComponent } from './tabs/verifier-overview-tab/verifier-overview-tab.component';
 import { AdminKycTabComponent } from '../admin/tabs/admin-kyc-tab/admin-kyc-tab.component';
-import { AdminFinancialProfilesTabComponent } from '../admin/tabs/admin-financial-profiles-tab/admin-financial-profiles-tab.component';
-
 @Component({
   selector: 'app-verifier-dashboard',
   standalone: true,
@@ -14,7 +12,6 @@ import { AdminFinancialProfilesTabComponent } from '../admin/tabs/admin-financia
     DashboardLayoutComponent,
     VerifierOverviewTabComponent,
     AdminKycTabComponent,
-    AdminFinancialProfilesTabComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './verifier-dashboard.component.html',
@@ -27,9 +24,8 @@ export class VerifierDashboardComponent implements OnInit {
   readonly activeTab = signal('overview');
 
   readonly navItems: NavItem[] = [
-    { id: 'overview',           label: 'Overview',            icon: 'dashboard' },
-    { id: 'kyc',                label: 'KYC Reviews',         icon: 'verified_user' },
-    { id: 'financial-profiles', label: 'Financial Profiles',  icon: 'account_balance_wallet' },
+    { id: 'overview', label: 'Overview',   icon: 'dashboard' },
+    { id: 'kyc',      label: 'KYC Reviews', icon: 'verified_user' },
   ];
 
   constructor() {
