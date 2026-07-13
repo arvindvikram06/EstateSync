@@ -189,6 +189,20 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 
+// ── Rate limiting (email-sending endpoints) ──────────────────
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth-email", httpContext =>
+        System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 3,
+                Window = TimeSpan.FromMinutes(15)
+            }));
+});
+
 // ── Redis (password reset tokens) ─────────────────────────────
 builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(_ =>
     StackExchange.Redis.ConnectionMultiplexer.Connect(
@@ -254,6 +268,8 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseCors("Angular");
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -47,6 +47,12 @@ import { AuthService } from '@core/services/auth/auth.service';
             Enter your email and we'll send you a link to reset it.
           </p>
 
+          @if (rateLimited()) {
+            <p class="text-sm es-text-danger mb-3">
+              Too many reset requests. Please wait 15 minutes and try again.
+            </p>
+          }
+
           <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="flex flex-col gap-1">
             <mat-form-field appearance="outline" class="w-full">
               <mat-label>Email address</mat-label>
@@ -79,6 +85,7 @@ export class ForgotPasswordComponent {
 
   readonly isLoading = signal(false);
   readonly sent = signal(false);
+  readonly rateLimited = signal(false);
 
   readonly form = new FormGroup({
     email: new FormControl('', {
@@ -96,12 +103,17 @@ export class ForgotPasswordComponent {
     }
 
     this.isLoading.set(true);
+    this.rateLimited.set(false);
     this.authService.forgotPassword(this.form.getRawValue().email)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         // Backend always returns 200 — never reveals whether the email exists.
         next: () => { this.isLoading.set(false); this.sent.set(true); },
-        error: () => { this.isLoading.set(false); this.sent.set(true); },
+        error: err => {
+          this.isLoading.set(false);
+          if (err?.status === 429) this.rateLimited.set(true);
+          else this.sent.set(true);
+        },
       });
   }
 }
