@@ -4,113 +4,115 @@
   <div class="flex items-center gap-3 py-8 text-sm text-es-muted">
     <mat-spinner diameter="24" /><span>Loading…</span>
   </div>
-} @else if (leases().length === 0) {
-  <app-empty-state icon="article" title="No leases"
-    subtitle="Leases created from approved applications will appear here." />
 } @else {
-  <div class="flex flex-col gap-4">
-    @for (lease of leaseRows(); track lease.leaseId) {
-      <div class="lease-card">
-        <!-- Header -->
-        <div class="lease-header">
-          <div>
-            <div class="text-[15px] font-bold text-es-text">{{ lease.propertyTitle }}</div>
-            <div class="es-text-xs mt-0.5">{{ lease.propertyAddress }}</div>
-            @if (lease.tenantName) {
-              <div class="es-text-xs mt-0.5">
-                <mat-icon class="!text-[13px] !w-[13px] !h-[13px] align-middle">person</mat-icon>
-                Tenant: <strong>{{ lease.tenantName }}</strong>
-              </div>
-            }
-          </div>
-          <app-status-badge [status]="lease.status" />
-        </div>
+  <!-- Toolbar -->
+  <div class="leases-toolbar">
+    <div class="filter-search-pill">
+      <mat-icon>search</mat-icon>
+      <input placeholder="Search property or tenant…"
+             [value]="searchQuery()"
+             (input)="onSearch($event)" />
+      @if (searchQuery()) {
+        <button class="search-clear-btn" (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
 
-        <!-- Lease details grid -->
-        <div class="lease-grid">
-          <div class="lease-detail">
-            <span class="detail-label">Start</span>
-            <span class="detail-value">{{ formatDate(lease.startDate) }}</span>
-          </div>
-          <div class="lease-detail">
-            <span class="detail-label">End</span>
-            <span class="detail-value">{{ formatDate(lease.endDate) }}</span>
-          </div>
-          <div class="lease-detail">
-            <span class="detail-label">Rent</span>
-            <span class="detail-value">{{ formatCurrency(lease.monthlyRent) }}/mo</span>
-          </div>
-          <div class="lease-detail">
-            <span class="detail-label">Signed</span>
-            <span class="detail-value">
-              <span [class]="lease.ownerSignedAt ? 'es-text-success' : 'es-text-warn-deep'">Owner</span>
-              /
-              <span [class]="lease.tenantSignedAt ? 'es-text-success' : 'es-text-warn-deep'">Tenant</span>
-            </span>
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="lease-actions">
-          @if (lease.canOwnerSign) {
-            <a mat-flat-button color="primary" class="!rounded-full !h-9 !px-4 !text-sm"
-              [routerLink]="['/leases', lease.leaseId, 'sign']">
-              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mr-1">draw</mat-icon>
-              Sign Lease
-            </a>
-          }
-          @if (lease.status === 'PartialSigned' && lease.ownerSignedAt && !lease.tenantSignedAt) {
-            <span class="es-chip-amber text-[12px] px-3 py-[5px] rounded-[20px] font-semibold">
-              Awaiting tenant signature
-            </span>
-          }
-          @if (lease.status === 'PendingAdminApproval') {
-            <span class="es-chip-primary text-[12px] px-3 py-[5px] rounded-[20px] font-semibold">
-              Awaiting admin approval
-            </span>
-          }
-          @if (lease.hasRenewalRequest) {
-            <span class="es-chip-amber text-[12px] px-3 py-[5px] rounded-[20px] font-semibold">
-              Renewal requested
-            </span>
-            <button mat-flat-button color="primary" class="!rounded-full !h-9 !px-4 !text-sm"
-              [disabled]="renewalActionId() === lease.leaseId"
-              (click)="openApproveRenewalDialog(lease)">
-              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mr-1">autorenew</mat-icon>
-              Approve renewal
-            </button>
-            <button mat-stroked-button class="!rounded-full !h-9 !px-4 !text-sm void-btn"
-              [disabled]="renewalActionId() === lease.leaseId"
-              (click)="rejectRenewal(lease)">
-              Decline
-            </button>
-          }
-          @if (lease.agreementPdfUrl) {
-            <a mat-stroked-button class="!rounded-full !h-9 !px-4 !text-sm"
-              [href]="lease.agreementPdfUrl" target="_blank">
-              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mr-1">download</mat-icon>
-              Agreement
-            </a>
-          }
-          <a mat-stroked-button class="!rounded-full !h-9 !px-4 !text-sm"
-            [routerLink]="['/leases', lease.leaseId]">
-            View
-          </a>
-          @if (lease.canVoid) {
-            <button mat-stroked-button class="!rounded-full !h-9 !px-4 !text-sm void-btn"
-              (click)="openVoidDialog(lease)">
-              Void
-            </button>
-          }
-          @if (lease.status === 'Active') {
-            <button mat-stroked-button class="!rounded-full !h-9 !px-4 !text-sm void-btn"
-              (click)="openTerminateDialog(lease)">
-              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] mr-1">gavel</mat-icon>
-              Terminate
-            </button>
-          }
-        </div>
-      </div>
-    }
+    <div class="leases-status-pills">
+      @for (pill of statusPills; track pill.value) {
+        <button class="filter-pill"
+                [class.filter-pill--active]="activeStatus() === pill.value"
+                (click)="setStatus(pill.value)">
+          {{ pill.label }}
+        </button>
+      }
+    </div>
   </div>
+
+  <!-- Table -->
+  @if (leases().length === 0) {
+    <app-empty-state icon="article" title="No leases"
+      subtitle="Leases created from approved applications will appear here." />
+  } @else if (filteredRows().length === 0) {
+    <app-empty-state icon="search_off" title="No matches"
+      subtitle="Try a different search or filter." />
+  } @else {
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Tenant</th>
+            <th>Period</th>
+            <th>Rent</th>
+            <th>Signed</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (lease of filteredRows(); track lease.leaseId) {
+            <tr>
+              <!-- Property -->
+              <td>
+                <div class="font-semibold text-[13px] text-es-text">{{ lease.propertyTitle ?? '—' }}</div>
+                @if (lease.propertyAddress) {
+                  <div class="text-[12px] text-es-muted mt-0.5">{{ lease.propertyAddress }}</div>
+                }
+              </td>
+
+              <!-- Tenant -->
+              <td>
+                <div class="text-[13px]">{{ lease.tenantName ?? '—' }}</div>
+                @if (lease.tenantEmail) {
+                  <div class="text-[12px] text-es-muted mt-0.5">{{ lease.tenantEmail }}</div>
+                }
+              </td>
+
+              <!-- Period -->
+              <td class="whitespace-nowrap">
+                <div class="text-[13px]">{{ formatDate(lease.startDate) }}</div>
+                <div class="text-[12px] text-es-muted">→ {{ formatDate(lease.endDate) }}</div>
+              </td>
+
+              <!-- Rent -->
+              <td class="whitespace-nowrap font-semibold text-[13px]">
+                {{ formatCurrency(lease.monthlyRent) }}/mo
+              </td>
+
+              <!-- Signed -->
+              <td>
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-[12px]" [class]="lease.ownerSignedAt ? 'es-text-success' : 'text-es-muted'">
+                    <mat-icon class="!text-[13px] !w-[13px] !h-[13px] align-middle">
+                      {{ lease.ownerSignedAt ? 'check_circle' : 'radio_button_unchecked' }}
+                    </mat-icon>
+                    Owner
+                  </span>
+                  <span class="text-[12px]" [class]="lease.tenantSignedAt ? 'es-text-success' : 'text-es-muted'">
+                    <mat-icon class="!text-[13px] !w-[13px] !h-[13px] align-middle">
+                      {{ lease.tenantSignedAt ? 'check_circle' : 'radio_button_unchecked' }}
+                    </mat-icon>
+                    Tenant
+                  </span>
+                </div>
+              </td>
+
+              <!-- Status -->
+              <td><app-status-badge [status]="lease.status" /></td>
+
+              <!-- Actions -->
+              <td>
+                <a mat-stroked-button class="!rounded-full !h-8 !px-4 !text-xs"
+                  [routerLink]="['/leases', lease.leaseId]">
+                  View
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 }

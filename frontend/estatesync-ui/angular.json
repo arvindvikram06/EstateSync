@@ -29,7 +29,11 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/material-theme.scss", "src/styles.css", "node_modules/leaflet/dist/leaflet.css"]
+            "styles": [
+              "src/material-theme.scss",
+              "src/styles.css",
+              "node_modules/leaflet/dist/leaflet.css"
+            ]
           },
           "configurations": {
             "production": {

@@ -27,7 +27,8 @@ export enum ApplicationStatus {
   Pending = 0,
   Approved = 1,
   Rejected = 2,
-  Withdrawn = 3
+  Withdrawn = 3,
+  Completed = 4
 }
 
 export enum ApprovalStatus {

@@ -59,6 +59,10 @@ public class LeaseExpiryScheduler : BackgroundService
             lease.Status = LeaseStatus.Expired;
             hasChanges = true;
 
+            // Close out the application so it cannot be used to create another lease.
+            if (lease.RentalApplication != null && lease.RentalApplication.Status == ApplicationStatus.Approved)
+                lease.RentalApplication.Status = ApplicationStatus.Completed;
+
             if (lease.Property != null &&
                 (lease.Property.Status == PropertyStatus.AvailableSoon || lease.Property.Status == PropertyStatus.Leased))
             {

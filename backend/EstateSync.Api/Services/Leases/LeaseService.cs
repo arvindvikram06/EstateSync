@@ -511,6 +511,11 @@ public class LeaseService : ILeaseService
         lease.CancellationReason = reason;
         lease.IsDepositForfeited = forfeitDeposit;
 
+        // Close out the application so it cannot be used to create another lease.
+        var application = await _applicationRepo.GetByIdAsync(lease.ApplicationId);
+        if (application != null && application.Status == ApplicationStatus.Approved)
+            application.Status = ApplicationStatus.Completed;
+
         if (property.Status == PropertyStatus.Leased || property.Status == PropertyStatus.AvailableSoon)
             property.Status = PropertyStatus.Active;
 
@@ -597,6 +602,11 @@ public class LeaseService : ILeaseService
         await _vacateNoticeRepo.AddAsync(notice);
 
         var property = lease.Property!;
+
+        // Exit is confirmed with no owner action needed — signal property is coming available
+        if (!penaltyApplied && property.Status == PropertyStatus.Leased)
+            property.Status = PropertyStatus.AvailableSoon;
+
         await _notificationSender.SendAsync(new Notification
         {
             NotificationId = Guid.NewGuid(),
@@ -648,14 +658,9 @@ public class LeaseService : ILeaseService
             });
         }
 
-        lease.Status = LeaseStatus.Terminated;
-        lease.CancelledBy = ownerId;
-        lease.CancelledAt = DateTime.UtcNow;
-        lease.CancellationReason = $"Tenant vacate notice accepted. Exit date: {notice.RequestedExitDate:dd MMM yyyy}.";
-        lease.IsDepositForfeited = notice.PenaltyApplied;
-
-        if (property.Status == PropertyStatus.Leased || property.Status == PropertyStatus.AvailableSoon)
-            property.Status = PropertyStatus.Active;
+        // Lease stays Active until RequestedExitDate — scheduler terminates on that date
+        if (property.Status == PropertyStatus.Leased)
+            property.Status = PropertyStatus.AvailableSoon;
 
         await _notificationSender.SendAsync(new Notification
         {
@@ -664,8 +669,8 @@ public class LeaseService : ILeaseService
             Type = NotificationType.VacateNoticeAccepted,
             Title = "Vacate Notice Accepted",
             Message = notice.PenaltyApplied
-                ? $"Your vacate notice for '{property.Title}' has been accepted. A penalty of ₹{notice.PenaltyAmount:N0} has been billed due to short notice. Your security deposit is forfeited."
-                : $"Your vacate notice for '{property.Title}' has been accepted. Lease ends {notice.RequestedExitDate:dd MMM yyyy}. Your security deposit will be returned.",
+                ? $"Your vacate notice for '{property.Title}' has been accepted. A penalty of ₹{notice.PenaltyAmount:N0} has been billed. Your lease will end on {notice.RequestedExitDate:dd MMM yyyy}."
+                : $"Your vacate notice for '{property.Title}' has been accepted. Your lease will end on {notice.RequestedExitDate:dd MMM yyyy}.",
             EntityId = notice.VacateNoticeId.ToString(),
             EntityType = "LeaseVacateNotice",
             IsRead = false,
@@ -673,7 +678,7 @@ public class LeaseService : ILeaseService
         });
 
         await _unitOfWork.SaveChangesAsync(ct);
-        _logger.LogInformation("Vacate notice {NoticeId} accepted. Lease {LeaseId} terminated.", vacateNoticeId, lease.LeaseId);
+        _logger.LogInformation("Vacate notice {NoticeId} accepted. Lease {LeaseId} will terminate on {ExitDate}.", vacateNoticeId, lease.LeaseId, notice.RequestedExitDate);
     }
 
     public async Task RejectVacateNoticeAsync(Guid vacateNoticeId, Guid ownerId, string reason, CancellationToken ct)

@@ -126,6 +126,7 @@ public class LeaseRepository : BaseRepository<Lease>, ILeaseRepository
     {
         return await _dbSet
             .Include(l => l.Property)
+            .Include(l => l.RentalApplication)
             .Where(l => l.Status == LeaseStatus.Active && l.EndDate < now)
             .ToListAsync();
     }

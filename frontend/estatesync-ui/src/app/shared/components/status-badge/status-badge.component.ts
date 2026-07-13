@@ -22,6 +22,7 @@ const STATUS_CLASS: Record<string, string> = {
   terminated:           'es-badge--draft',
   withdrawn:            'es-badge--draft',
   closed:               'es-badge--closed',
+  completed:            'es-badge--closed',
   notstarted:           'es-badge--draft',
   availablesoon:        'es-badge--partial',
   leased:               'es-badge--partial',

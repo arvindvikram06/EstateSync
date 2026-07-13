@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using EstateSync.Api.Data;
@@ -26,4 +27,15 @@ public class LeaseVacateNoticeRepository : BaseRepository<LeaseVacateNotice>, IL
             .Include(v => v.Tenant)
             .FirstOrDefaultAsync(v => v.VacateNoticeId == vacateNoticeId);
     }
+
+    public async Task<IEnumerable<LeaseVacateNotice>> GetDueForTerminationAsync(DateTime asOf)
+        => await _dbSet
+            .Include(n => n.Lease)
+                .ThenInclude(l => l!.Property)
+            .Include(n => n.Lease)
+                .ThenInclude(l => l!.RentalApplication)
+            .Where(n => n.RequestedExitDate.Date <= asOf.Date && (
+                (n.Status == VacateNoticeStatus.Pending && !n.PenaltyApplied) ||
+                 n.Status == VacateNoticeStatus.Accepted))
+            .ToListAsync();
 }

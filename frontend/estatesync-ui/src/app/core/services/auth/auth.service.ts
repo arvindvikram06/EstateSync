@@ -35,7 +35,7 @@ export class AuthService {
   readonly isOwnerVerified = computed(() => this._verificationState()?.isOwnerVerified ?? false);
 
   login(request: LoginRequest): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, request).pipe(
+    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, request, { withCredentials: true }).pipe(
       tap(res => { if (res.success) this.persist(res.data); })
     );
   }

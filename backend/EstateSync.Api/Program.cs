@@ -222,6 +222,7 @@ builder.Services.AddHostedService<PenaltyScheduler>();
 builder.Services.AddHostedService<PropertyStatusUpdateScheduler>();
 builder.Services.AddHostedService<LeaseExpiryScheduler>();
 builder.Services.AddHostedService<RefreshTokenCleanupScheduler>();
+builder.Services.AddHostedService<VacateNoticeScheduler>();
 
 // ── Email (SMTP via background queue) ─────────────────────────
 builder.Services.Configure<EstateSync.Api.Common.EmailSettings>(builder.Configuration.GetSection("Email"));
