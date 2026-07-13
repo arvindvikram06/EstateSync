@@ -42,17 +42,20 @@ public class NotificationSender : INotificationSender
     private readonly IHubContext<NotificationHub> _hubContext;
     private readonly IUserRepository _userRepo;
     private readonly IEmailQueue _emailQueue;
+    private readonly string _frontendUrl;
 
     public NotificationSender(
         INotificationRepository notificationRepo,
         IHubContext<NotificationHub> hubContext,
         IUserRepository userRepo,
-        IEmailQueue emailQueue)
+        IEmailQueue emailQueue,
+        IConfiguration configuration)
     {
         _notificationRepo = notificationRepo ?? throw new ArgumentNullException(nameof(notificationRepo));
         _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
         _emailQueue = emailQueue ?? throw new ArgumentNullException(nameof(emailQueue));
+        _frontendUrl = configuration["App:FrontendUrl"] ?? "http://localhost:4200";
     }
 
     public async Task SendAsync(Notification notification, CancellationToken ct = default)
@@ -89,7 +92,7 @@ public class NotificationSender : INotificationSender
                     Heading = notification.Title,
                     Body = notification.Message,
                     CtaLabel = "Open EstateSync",
-                    CtaUrl = "http://localhost:4200",
+                    CtaUrl = _frontendUrl,
                 }, ct);
             }
         }

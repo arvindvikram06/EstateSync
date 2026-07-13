@@ -24,6 +24,10 @@
     <app-bills-tab [bills]="bills()" [loading]="billsLoading()" />
   }
 
+  @if (activeTab() === 'saved') {
+    <app-saved-tab />
+  }
+
   @if (activeTab() === 'complaints') {
     <app-complaints-tab />
   }

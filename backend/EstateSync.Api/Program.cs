@@ -106,12 +106,13 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// CORS — allow Angular dev server
+// CORS — frontend origin comes from config so deployment only changes appsettings
+var frontendUrl = builder.Configuration["App:FrontendUrl"] ?? "http://localhost:4200";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Angular", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins(frontendUrl)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -145,6 +146,7 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IStripeConnectedAccountRepository, StripeConnectedAccountRepository>();
 builder.Services.AddScoped<IStripeCustomerProfileRepository, StripeCustomerProfileRepository>();
 builder.Services.AddScoped<IOwnerSettlementRepository, OwnerSettlementRepository>();
+builder.Services.AddScoped<ISavedPropertyRepository, SavedPropertyRepository>();
 #endregion
 
 // Register FluentValidation
@@ -166,6 +168,7 @@ builder.Services.AddScoped<IPropertyImageService, PropertyImageService>();
 builder.Services.AddScoped<IPropertyAmenityService, PropertyAmenityService>();
 builder.Services.AddScoped<IPropertyApprovalService, PropertyApprovalService>();
 builder.Services.AddScoped<IPropertyDocumentService, PropertyDocumentService>();
+builder.Services.AddScoped<ISavedPropertyService, SavedPropertyService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddScoped<IKycService, KycService>();
 builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();

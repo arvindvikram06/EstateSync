@@ -49,6 +49,9 @@ public static class DbSeeder
 
         foreach (var o in new[] { owner1, owner2, owner3 })
         {
+            // Real users register as Tenant first and become-owner ADDS the Owner
+            // role — seeded owners mirror that and carry both roles.
+            context.UserRoles.Add(new UserRole { UserRoleId = Guid.NewGuid(), UserId = o.UserId, RoleId = tenantRole.RoleId });
             context.UserRoles.Add(new UserRole { UserRoleId = Guid.NewGuid(), UserId = o.UserId, RoleId = ownerRole.RoleId });
             context.OwnerProfiles.Add(new OwnerProfile
             {

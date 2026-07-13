@@ -25,6 +25,7 @@ public class AuthService : IAuthService
     private readonly EstateSync.Api.Mappers.AuthMapper _authMapper;
     private readonly IEmailQueue _emailQueue;
     private readonly IPasswordResetTokenStore _passwordResetTokenStore;
+    private readonly string _frontendUrl;
 
     public AuthService(
         IUserRepository userRepository,
@@ -35,7 +36,8 @@ public class AuthService : IAuthService
         IUnitOfWork unitOfWork,
         EstateSync.Api.Mappers.AuthMapper authMapper,
         IEmailQueue emailQueue,
-        IPasswordResetTokenStore passwordResetTokenStore)
+        IPasswordResetTokenStore passwordResetTokenStore,
+        Microsoft.Extensions.Configuration.IConfiguration configuration)
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _roleRepository = roleRepository ?? throw new ArgumentNullException(nameof(roleRepository));
@@ -46,6 +48,7 @@ public class AuthService : IAuthService
         _authMapper = authMapper ?? throw new ArgumentNullException(nameof(authMapper));
         _emailQueue = emailQueue ?? throw new ArgumentNullException(nameof(emailQueue));
         _passwordResetTokenStore = passwordResetTokenStore ?? throw new ArgumentNullException(nameof(passwordResetTokenStore));
+        _frontendUrl = configuration["App:FrontendUrl"] ?? "http://localhost:4200";
     }
 
     public async Task RegisterAsync(RegisterRequest request)
@@ -113,7 +116,7 @@ public class AuthService : IAuthService
             Heading = $"Welcome, {user.FullName}!",
             Body = "Confirm your email address to activate your EstateSync account. This link is valid for 24 hours.",
             CtaLabel = "Verify my email",
-            CtaUrl = $"http://localhost:4200/auth/verify-email?token={user.EmailVerificationToken}",
+            CtaUrl = $"{_frontendUrl}/auth/verify-email?token={user.EmailVerificationToken}",
         });
     }
 
@@ -258,7 +261,7 @@ public class AuthService : IAuthService
             Body = "We received a request to reset your password. Click the button below to choose a new one. " +
                    "This link is valid for 1 hour. If you didn't request this, you can safely ignore this email.",
             CtaLabel = "Reset Password",
-            CtaUrl = $"http://localhost:4200/auth/reset-password?token={token}",
+            CtaUrl = $"{_frontendUrl}/auth/reset-password?token={token}",
         });
     }
 

@@ -9,6 +9,7 @@ import { NotificationService } from '@core/services/shared/notification.service'
 import { ApiResponse } from '../../models/api-response.model';
 import { AuthResponse, LoginRequest, RegisterRequest, UserProfileResponse } from '../../models/auth.model';
 import { KycStore } from '../../stores/kyc.store';
+import { SavedPropertyService } from '@core/services/property/saved-property.service';
 import { SKIP_AUTH_HANDLING } from '../../interceptors/http-context.tokens';
 
 @Injectable({ providedIn: 'root' })
@@ -19,6 +20,7 @@ export class AuthService {
   private readonly userService = inject(UserService);
   private readonly notificationService = inject(NotificationService);
   private readonly kycStore = inject(KycStore);
+  private readonly savedPropertyService = inject(SavedPropertyService);
 
   private readonly baseUrl = `${environment.apiUrl}/api/v1/auth`;
 
@@ -104,6 +106,7 @@ export class AuthService {
   private clearClientState(navigateToLogin = true): void {
     this.kycStore.reset();
     this.notificationService.clear();
+    this.savedPropertyService.clear();
     this.tokenService.clearToken();
     this.currentUser.set(null);
     this._verificationState.set(null);

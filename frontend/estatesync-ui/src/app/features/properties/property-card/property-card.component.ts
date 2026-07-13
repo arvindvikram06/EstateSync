@@ -1,10 +1,12 @@
-import { Component, ChangeDetectionStrategy, inject, input, computed } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, ChangeDetectionStrategy, inject, input, computed, OnInit } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { PropertySummaryResponse } from '../../../core/models/property.model';
 import { PropertyService } from '@core/services/property/property.service';
+import { SavedPropertyService } from '@core/services/property/saved-property.service';
+import { AuthService } from '@core/services/auth/auth.service';
 import { formatCurrency } from '../../../core/utils/format.utils';
 
 const GRADIENTS = [
@@ -30,13 +32,34 @@ function hashCode(s: string): number {
   imports: [RouterLink, MatCardModule, MatChipsModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './property-card.component.html',})
-export class PropertyCardComponent {
+export class PropertyCardComponent implements OnInit {
   readonly property = input.required<PropertySummaryResponse>();
   readonly propertyService = inject(PropertyService);
+  private readonly savedPropertyService = inject(SavedPropertyService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   readonly gradient = computed(() =>
     GRADIENTS[hashCode(this.property().propertyId) % GRADIENTS.length]
   );
 
+  readonly isSaved = computed(() =>
+    this.savedPropertyService.savedIds().has(this.property().propertyId)
+  );
+
   readonly formatRent = formatCurrency;
+
+  ngOnInit(): void {
+    if (this.authService.isLoggedIn()) this.savedPropertyService.ensureIdsLoaded();
+  }
+
+  toggleSave(event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+    this.savedPropertyService.toggle(this.property().propertyId);
+  }
 }

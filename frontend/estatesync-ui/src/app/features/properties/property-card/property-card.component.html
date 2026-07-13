@@ -19,6 +19,15 @@
         class="absolute top-3 left-3 px-2.5 py-1 bg-white/95 text-es-text text-[11px] font-semibold rounded-full shadow-sm">
         {{ property().propertyType === 'Villa' ? 'Villa' : 'House' }}
       </span>
+      <!-- Save heart -->
+      <button type="button" (click)="toggleSave($event)"
+        class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/95 shadow-sm border-none cursor-pointer flex items-center justify-center hover:scale-110 transition-transform"
+        [attr.aria-label]="isSaved() ? 'Remove from saved' : 'Save property'">
+        <mat-icon class="!text-[18px] !w-[18px] !h-[18px]"
+          [class.es-text-primary]="isSaved()" [class.text-es-muted]="!isSaved()">
+          {{ isSaved() ? 'favorite' : 'favorite_border' }}
+        </mat-icon>
+      </button>
     </div>
 
     <!-- Body -->
