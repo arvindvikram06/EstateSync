@@ -42,7 +42,6 @@ export interface LeaseDetailResponse extends LeaseSummaryResponse {
   ownerSignature: string | null;
   tenantSignatureImageUrl: string | null;
   ownerSignatureImageUrl: string | null;
-  signatureVerificationHash: string | null;
   adminApprovedAt: string | null;
   adminRemarks: string | null;
   activatedAt: string | null;

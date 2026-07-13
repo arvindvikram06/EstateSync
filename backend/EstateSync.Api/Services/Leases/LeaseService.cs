@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -221,7 +219,6 @@ public class LeaseService : ILeaseService
         if (tenantSigned && ownerSigned)
         {
             lease.Status = LeaseStatus.PendingAdminApproval;
-            lease.SignatureVerificationHash = ComputeVerificationHash(lease, property.OwnerId);
 
             var signedPdfUrl = await _leaseDocumentService.GenerateSignedAgreementPdfAsync(lease, ct);
             lease.SignedAgreementUrl = signedPdfUrl;
@@ -858,10 +855,4 @@ public class LeaseService : ILeaseService
         }
     }
 
-    private static string ComputeVerificationHash(Lease lease, Guid ownerId)
-    {
-        var raw = $"{lease.LeaseId}{lease.TenantId}{ownerId}{lease.TenantSignedAt:O}{lease.OwnerSignedAt:O}";
-        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
-        return Convert.ToHexString(hashBytes).ToLowerInvariant();
-    }
 }

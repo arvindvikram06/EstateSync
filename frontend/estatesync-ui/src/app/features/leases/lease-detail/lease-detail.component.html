@@ -159,22 +159,6 @@
               }
             </div>
 
-            <!-- Verification hash -->
-            @if (l.signatureVerificationHash) {
-              <div class="mt-5 pt-5 border-0 border-t border-solid border-es-border-light">
-                <div class="flex items-center justify-between mb-1">
-                  <p class="text-xs text-es-muted">Signature verification hash</p>
-                  <button mat-button class="!h-7 !min-w-0 !px-2 !text-xs" (click)="copyHash()"
-                    aria-label="Copy verification hash">
-                    <mat-icon class="!text-[14px] !w-[14px] !h-[14px] mr-1">
-                      {{ hashCopied() ? 'check' : 'content_copy' }}
-                    </mat-icon>
-                    {{ hashCopied() ? 'Copied' : 'Copy' }}
-                  </button>
-                </div>
-                <p class="text-xs font-mono break-all text-es-text">{{ l.signatureVerificationHash }}</p>
-              </div>
-            }
           </div>
         </section>
 

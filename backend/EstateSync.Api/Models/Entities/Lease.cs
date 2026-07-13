@@ -44,7 +44,6 @@ public class Lease : BaseEntity
     // E-sign metadata
     public string? TenantSignatureIp { get; set; }
     public string? OwnerSignatureIp { get; set; }
-    public string? SignatureVerificationHash { get; set; }
 
     public LeaseStatus Status { get; set; }
     public DateTime? ActivatedAt { get; set; }

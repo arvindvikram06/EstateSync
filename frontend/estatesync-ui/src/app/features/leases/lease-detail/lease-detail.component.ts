@@ -52,7 +52,6 @@ export class LeaseDetailComponent implements OnInit {
   readonly paymentsLoading = signal(true);
   readonly payingBillId    = signal<string | null>(null);
   readonly payError        = signal<string | null>(null);
-  readonly hashCopied      = signal(false);
   readonly vacateNotice    = signal<LeaseVacateNoticeResponse | null>(null);
   readonly vacateActionId  = signal<'accept' | 'reject' | null>(null);
   readonly vacateError     = signal<string | null>(null);
@@ -218,15 +217,6 @@ export class LeaseDetailComponent implements OnInit {
           this.payError.set('Failed to start payment. Please try again.');
         },
       });
-  }
-
-  copyHash(): void {
-    const hash = this.lease()?.signatureVerificationHash;
-    if (!hash) return;
-    navigator.clipboard.writeText(hash).then(() => {
-      this.hashCopied.set(true);
-      setTimeout(() => this.hashCopied.set(false), 2000);
-    });
   }
 
   openVoidDialog(): void {

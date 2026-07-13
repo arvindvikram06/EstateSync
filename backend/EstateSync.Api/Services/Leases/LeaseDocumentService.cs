@@ -58,7 +58,7 @@ public class LeaseDocumentService : ILeaseDocumentService
                 ApplyPageDefaults(page);
                 page.Header().Element(c => BuildPageHeader(c, lease, signed: false));
                 page.Content().Element(c => BuildBody(c, lease, tenantSig: null, ownerSig: null, signed: false));
-                page.Footer().Element(c => BuildPageFooter(c, "DRAFT — Awaiting Signatures", lease.SignatureVerificationHash, signed: false));
+                page.Footer().Element(c => BuildPageFooter(c, "DRAFT — Awaiting Signatures", signed: false));
             });
         }).GeneratePdf();
 
@@ -79,7 +79,7 @@ public class LeaseDocumentService : ILeaseDocumentService
                 ApplyPageDefaults(page);
                 page.Header().Element(c => BuildPageHeader(c, lease, signed: true));
                 page.Content().Element(c => BuildBody(c, lease, tenantSig, ownerSig, signed: true));
-                page.Footer().Element(c => BuildPageFooter(c, null, lease.SignatureVerificationHash, signed: true));
+                page.Footer().Element(c => BuildPageFooter(c, null, signed: true));
             });
         }).GeneratePdf();
 
@@ -454,7 +454,7 @@ public class LeaseDocumentService : ILeaseDocumentService
 
     // ── Page footer ───────────────────────────────────────────────────────────
 
-    private static void BuildPageFooter(IContainer container, string? draftText, string? hash, bool signed)
+    private static void BuildPageFooter(IContainer container, string? draftText, bool signed)
     {
         container.Column(col =>
         {
@@ -462,8 +462,8 @@ public class LeaseDocumentService : ILeaseDocumentService
             col.Item().PaddingTop(4).Row(row =>
             {
                 row.RelativeItem()
-                    .Text(signed && hash != null
-                        ? $"Verification Hash: {hash}"
+                    .Text(signed
+                        ? "Digitally signed via EstateSync"
                         : draftText ?? string.Empty)
                     .FontSize(7).FontColor(TextMuted);
 

@@ -35,7 +35,6 @@ public class LeaseMapper
             OwnerSignedAt = lease.OwnerSignedAt,
             OwnerSignature = lease.OwnerSignature,
             OwnerSignatureImageUrl = lease.OwnerSignatureImageUrl,
-            SignatureVerificationHash = lease.SignatureVerificationHash,
             Status = lease.Status.ToString(),
             IsRenewalRequested = lease.IsRenewalRequested,
             ActivatedAt = lease.ActivatedAt,

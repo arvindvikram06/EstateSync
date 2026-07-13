@@ -398,9 +398,6 @@ namespace EstateSync.Api.Migrations
                     b.Property<decimal>("SecurityDeposit")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("SignatureVerificationHash")
-                        .HasColumnType("text");
-
                     b.Property<string>("SignedAgreementUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
