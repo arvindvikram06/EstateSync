@@ -24,6 +24,7 @@ public class AuthService : IAuthService
     private readonly IUnitOfWork _unitOfWork;
     private readonly EstateSync.Api.Mappers.AuthMapper _authMapper;
     private readonly IEmailQueue _emailQueue;
+    private readonly IPasswordResetTokenStore _passwordResetTokenStore;
 
     public AuthService(
         IUserRepository userRepository,
@@ -33,7 +34,8 @@ public class AuthService : IAuthService
         ITokenService tokenService,
         IUnitOfWork unitOfWork,
         EstateSync.Api.Mappers.AuthMapper authMapper,
-        IEmailQueue emailQueue)
+        IEmailQueue emailQueue,
+        IPasswordResetTokenStore passwordResetTokenStore)
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _roleRepository = roleRepository ?? throw new ArgumentNullException(nameof(roleRepository));
@@ -43,6 +45,7 @@ public class AuthService : IAuthService
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _authMapper = authMapper ?? throw new ArgumentNullException(nameof(authMapper));
         _emailQueue = emailQueue ?? throw new ArgumentNullException(nameof(emailQueue));
+        _passwordResetTokenStore = passwordResetTokenStore ?? throw new ArgumentNullException(nameof(passwordResetTokenStore));
     }
 
     public async Task RegisterAsync(RegisterRequest request)
@@ -236,14 +239,48 @@ public class AuthService : IAuthService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public Task ForgotPasswordAsync(ForgotPasswordRequest request)
+    private static readonly TimeSpan PasswordResetTokenTtl = TimeSpan.FromHours(1);
+
+    public async Task ForgotPasswordAsync(ForgotPasswordRequest request)
     {
-        return Task.CompletedTask;
+        // Always succeed silently — never reveal whether an email is registered.
+        var user = await _userRepository.GetByEmailAsync(request.Email);
+        if (user == null || !user.IsActive) return;
+
+        var token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+        await _passwordResetTokenStore.StoreAsync(token, user.UserId, PasswordResetTokenTtl);
+
+        await _emailQueue.EnqueueAsync(new EmailMessage
+        {
+            To = user.Email,
+            Subject = "Reset your EstateSync password",
+            Heading = $"Hi {user.FullName},",
+            Body = "We received a request to reset your password. Click the button below to choose a new one. " +
+                   "This link is valid for 1 hour. If you didn't request this, you can safely ignore this email.",
+            CtaLabel = "Reset Password",
+            CtaUrl = $"http://localhost:4200/auth/reset-password?token={token}",
+        });
     }
 
-    public Task ResetPasswordAsync(ResetPasswordRequest request)
+    public async Task ResetPasswordAsync(ResetPasswordRequest request)
     {
-        return Task.CompletedTask;
+        var userId = await _passwordResetTokenStore.ConsumeAsync(request.Token);
+        if (userId == null)
+            throw new BadRequestException("Invalid or expired reset link. Please request a new one.");
+
+        var user = await _userRepository.GetByIdAsync(userId.Value);
+        if (user == null || !user.IsActive)
+            throw new BadRequestException("Invalid or expired reset link. Please request a new one.");
+
+        user.PasswordHash = _passwordService.HashPassword(request.NewPassword);
+
+        var activeTokens = await _refreshTokenRepository.GetActiveTokensByUserIdAsync(user.UserId);
+        foreach (var token in activeTokens)
+        {
+            token.RevokedAt = DateTime.UtcNow;
+        }
+
+        await _unitOfWork.SaveChangesAsync();
     }
 
     private User CreateTenantUser(RegisterRequest request, Role tenantRole)

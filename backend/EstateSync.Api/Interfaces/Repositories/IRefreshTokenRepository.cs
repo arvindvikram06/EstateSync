@@ -9,6 +9,7 @@ public interface IRefreshTokenRepository : IRepository<RefreshToken>
 {
     Task<RefreshToken?> GetByTokenAsync(string token);
     Task<IEnumerable<RefreshToken>> GetActiveTokensInFamilyAsync(string tokenFamily);
+    Task<IEnumerable<RefreshToken>> GetActiveTokensByUserIdAsync(Guid userId);
 
     /// <summary>
     /// Permanently removes refresh tokens that are no longer useful: those past their expiry,

@@ -11,7 +11,7 @@
       <div class="flex items-center gap-5">
         <span class="w-16 h-16 rounded-full es-bg-primary-soft es-text-primary text-[22px] font-bold flex items-center justify-center shrink-0"
           aria-hidden="true">{{ initials() }}</span>
-        <div class="min-w-0">
+        <div class="min-w-0 flex-1">
           <h1 class="text-[22px] font-bold text-es-text tracking-tight truncate">{{ profile()!.fullName }}</h1>
           <div class="flex items-center gap-2 mt-1 flex-wrap">
             @for (role of roles(); track role) {
@@ -19,31 +19,66 @@
             }
           </div>
         </div>
+        @if (!isEditing()) {
+          <button mat-stroked-button class="!rounded-full shrink-0" (click)="startEdit()">
+            <mat-icon class="!text-[18px] !w-[18px] !h-[18px]">edit</mat-icon>
+            Edit
+          </button>
+        }
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-7">
-        <div class="es-tile">
-          <div class="es-detail-label mb-1">Email</div>
-          <div class="es-detail-value flex items-center gap-2">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-muted">mail</mat-icon>
-            <span class="truncate">{{ profile()!.email }}</span>
+      @if (isEditing()) {
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" novalidate class="flex flex-col gap-1 mt-7">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Full name</mat-label>
+            <mat-icon matPrefix>person</mat-icon>
+            <input matInput formControlName="fullName" autocomplete="name" />
+            @if (profileForm.controls.fullName.hasError('required') && profileForm.controls.fullName.touched) {
+              <mat-error>Full name is required</mat-error>
+            } @else if (profileForm.controls.fullName.hasError('minlength') && profileForm.controls.fullName.touched) {
+              <mat-error>Full name must be at least 3 characters</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Phone number</mat-label>
+            <mat-icon matPrefix>call</mat-icon>
+            <input matInput formControlName="phoneNumber" autocomplete="tel" />
+            @if (profileForm.controls.phoneNumber.hasError('required') && profileForm.controls.phoneNumber.touched) {
+              <mat-error>Phone number is required</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="flex items-center gap-3">
+            <app-loading-button type="submit" [loading]="isSavingProfile()">Save changes</app-loading-button>
+            <button mat-stroked-button type="button" class="!rounded-full !h-12 !px-6" (click)="cancelEdit()">Cancel</button>
+          </div>
+        </form>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-7">
+          <div class="es-tile">
+            <div class="es-detail-label mb-1">Email</div>
+            <div class="es-detail-value flex items-center gap-2">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-muted">mail</mat-icon>
+              <span class="truncate">{{ profile()!.email }}</span>
+            </div>
+          </div>
+          <div class="es-tile">
+            <div class="es-detail-label mb-1">Phone</div>
+            <div class="es-detail-value flex items-center gap-2">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-muted">call</mat-icon>
+              {{ profile()!.phoneNumber || '—' }}
+            </div>
+          </div>
+          <div class="es-tile">
+            <div class="es-detail-label mb-1">Member since</div>
+            <div class="es-detail-value flex items-center gap-2">
+              <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-muted">calendar_month</mat-icon>
+              {{ formatDate(profile()!.createdAt) }}
+            </div>
           </div>
         </div>
-        <div class="es-tile">
-          <div class="es-detail-label mb-1">Phone</div>
-          <div class="es-detail-value flex items-center gap-2">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-muted">call</mat-icon>
-            {{ profile()!.phoneNumber || '—' }}
-          </div>
-        </div>
-        <div class="es-tile">
-          <div class="es-detail-label mb-1">Member since</div>
-          <div class="es-detail-value flex items-center gap-2">
-            <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-muted">calendar_month</mat-icon>
-            {{ formatDate(profile()!.createdAt) }}
-          </div>
-        </div>
-      </div>
+      }
     </div>
 
     <!-- Verification card -->
@@ -65,6 +100,56 @@
           <app-status-badge [status]="profile()!.isOwnerVerified ? 'Verified' : 'Pending'" />
         </div>
       </div>
+    </div>
+
+    <!-- Security card -->
+    <div class="es-card px-8 py-7 mb-6">
+      <h2 class="es-title mb-1">Security</h2>
+      <p class="text-sm text-es-muted mb-5">
+        Must be at least 8 characters with an uppercase letter, a number and a special character.
+      </p>
+
+      @if (passwordError()) {
+        <p class="text-sm es-text-danger mb-3">{{ passwordError() }}</p>
+      }
+
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" novalidate class="flex flex-col gap-1">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Current password</mat-label>
+          <mat-icon matPrefix>lock</mat-icon>
+          <input matInput [type]="currentPasswordVisible() ? 'text' : 'password'"
+            formControlName="currentPassword" autocomplete="current-password" />
+          <button mat-icon-button matSuffix type="button"
+            (click)="currentPasswordVisible.set(!currentPasswordVisible())">
+            <mat-icon>{{ currentPasswordVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (passwordForm.controls.currentPassword.hasError('required') && passwordForm.controls.currentPassword.touched) {
+            <mat-error>Current password is required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>New password</mat-label>
+          <mat-icon matPrefix>lock_reset</mat-icon>
+          <input matInput [type]="newPasswordVisible() ? 'text' : 'password'"
+            formControlName="newPassword" autocomplete="new-password" />
+          <button mat-icon-button matSuffix type="button"
+            (click)="newPasswordVisible.set(!newPasswordVisible())">
+            <mat-icon>{{ newPasswordVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (passwordForm.controls.newPassword.hasError('required') && passwordForm.controls.newPassword.touched) {
+            <mat-error>New password is required</mat-error>
+          } @else if (passwordForm.controls.newPassword.hasError('minlength') && passwordForm.controls.newPassword.touched) {
+            <mat-error>Password must be at least 8 characters</mat-error>
+          } @else if (passwordForm.controls.newPassword.hasError('pattern') && passwordForm.controls.newPassword.touched) {
+            <mat-error>Needs an uppercase letter, a number and a special character</mat-error>
+          }
+        </mat-form-field>
+
+        <div>
+          <app-loading-button type="submit" [loading]="isChangingPassword()">Change password</app-loading-button>
+        </div>
+      </form>
     </div>
 
     <!-- Business details (owners with a company profile) -->

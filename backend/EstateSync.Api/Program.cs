@@ -189,6 +189,12 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 
+// ── Redis (password reset tokens) ─────────────────────────────
+builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(_ =>
+    StackExchange.Redis.ConnectionMultiplexer.Connect(
+        builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379,abortConnect=false"));
+builder.Services.AddSingleton<IPasswordResetTokenStore, RedisPasswordResetTokenStore>();
+
 // Configure JWT Authentication via Extension Method
 builder.Services.AddCustomAuthentication(builder.Configuration);
 

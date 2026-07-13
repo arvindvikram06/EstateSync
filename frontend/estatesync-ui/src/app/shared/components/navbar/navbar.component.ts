@@ -1,11 +1,11 @@
 import {
   Component, ChangeDetectionStrategy, inject, computed,
-  signal, HostListener,
+  signal, HostListener, DestroyRef,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router, NavigationEnd } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map } from 'rxjs';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, map, Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -81,8 +81,23 @@ export class NavbarComponent {
     this.notificationService.markAllRead().subscribe();
   }
 
+  private readonly searchTerm$ = new Subject<string>();
+  private readonly _searchSub = this.searchTerm$.pipe(
+    debounceTime(400),
+    map(v => v.trim().replace(/\s+/g, ' ')),
+    distinctUntilChanged(),
+    takeUntilDestroyed(inject(DestroyRef)),
+  ).subscribe(q => this.navigateToResults(q));
+
+  onSearchInput(value: string): void {
+    this.searchTerm$.next(value);
+  }
+
   doSearch(value: string): void {
-    const q = value.trim();
+    this.navigateToResults(value.trim().replace(/\s+/g, ' '));
+  }
+
+  private navigateToResults(q: string): void {
     this.router.navigate(['/properties'], q ? { queryParams: { search: q } } : {});
   }
 

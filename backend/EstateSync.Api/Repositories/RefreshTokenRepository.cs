@@ -28,6 +28,13 @@ public class RefreshTokenRepository : BaseRepository<RefreshToken>, IRefreshToke
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<RefreshToken>> GetActiveTokensByUserIdAsync(Guid userId)
+    {
+        return await _dbSet
+            .Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > DateTime.UtcNow)
+            .ToListAsync();
+    }
+
     public async Task<int> DeleteExpiredAndStaleRevokedAsync(DateTime now, TimeSpan revokedRetention)
     {
         var revokedCutoff = now - revokedRetention;

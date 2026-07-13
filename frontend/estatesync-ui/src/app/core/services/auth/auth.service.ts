@@ -50,6 +50,14 @@ export class AuthService {
     return this.http.post<ApiResponse<object>>(`${this.baseUrl}/resend-verification`, { email });
   }
 
+  forgotPassword(email: string): Observable<ApiResponse<object>> {
+    return this.http.post<ApiResponse<object>>(`${this.baseUrl}/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<ApiResponse<object>> {
+    return this.http.post<ApiResponse<object>>(`${this.baseUrl}/reset-password`, { token, newPassword });
+  }
+
   // Runs once at app startup. If a valid token is in localStorage, restores
   // session instantly from the JWT. Falls back to a cookie refresh otherwise.
   bootstrap(): Observable<unknown> {

@@ -42,9 +42,12 @@ export class PropertiesComponent implements OnInit {
   readonly bedroomsFilter = signal<string>('');
   readonly rentFilter     = signal<string>('');
 
-  readonly hasActiveFilters = computed(() =>
-    !!this.searchFilter() || !!this.typeFilter() || !!this.bedroomsFilter() || !!this.rentFilter()
+  readonly activeFilterCount = computed(() =>
+    [this.searchFilter(), this.typeFilter(), this.bedroomsFilter(), this.rentFilter()]
+      .filter(Boolean).length
   );
+
+  readonly showClearAll = computed(() => this.activeFilterCount() > 1);
 
   readonly typeOptions = [
     { label: 'All', value: '' },

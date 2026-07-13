@@ -62,7 +62,7 @@
     </div>
 
     <!-- Clear all -->
-    @if (hasActiveFilters()) {
+    @if (showClearAll()) {
       <div class="h-5 w-px bg-es-border-light hidden sm:block"></div>
       <button type="button" (click)="clearFilters()"
         class="flex items-center gap-1 text-[12px] font-semibold cursor-pointer border-none bg-transparent es-text-primary"

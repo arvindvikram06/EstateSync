@@ -15,6 +15,7 @@
           class="flex-1 border-none outline-none text-sm text-es-text bg-transparent min-w-0 placeholder:text-es-faint"
           type="text"
           placeholder="Search by city or state…"
+          (input)="onSearchInput(searchInput.value)"
           (keyup.enter)="doSearch(searchInput.value)" />
         <button
           class="bg-[var(--mat-sys-primary)] text-white rounded-[40px] px-[18px] py-[7px] text-[13px] font-semibold cursor-pointer whitespace-nowrap shrink-0 border-none hover:opacity-[0.88] transition-opacity"

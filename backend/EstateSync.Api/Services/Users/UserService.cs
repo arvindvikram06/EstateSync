@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using EstateSync.Api.DTOs.Users;
 using EstateSync.Api.Exceptions;
+using EstateSync.Api.Interfaces.Services.Auth;
 using EstateSync.Api.Interfaces.Services.Users;
 using EstateSync.Api.Models;
 using EstateSync.Api.Models.Enums;
@@ -17,12 +18,18 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepo;
     private readonly IRoleRepository _roleRepo;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPasswordService _passwordService;
 
-    public UserService(IUserRepository userRepo, IRoleRepository roleRepo, IUnitOfWork unitOfWork)
+    public UserService(
+        IUserRepository userRepo,
+        IRoleRepository roleRepo,
+        IUnitOfWork unitOfWork,
+        IPasswordService passwordService)
     {
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
         _roleRepo = roleRepo ?? throw new ArgumentNullException(nameof(roleRepo));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _passwordService = passwordService ?? throw new ArgumentNullException(nameof(passwordService));
     }
 
     public async Task<string> BecomeOwnerAsync(Guid userId, BecomeOwnerRequest request, CancellationToken ct = default)
@@ -56,6 +63,34 @@ public class UserService : IUserService
         await _unitOfWork.SaveChangesAsync(ct);
 
         return "Owner role granted. Complete Stripe onboarding to start listing properties.";
+    }
+
+    public async Task<UserProfileResponse> UpdateProfileAsync(Guid userId, UpdateProfileRequest request, CancellationToken ct = default)
+    {
+        var user = await _userRepo.GetByIdAsync(userId)
+            ?? throw new NotFoundException("User", userId);
+
+        user.FullName = request.FullName.Trim();
+        user.PhoneNumber = request.PhoneNumber.Trim();
+
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        return await GetProfileAsync(userId, ct);
+    }
+
+    public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken ct = default)
+    {
+        var user = await _userRepo.GetByIdAsync(userId)
+            ?? throw new NotFoundException("User", userId);
+
+        if (!_passwordService.VerifyPassword(request.CurrentPassword, user.PasswordHash))
+            throw new BadRequestException("Current password is incorrect.");
+
+        if (request.CurrentPassword == request.NewPassword)
+            throw new BadRequestException("New password must be different from the current password.");
+
+        user.PasswordHash = _passwordService.HashPassword(request.NewPassword);
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task<UserProfileResponse> GetProfileAsync(Guid userId, CancellationToken ct = default)

@@ -14,6 +14,14 @@ export class UserService {
     return this.http.get<ApiResponse<UserProfileResponse>>(`${this.baseUrl}/me/profile`);
   }
 
+  updateProfile(fullName: string, phoneNumber: string): Observable<ApiResponse<UserProfileResponse>> {
+    return this.http.put<ApiResponse<UserProfileResponse>>(`${this.baseUrl}/me/profile`, { fullName, phoneNumber });
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<ApiResponse<object>> {
+    return this.http.put<ApiResponse<object>>(`${this.baseUrl}/me/change-password`, { currentPassword, newPassword });
+  }
+
   becomeOwner(request: BecomeOwnerRequest): Observable<ApiResponse<object>> {
     return this.http.post<ApiResponse<object>>(`${this.baseUrl}/me/become-owner`, request);
   }

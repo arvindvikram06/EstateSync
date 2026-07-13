@@ -51,14 +51,23 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
             .Include(p => p.PropertyImages)
             .Where(p => p.Status == PropertyStatus.Active);
 
-        if (!string.IsNullOrEmpty(search))
-            query = query.Where(p =>
-                p.Title.ToLower().Contains(search.ToLower()) ||
-                p.City.ToLower().Contains(search.ToLower()) ||
-                p.State.ToLower().Contains(search.ToLower()));
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            // Token-based fuzzy match: every word must appear somewhere in
+            // Title/City/State, in any order ("delhi new" finds "New Delhi").
+            var tokens = search.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (var token in tokens)
+            {
+                var pattern = $"%{token}%";
+                query = query.Where(p =>
+                    EF.Functions.ILike(p.Title, pattern) ||
+                    EF.Functions.ILike(p.City, pattern) ||
+                    EF.Functions.ILike(p.State, pattern));
+            }
+        }
 
-        if (!string.IsNullOrEmpty(state))
-            query = query.Where(p => p.State.ToLower() == state.ToLower());
+        if (!string.IsNullOrWhiteSpace(state))
+            query = query.Where(p => EF.Functions.ILike(p.State, state.Trim()));
 
         if (minRent.HasValue)
             query = query.Where(p => p.MonthlyRent >= minRent.Value);

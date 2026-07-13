@@ -28,6 +28,20 @@ public class UsersController : ControllerBase
         return Ok(new ApiResponse<UserProfileResponse> { Data = profile });
     }
 
+    [HttpPut("me/profile")]
+    public async Task<ActionResult<ApiResponse<UserProfileResponse>>> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken ct)
+    {
+        var profile = await _userService.UpdateProfileAsync(User.GetUserId(), request, ct);
+        return Ok(new ApiResponse<UserProfileResponse> { Data = profile, Message = "Profile updated." });
+    }
+
+    [HttpPut("me/change-password")]
+    public async Task<ActionResult<ApiResponse<object>>> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken ct)
+    {
+        await _userService.ChangePasswordAsync(User.GetUserId(), request, ct);
+        return Ok(new ApiResponse<object> { Message = "Password changed successfully." });
+    }
+
     [HttpPost("me/become-owner")]
     public async Task<ActionResult<ApiResponse<object>>> BecomeOwner([FromBody] BecomeOwnerRequest request, CancellationToken ct)
     {

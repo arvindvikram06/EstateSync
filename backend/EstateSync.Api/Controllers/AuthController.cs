@@ -97,19 +97,19 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<object>.Ok(new { }, message: "Logged out."));
     }
 
-    // [HttpPost("forgot-password")]
-    // public async Task<ActionResult<ApiResponse<object>>> ForgotPassword([FromBody] ForgotPasswordRequest request)
-    // {
-    //     await _authService.ForgotPasswordAsync(request);
-    //     return Ok(ApiResponse<object>.Ok(new { message = "If the email is registered, a reset link has been sent." }));
-    // }
+    [HttpPost("forgot-password")]
+    public async Task<ActionResult<ApiResponse<object>>> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        await _authService.ForgotPasswordAsync(request);
+        return Ok(new ApiResponse<object> { Message = "If the email is registered, a reset link has been sent." });
+    }
 
-    // [HttpPost("reset-password")]
-    // public async Task<ActionResult<ApiResponse<object>>> ResetPassword([FromBody] ResetPasswordRequest request)
-    // {
-    //     await _authService.ResetPasswordAsync(request);
-    //     return Ok(ApiResponse<object>.Ok(new { message = "Password reset successful." }));
-    // }
+    [HttpPost("reset-password")]
+    public async Task<ActionResult<ApiResponse<object>>> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        await _authService.ResetPasswordAsync(request);
+        return Ok(new ApiResponse<object> { Message = "Password reset successful. You can now sign in with your new password." });
+    }
 
     private void SetRefreshTokenCookie(string token)
     {
