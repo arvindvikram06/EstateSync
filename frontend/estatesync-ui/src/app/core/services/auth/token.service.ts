@@ -13,11 +13,16 @@ interface JwtPayload {
 
 @Injectable({ providedIn: 'root' })
 export class TokenService {
-  private readonly TOKEN_KEY = 'es_access_token';
+  private readonly TOKEN_KEY   = 'es_access_token';
+  private readonly SESSION_KEY = 'es_has_session';
 
   getToken(): string | null  { return localStorage.getItem(this.TOKEN_KEY); }
   setToken(token: string)    { localStorage.setItem(this.TOKEN_KEY, token); }
   clearToken()               { localStorage.removeItem(this.TOKEN_KEY); }
+
+  hasSessionHint(): boolean  { return localStorage.getItem(this.SESSION_KEY) === '1'; }
+  setSessionHint(): void     { localStorage.setItem(this.SESSION_KEY, '1'); }
+  clearSessionHint(): void   { localStorage.removeItem(this.SESSION_KEY); }
 
   isAuthenticated(): boolean {
     const token = this.getToken();

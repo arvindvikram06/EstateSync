@@ -36,7 +36,7 @@ export class AuthService {
 
   login(request: LoginRequest): Observable<ApiResponse<AuthResponse>> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/login`, request, { withCredentials: true }).pipe(
-      tap(res => { if (res.success) this.persist(res.data); })
+      tap(res => { if (res.success) { this.tokenService.setSessionHint(); this.persist(res.data); } })
     );
   }
 
@@ -71,12 +71,15 @@ export class AuthService {
         return of(null);
       }
     }
+    if (!this.tokenService.hasSessionHint()) {
+      return of(null);
+    }
     return this.http.post<ApiResponse<AuthResponse>>(
       `${this.baseUrl}/refresh-token`, {},
       { withCredentials: true, context: new HttpContext().set(SKIP_AUTH_HANDLING, true) }
     ).pipe(
       tap(res => { if (res.success) this.persist(res.data); }),
-      catchError(() => { this.tokenService.clearToken(); return of(null); })
+      catchError(() => { this.tokenService.clearToken(); this.tokenService.clearSessionHint(); return of(null); })
     );
   }
 
@@ -108,6 +111,7 @@ export class AuthService {
     this.notificationService.clear();
     this.savedPropertyService.clear();
     this.tokenService.clearToken();
+    this.tokenService.clearSessionHint();
     this.currentUser.set(null);
     this._verificationState.set(null);
     if (navigateToLogin) this.router.navigate(['/auth/login']);
