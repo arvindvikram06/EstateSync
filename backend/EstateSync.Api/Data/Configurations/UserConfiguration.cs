@@ -21,8 +21,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         // Default TRUE so pre-existing users aren't locked out by the migration;
         // new registrations explicitly write false.
         builder.Property(x => x.IsEmailVerified).HasDefaultValue(true);
-        builder.Property(x => x.EmailVerificationToken).HasMaxLength(128);
-        builder.HasIndex(x => x.EmailVerificationToken);
 
         builder.HasIndex(x => x.Email).IsUnique();
         builder.HasIndex(x => x.IsActive).HasFilter("\"DeletedAt\" IS NULL");

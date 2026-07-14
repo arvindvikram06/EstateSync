@@ -66,13 +66,13 @@ public class LocalFileStorageService : IFileStorageService
         return $"/uploads/{normalizedSubFolder}/{fileName}";
     }
 
-    public Task DeleteFileAsync(string fileUrl)
+    public Task DeleteFileAsync(string blobPath)
     {
-        if (string.IsNullOrEmpty(fileUrl)) return Task.CompletedTask;
+        if (string.IsNullOrEmpty(blobPath)) return Task.CompletedTask;
 
-        if (fileUrl.StartsWith("/uploads/"))
+        if (blobPath.StartsWith("/uploads/"))
         {
-            var relativePath = fileUrl.Substring("/uploads/".Length).Replace('/', Path.DirectorySeparatorChar);
+            var relativePath = blobPath.Substring("/uploads/".Length).Replace('/', Path.DirectorySeparatorChar);
             var fullPath = Path.Combine(_uploadRootPath, relativePath);
             if (File.Exists(fullPath))
                 File.Delete(fullPath);
@@ -80,4 +80,8 @@ public class LocalFileStorageService : IFileStorageService
 
         return Task.CompletedTask;
     }
+
+    // Local dev: the stored path is already a usable relative URL (/uploads/...).
+    public Task<string> GetFileUrlAsync(string blobPath, CancellationToken ct = default)
+        => Task.FromResult(blobPath);
 }

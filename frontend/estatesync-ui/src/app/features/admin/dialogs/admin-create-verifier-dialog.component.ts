@@ -71,7 +71,7 @@ export class AdminCreateVerifierDialogComponent {
   readonly form = new FormGroup({
     fullName:    new FormControl('', { nonNullable: true, validators: Validators.required }),
     email:       new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
-    phoneNumber: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    phoneNumber: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^(\+91|0)?[6-9]\d{9}$/)] }),
     password:    new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(8)] }),
   });
 

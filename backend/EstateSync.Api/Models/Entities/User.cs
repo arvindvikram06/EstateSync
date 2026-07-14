@@ -15,9 +15,7 @@ public class User : BaseEntity
     public DateTime? LastLogin { get; set; }
 
     public bool IsEmailVerified { get; set; } = false;
-    public string? EmailVerificationToken { get; set; }
-    public DateTime? EmailVerificationTokenExpiresAt { get; set; }
-    
+
     public bool IsKycVerified { get; set; } = false;
     public bool IsOwnerVerified { get; set; } = false;
 

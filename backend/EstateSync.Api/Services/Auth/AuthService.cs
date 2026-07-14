@@ -25,6 +25,7 @@ public class AuthService : IAuthService
     private readonly EstateSync.Api.Mappers.AuthMapper _authMapper;
     private readonly IEmailQueue _emailQueue;
     private readonly IPasswordResetTokenStore _passwordResetTokenStore;
+    private readonly IEmailVerificationTokenStore _emailVerificationTokenStore;
     private readonly string _frontendUrl;
 
     public AuthService(
@@ -37,6 +38,7 @@ public class AuthService : IAuthService
         EstateSync.Api.Mappers.AuthMapper authMapper,
         IEmailQueue emailQueue,
         IPasswordResetTokenStore passwordResetTokenStore,
+        IEmailVerificationTokenStore emailVerificationTokenStore,
         Microsoft.Extensions.Configuration.IConfiguration configuration)
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
@@ -48,6 +50,7 @@ public class AuthService : IAuthService
         _authMapper = authMapper ?? throw new ArgumentNullException(nameof(authMapper));
         _emailQueue = emailQueue ?? throw new ArgumentNullException(nameof(emailQueue));
         _passwordResetTokenStore = passwordResetTokenStore ?? throw new ArgumentNullException(nameof(passwordResetTokenStore));
+        _emailVerificationTokenStore = emailVerificationTokenStore ?? throw new ArgumentNullException(nameof(emailVerificationTokenStore));
         _frontendUrl = configuration["App:FrontendUrl"] ?? "http://localhost:4200";
     }
 
@@ -67,26 +70,23 @@ public class AuthService : IAuthService
 
         var newUser = CreateTenantUser(request, tenantRole);
         newUser.IsEmailVerified = false;
-        IssueVerificationToken(newUser);
         await _userRepository.AddAsync(newUser);
         await _unitOfWork.SaveChangesAsync();
 
-        // No tokens issued here — the user signs in after verifying their email.
-        await QueueVerificationEmailAsync(newUser);
+        var verificationToken = await IssueVerificationTokenAsync(newUser.UserId);
+        await QueueVerificationEmailAsync(newUser, verificationToken);
     }
 
     public async Task VerifyEmailAsync(string token)
     {
-        var user = await _userRepository.GetByEmailVerificationTokenAsync(token);
-        if (user == null)
+        var userId = await _emailVerificationTokenStore.ConsumeAsync(token);
+        if (userId == null)
             throw new BadRequestException("Invalid or already-used verification link.");
 
-        if (user.EmailVerificationTokenExpiresAt < DateTime.UtcNow)
-            throw new BadRequestException("This verification link has expired. Please request a new one.");
+        var user = await _userRepository.GetByIdAsync(userId.Value)
+            ?? throw new BadRequestException("Invalid or already-used verification link.");
 
         user.IsEmailVerified = true;
-        user.EmailVerificationToken = null;
-        user.EmailVerificationTokenExpiresAt = null;
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -96,18 +96,18 @@ public class AuthService : IAuthService
         var user = await _userRepository.GetByEmailAsync(email);
         if (user == null || user.IsEmailVerified) return;
 
-        IssueVerificationToken(user);
-        await _unitOfWork.SaveChangesAsync();
-        await QueueVerificationEmailAsync(user);
+        var verificationToken = await IssueVerificationTokenAsync(user.UserId);
+        await QueueVerificationEmailAsync(user, verificationToken);
     }
 
-    private static void IssueVerificationToken(User user)
+    private async Task<string> IssueVerificationTokenAsync(Guid userId)
     {
-        user.EmailVerificationToken = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
-        user.EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24);
+        var token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+        await _emailVerificationTokenStore.StoreAsync(token, userId, TimeSpan.FromHours(24));
+        return token;
     }
 
-    private async Task QueueVerificationEmailAsync(User user)
+    private async Task QueueVerificationEmailAsync(User user, string verificationToken)
     {
         await _emailQueue.EnqueueAsync(new EmailMessage
         {
@@ -116,7 +116,7 @@ public class AuthService : IAuthService
             Heading = $"Welcome, {user.FullName}!",
             Body = "Confirm your email address to activate your EstateSync account. This link is valid for 24 hours.",
             CtaLabel = "Verify my email",
-            CtaUrl = $"{_frontendUrl}/auth/verify-email?token={user.EmailVerificationToken}",
+            CtaUrl = $"{_frontendUrl}/auth/verify-email?token={verificationToken}",
         });
     }
 
@@ -302,7 +302,6 @@ public class AuthService : IAuthService
 
         newUser.UserRoles.Add(new UserRole
         {
-            // Do NOT generate UserRoleId manually
             UserId = newUser.UserId,
             RoleId = tenantRole.RoleId,
             Role = tenantRole

@@ -21,12 +21,6 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<User?> GetByEmailVerificationTokenAsync(string token)
-    {
-        return await _dbSet
-            .FirstOrDefaultAsync(u => u.EmailVerificationToken == token);
-    }
-
     public async Task<User?> GetByEmailWithRolesAsync(string email)
     {
         return await _dbSet

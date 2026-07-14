@@ -78,7 +78,7 @@ public class KycService : IKycService
         if (draft != null)
         {
             var detailed = await _kycRepo.GetWithDetailsByIdAsync(draft.KycVerificationId);
-            return _mapper.MapToKycResponse(detailed!);
+            return await ResolveUrlsAsync(_mapper.MapToKycResponse(detailed!), ct);
         }
 
         var kyc = new KycVerification
@@ -95,7 +95,7 @@ public class KycService : IKycService
         _logger.LogInformation("KYC draft created {KycId} for user {UserId}", kyc.KycVerificationId, userId);
 
         var result = await _kycRepo.GetWithDetailsByIdAsync(kyc.KycVerificationId);
-        return _mapper.MapToKycResponse(result!);
+        return await ResolveUrlsAsync(_mapper.MapToKycResponse(result!), ct);
     }
 
     public async Task<DocumentResponse> UploadDocumentAsync(Guid userId, Guid kycId, IFormFile file, DocumentType documentType, CancellationToken ct)
@@ -131,7 +131,9 @@ public class KycService : IKycService
 
         await _unitOfWork.SaveChangesAsync(ct);
         _logger.LogInformation("KYC document {DocType} uploaded for user {UserId}", documentType, userId);
-        return _mapper.MapToDocumentResponse(doc);
+        var mapped = _mapper.MapToDocumentResponse(doc);
+        var resolvedUrl = await _fileStorageService.GetFileUrlAsync(mapped.DocumentUrl, ct);
+        return mapped with { DocumentUrl = resolvedUrl };
     }
 
     public async Task SubmitAsync(Guid userId, Guid kycId, SubmitKycRequest request, CancellationToken ct)
@@ -185,7 +187,7 @@ public class KycService : IKycService
     {
         var kyc = await _kycRepo.GetWithDetailsByIdAsync(kycId)
             ?? throw new NotFoundException("KycVerification", kycId);
-        return _mapper.MapToKycResponse(kyc);
+        return await ResolveUrlsAsync(_mapper.MapToKycResponse(kyc), ct);
     }
 
     public async Task ReviewAsync(Guid kycId, Guid reviewerId, string status, string remarks, CancellationToken ct)
@@ -241,6 +243,18 @@ public class KycService : IKycService
 
         await _unitOfWork.SaveChangesAsync(ct);
         _logger.LogInformation("KYC {KycId} {Status} by reviewer {ReviewerId}", kycId, parsedStatus, reviewerId);
+    }
+
+    private async Task<KycVerificationResponse> ResolveUrlsAsync(KycVerificationResponse response, CancellationToken ct)
+    {
+        var resolved = new List<DocumentResponse>(response.Documents.Count);
+        foreach (var doc in response.Documents)
+        {
+            var url = await _fileStorageService.GetFileUrlAsync(doc.DocumentUrl, ct);
+            resolved.Add(doc with { DocumentUrl = url });
+        }
+        response.Documents = resolved;
+        return response;
     }
 
     private static void ValidateRequiredDocuments(KycVerification kyc)

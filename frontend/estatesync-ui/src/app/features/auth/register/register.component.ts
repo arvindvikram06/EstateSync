@@ -46,7 +46,7 @@ export class RegisterComponent {
     }),
     phoneNumber: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.pattern(/^\+?[\d\s\-]{10,}$/)]
+      validators: [Validators.required, Validators.pattern(/^(\+91|0)?[6-9]\d{9}$/)]
     }),
     password: new FormControl('', {
       nonNullable: true,

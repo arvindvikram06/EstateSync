@@ -92,8 +92,8 @@ public class AuthController : ControllerBase
         Response.Cookies.Delete("refreshToken", new CookieOptions
         {
             HttpOnly = true,
-            Secure = isProduction,
-            SameSite = isProduction ? SameSiteMode.Strict : SameSiteMode.Lax
+            Secure = true,
+            SameSite = isProduction ? SameSiteMode.None : SameSiteMode.Lax
         });
 
         return Ok(ApiResponse<object>.Ok(new { }, message: "Logged out."));
@@ -120,8 +120,9 @@ public class AuthController : ControllerBase
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = isProduction,
-            SameSite = isProduction ? SameSiteMode.Strict : SameSiteMode.Lax,
+            Secure = true,
+            // SameSite=None required for cross-origin cookie (frontend and backend on different domains)
+            SameSite = isProduction ? SameSiteMode.None : SameSiteMode.Lax,
             Expires = DateTime.UtcNow.AddDays(7)
         };
         Response.Cookies.Append("refreshToken", token, cookieOptions);

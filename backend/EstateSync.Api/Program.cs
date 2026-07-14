@@ -43,11 +43,22 @@ using EstateSync.Api.Extensions;
 using EstateSync.Api.Validators;
 using Serilog;
 using System.Diagnostics;
+using Azure.Identity;
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
+using Microsoft.Extensions.Azure;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Load secrets from Key Vault before any service registration reads config
+if (builder.Environment.IsProduction())
+{
+    var kvUri = builder.Configuration["Azure:KeyVaultUri"]
+        ?? throw new InvalidOperationException("Azure:KeyVaultUri is not configured.");
+    builder.Configuration.AddAzureKeyVault(new Uri(kvUri), new DefaultAzureCredential());
+}
 
 builder.Host.UseSerilog((context, loggerConfiguration) =>
 {
@@ -55,7 +66,10 @@ builder.Host.UseSerilog((context, loggerConfiguration) =>
 });
 
 // Add services to the container.
-builder.Services.AddSignalR();
+var signalRBuilder = builder.Services.AddSignalR();
+if (builder.Environment.IsProduction())
+    signalRBuilder.AddAzureSignalR(builder.Configuration["Azure:SignalRConnectionString"]
+        ?? throw new InvalidOperationException("Azure:SignalRConnectionString is not configured."));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -169,7 +183,17 @@ builder.Services.AddScoped<IPropertyAmenityService, PropertyAmenityService>();
 builder.Services.AddScoped<IPropertyApprovalService, PropertyApprovalService>();
 builder.Services.AddScoped<IPropertyDocumentService, PropertyDocumentService>();
 builder.Services.AddScoped<ISavedPropertyService, SavedPropertyService>();
-builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddAzureClients(clients =>
+        clients.AddBlobServiceClient(builder.Configuration["Azure:BlobConnectionString"]
+            ?? throw new InvalidOperationException("Azure:BlobConnectionString is not configured.")));
+    builder.Services.AddScoped<IFileStorageService, AzureBlobFileStorageService>();
+}
+else
+{
+    builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+}
 builder.Services.AddScoped<IKycService, KycService>();
 builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
 builder.Services.AddScoped<IRentalApplicationService, RentalApplicationService>();
@@ -211,11 +235,13 @@ builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(_ =>
     StackExchange.Redis.ConnectionMultiplexer.Connect(
         builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379,abortConnect=false"));
 builder.Services.AddSingleton<IPasswordResetTokenStore, RedisPasswordResetTokenStore>();
+builder.Services.AddSingleton<IEmailVerificationTokenStore, RedisEmailVerificationTokenStore>();
 
 // Configure JWT Authentication via Extension Method
 builder.Services.AddCustomAuthentication(builder.Configuration);
 
 builder.Services.AddAuthorization();
+builder.Services.AddHealthChecks();
 
 builder.Services.AddHostedService<LeaseBillScheduler>();
 builder.Services.AddHostedService<PenaltyScheduler>();
@@ -238,9 +264,10 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 }
 
-// Seed test database on first run (only when SeedDb connection string is configured)
-using (var scope = app.Services.CreateScope())
+// Seed test data in Development only — admin + roles are seeded via EF migrations (HasData)
+if (app.Environment.IsDevelopment())
 {
+    using var scope = app.Services.CreateScope();
     await DbSeeder.SeedAsync(scope.ServiceProvider);
 }
 
@@ -263,13 +290,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Serve uploaded files (PDFs, images) at /uploads/...
-app.UseStaticFiles(new StaticFileOptions
+// Local dev only — in production files are served from Azure Blob Storage
+if (app.Environment.IsDevelopment())
 {
-    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
-        Path.Combine(app.Environment.ContentRootPath, "uploads")),
-    RequestPath = "/uploads"
-});
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+            Path.Combine(app.Environment.ContentRootPath, "uploads")),
+        RequestPath = "/uploads"
+    });
+}
 
 app.UseCors("Angular");
 
@@ -280,5 +310,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHealthChecks("/health");
 
 app.Run();

@@ -14,6 +14,6 @@ public class UpdateProfileRequestValidator : AbstractValidator<UpdateProfileRequ
 
         RuleFor(x => x.PhoneNumber)
             .NotEmpty().WithMessage("Phone number is required")
-            .MaximumLength(50).WithMessage("Phone number must not exceed 50 characters");
+            .Matches(@"^(\+91|0)?[6-9]\d{9}$").WithMessage("Enter a valid Indian mobile number (e.g. 9876543210 or +919876543210)");
     }
 }

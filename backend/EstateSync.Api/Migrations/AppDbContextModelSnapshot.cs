@@ -1239,13 +1239,6 @@ namespace EstateSync.Api.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("character varying(250)");
 
-                    b.Property<string>("EmailVerificationToken")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<DateTime?>("EmailVerificationTokenExpiresAt")
-                        .HasColumnType("timestamp without time zone");
-
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(250)
@@ -1297,8 +1290,6 @@ namespace EstateSync.Api.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
-
-                    b.HasIndex("EmailVerificationToken");
 
                     b.HasIndex("IsActive")
                         .HasFilter("\"DeletedAt\" IS NULL");

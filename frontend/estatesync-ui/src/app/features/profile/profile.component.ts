@@ -51,7 +51,7 @@ export class ProfileComponent implements OnInit {
     }),
     phoneNumber: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(50)]
+      validators: [Validators.required, Validators.pattern(/^(\+91|0)?[6-9]\d{9}$/)]
     }),
   });
 
