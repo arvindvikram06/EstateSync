@@ -1,57 +1,25 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace EstateSync.Api.Services.Background;
 
-public class LeaseExpiryScheduler : BackgroundService
+public class LeaseExpiryJob
 {
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<LeaseExpiryScheduler> _logger;
+    private readonly ILeaseRepository _leaseRepo;
+    private readonly INotificationSender _notif;
+    private readonly IUnitOfWork _uow;
+    private readonly ILogger<LeaseExpiryJob> _logger;
 
-    public LeaseExpiryScheduler(IServiceScopeFactory scopeFactory, ILogger<LeaseExpiryScheduler> logger)
+    public LeaseExpiryJob(ILeaseRepository leaseRepo, INotificationSender notif, IUnitOfWork uow, ILogger<LeaseExpiryJob> logger)
     {
-        _scopeFactory = scopeFactory;
-        _logger = logger;
+        _leaseRepo = leaseRepo; _notif = notif; _uow = uow; _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public async Task RunAsync()
     {
-        _logger.LogInformation("LeaseExpiryScheduler Background Service started.");
-
-        // Offset by 1 hour to avoid lock contention with PropertyStatusUpdateScheduler
-        await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
-
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
-            {
-                await ExpireLeasesAsync(stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while running LeaseExpiryScheduler background job.");
-            }
-
-            await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
-        }
-    }
-
-    private async Task ExpireLeasesAsync(CancellationToken stoppingToken)
-    {
-        using var scope = _scopeFactory.CreateScope();
-        var leaseRepo = scope.ServiceProvider.GetRequiredService<ILeaseRepository>();
-        var notificationSender = scope.ServiceProvider.GetRequiredService<INotificationSender>();
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-
-        var expiredLeases = await leaseRepo.GetActiveLeasesPastEndDateAsync(DateTime.UtcNow);
-
+        var expiredLeases = await _leaseRepo.GetActiveLeasesPastEndDateAsync(DateTime.UtcNow);
         bool hasChanges = false;
 
         foreach (var lease in expiredLeases)
@@ -59,7 +27,6 @@ public class LeaseExpiryScheduler : BackgroundService
             lease.Status = LeaseStatus.Expired;
             hasChanges = true;
 
-            // Close out the application so it cannot be used to create another lease.
             if (lease.RentalApplication != null && lease.RentalApplication.Status == ApplicationStatus.Approved)
                 lease.RentalApplication.Status = ApplicationStatus.Completed;
 
@@ -69,10 +36,9 @@ public class LeaseExpiryScheduler : BackgroundService
                 lease.Property.Status = PropertyStatus.Active;
             }
 
-            _logger.LogInformation("LeaseExpiryScheduler: Expired Lease {LeaseId} for Property {PropertyId}",
-                lease.LeaseId, lease.PropertyId);
+            _logger.LogInformation("LeaseExpiryJob: Expired Lease {LeaseId} for Property {PropertyId}", lease.LeaseId, lease.PropertyId);
 
-            await notificationSender.SendAsync(new Notification
+            await _notif.SendAsync(new Notification
             {
                 NotificationId = Guid.NewGuid(),
                 UserId = lease.TenantId,
@@ -87,7 +53,7 @@ public class LeaseExpiryScheduler : BackgroundService
 
             if (lease.Property != null)
             {
-                await notificationSender.SendAsync(new Notification
+                await _notif.SendAsync(new Notification
                 {
                     NotificationId = Guid.NewGuid(),
                     UserId = lease.Property.OwnerId,
@@ -102,7 +68,7 @@ public class LeaseExpiryScheduler : BackgroundService
 
                 if (!lease.IsDepositForfeited)
                 {
-                    await notificationSender.SendAsync(new Notification
+                    await _notif.SendAsync(new Notification
                     {
                         NotificationId = Guid.NewGuid(),
                         UserId = lease.Property.OwnerId,
@@ -119,8 +85,6 @@ public class LeaseExpiryScheduler : BackgroundService
         }
 
         if (hasChanges)
-        {
-            await unitOfWork.SaveChangesAsync(stoppingToken);
-        }
+            await _uow.SaveChangesAsync();
     }
 }

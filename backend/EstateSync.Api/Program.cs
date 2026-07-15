@@ -38,6 +38,8 @@ using EstateSync.Api.Services.Users;
 using EstateSync.Api.Interfaces.Services.Admin;
 using EstateSync.Api.Services.Admin;
 using EstateSync.Api.Services.Background;
+using Hangfire;
+using Hangfire.PostgreSql;
 using EstateSync.Api.Services.Notifications;
 using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Hubs;
@@ -247,12 +249,20 @@ builder.Services.AddCustomAuthentication(builder.Configuration);
 builder.Services.AddAuthorization();
 builder.Services.AddHealthChecks();
 
-builder.Services.AddHostedService<LeaseBillScheduler>();
-builder.Services.AddHostedService<PenaltyScheduler>();
-builder.Services.AddHostedService<PropertyStatusUpdateScheduler>();
-builder.Services.AddHostedService<LeaseExpiryScheduler>();
-builder.Services.AddHostedService<RefreshTokenCleanupScheduler>();
-builder.Services.AddHostedService<VacateNoticeScheduler>();
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(
+        builder.Configuration.GetConnectionString("DefaultConnection")!)));
+builder.Services.AddHangfireServer();
+
+builder.Services.AddScoped<LeaseExpiryJob>();
+builder.Services.AddScoped<LeaseBillJob>();
+builder.Services.AddScoped<PenaltyJob>();
+builder.Services.AddScoped<PropertyStatusUpdateJob>();
+builder.Services.AddScoped<RefreshTokenCleanupJob>();
+builder.Services.AddScoped<VacateNoticeJob>();
 
 // ── Email (SMTP via background queue) ─────────────────────────
 builder.Services.Configure<EstateSync.Api.Common.EmailSettings>(builder.Configuration.GetSection("Email"));
@@ -274,6 +284,18 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     await DbSeeder.SeedAsync(scope.ServiceProvider);
 }
+
+if (app.Environment.IsDevelopment())
+    app.UseHangfireDashboard("/hangfire");
+
+// Register recurring Hangfire jobs using DI-based manager (avoids static JobStorage.Current)
+var recurringJobs = app.Services.GetRequiredService<IRecurringJobManager>();
+recurringJobs.AddOrUpdate<LeaseExpiryJob>("lease-expiry", j => j.RunAsync(), Cron.Daily(1));
+recurringJobs.AddOrUpdate<LeaseBillJob>("lease-bill", j => j.RunAsync(), Cron.Daily);
+recurringJobs.AddOrUpdate<PenaltyJob>("penalty", j => j.RunAsync(), Cron.Daily(2));
+recurringJobs.AddOrUpdate<PropertyStatusUpdateJob>("prop-status", j => j.RunAsync(), Cron.Daily);
+recurringJobs.AddOrUpdate<RefreshTokenCleanupJob>("token-cleanup", j => j.RunAsync(), "30 0 * * *");
+recurringJobs.AddOrUpdate<VacateNoticeJob>("vacate-notice", j => j.RunAsync(), Cron.Daily);
 
 // Configure Stripe Global API Key
 Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];

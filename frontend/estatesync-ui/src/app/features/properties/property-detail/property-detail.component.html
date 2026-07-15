@@ -27,11 +27,12 @@
     <div class="flex justify-between items-start mb-4">
       <h1 class="text-[26px] font-bold text-es-text leading-tight">{{ p.title }}</h1>
       <div class="flex items-center gap-3 shrink-0 ml-4">
-        <button mat-button class="!text-[13px] !underline">
+        <button mat-button class="!text-[13px] !underline" (click)="share()">
           <mat-icon class="!text-[16px]">share</mat-icon> Share
         </button>
-        <button mat-button class="!text-[13px] !underline">
-          <mat-icon class="!text-[16px]">favorite_border</mat-icon> Save
+        <button mat-button class="!text-[13px] !underline" (click)="toggleSave()">
+          <mat-icon class="!text-[16px]">{{ isSaved() ? 'favorite' : 'favorite_border' }}</mat-icon>
+          {{ isSaved() ? 'Saved' : 'Save' }}
         </button>
       </div>
     </div>
