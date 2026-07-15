@@ -28,8 +28,18 @@ public class StripeWebhookService : IStripeWebhookService
 
     public async Task HandleAsync(string json, string stripeSignature, CancellationToken ct = default)
     {
-        var webhookSecret = _config["Stripe:WebhookSecret"];
-        var stripeEvent   = EventUtility.ConstructEvent(json, stripeSignature, webhookSecret);
+        var webhookSecret           = _config["Stripe:WebhookSecret"];
+        var connectedAccountSecret  = _config["Stripe:ConnectedAccountWebhookSecret"];
+
+        Event stripeEvent;
+        try
+        {
+            stripeEvent = EventUtility.ConstructEvent(json, stripeSignature, webhookSecret);
+        }
+        catch (StripeException)
+        {
+            stripeEvent = EventUtility.ConstructEvent(json, stripeSignature, connectedAccountSecret);
+        }
 
         _logger.LogDebug("Stripe event received: {EventType} (EventId={EventId})", stripeEvent.Type, stripeEvent.Id);
 

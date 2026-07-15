@@ -1,5 +1,6 @@
 **/doc/
-**/docs/
+docs/onboarding/AZURE_DEPLOYMENT.md
+docs/PASSWORD_RESET_WITH_REDIS.md
 **/bin/
 **/obj/
 **/Logs/
@@ -28,3 +29,17 @@ backend/EstateSync.Api/uploads/
 **/TestResults/
 *.opencover.xml
 coverage.cobertura.xml
+
+# Local secrets — never commit
+**/appsettings.Development.json
+**/appsettings.*.local.json
+
+# Azure deployment infra (contains secrets)
+infra/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Frontend production environment (contains Azure URLs)
+frontend/estatesync-ui/src/environments/environment.production.ts

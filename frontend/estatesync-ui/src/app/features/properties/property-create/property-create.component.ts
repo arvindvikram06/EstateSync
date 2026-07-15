@@ -11,7 +11,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatAutocomplete, MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { MatOption } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -42,7 +43,7 @@ const STORAGE_STEP        = 'es_wizard_step';
   imports: [
     ReactiveFormsModule,
     MatButtonModule, MatIconModule, MatFormFieldModule,
-    MatInputModule, MatAutocompleteModule, MatProgressSpinnerModule,
+    MatInputModule, MatAutocomplete, MatAutocompleteTrigger, MatOption, MatProgressSpinnerModule,
     MatProgressBarModule, MatSnackBarModule, DecimalPipe, DatePipe,
     StatusBadgeComponent,
   ],

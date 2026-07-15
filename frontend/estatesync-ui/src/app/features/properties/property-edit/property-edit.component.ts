@@ -11,11 +11,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatAutocomplete, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { IState, ICity } from 'country-state-city';
 import { PropertyService } from '@core/services/property/property.service';
 import { LocationService } from '@core/services/shared/location.service';
@@ -38,7 +39,7 @@ const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
     RouterLink,
     ReactiveFormsModule,
     MatButtonModule, MatIconModule, MatFormFieldModule,
-    MatInputModule, MatSelectModule, MatAutocompleteModule, MatProgressSpinnerModule,
+    MatInputModule, MatSelect, MatOption, MatAutocomplete, MatAutocompleteTrigger, MatProgressSpinnerModule,
     MatProgressBarModule, MatSnackBarModule, DecimalPipe, DatePipe,
     StatusBadgeComponent,
   ],
