@@ -18,6 +18,8 @@ using EstateSync.Api.Interfaces.Services.Properties;
 using EstateSync.Api.Interfaces.Services.Auth;
 using EstateSync.Api.Interfaces.Services.Tokens;
 using EstateSync.Api.Interfaces.Services.Storage;
+using EstateSync.Api.Interfaces.Services.Shared;
+using EstateSync.Api.Services.Shared;
 using EstateSync.Api.Interfaces.Services.Kyc;
 using EstateSync.Api.Services.Kyc;
 using EstateSync.Api.Interfaces.Services.RentalApplications;
@@ -205,6 +207,7 @@ builder.Services.AddScoped<IStripeConnectedAccountService, StripeConnectedAccoun
 builder.Services.AddScoped<ITenantPaymentService, TenantPaymentService>();
 builder.Services.AddScoped<IStripeWebhookService, StripeWebhookService>();
 builder.Services.AddScoped<IComplaintService, ComplaintService>();
+builder.Services.AddScoped<IUrlResolverService, UrlResolverService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();

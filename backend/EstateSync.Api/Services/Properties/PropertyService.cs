@@ -11,6 +11,7 @@ using EstateSync.Api.Exceptions;
 using EstateSync.Api.Repositories.Interfaces;
 using EstateSync.Api.Models;
 using EstateSync.Api.Interfaces.Services.Properties;
+using EstateSync.Api.Interfaces.Services.Shared;
 
 namespace EstateSync.Api.Services.Properties;
 
@@ -22,6 +23,7 @@ public class PropertyService : IPropertyService
     private readonly IUnitOfWork _unitOfWork;
     private readonly PropertyMapper _mapper;
     private readonly ILogger<PropertyService> _logger;
+    private readonly IUrlResolverService _urlResolver;
 
     public PropertyService(
         IPropertyRepository propertyRepo,
@@ -29,7 +31,8 @@ public class PropertyService : IPropertyService
         ILeaseRepository leaseRepo,
         IUnitOfWork unitOfWork,
         PropertyMapper mapper,
-        ILogger<PropertyService> logger)
+        ILogger<PropertyService> logger,
+        IUrlResolverService urlResolver)
     {
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
@@ -37,6 +40,7 @@ public class PropertyService : IPropertyService
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
     }
 
     public async Task<PagedResponse<PropertySummaryResponse>> SearchAsync(PropertySearchRequest request, CancellationToken ct)
@@ -52,12 +56,14 @@ public class PropertyService : IPropertyService
             request.Limit,
             offset);
 
-        var mapped = items.Select(_mapper.MapToSummaryResponse).ToList();
+        var resolved = new List<PropertySummaryResponse>();
+        foreach (var item in items)
+            resolved.Add(await _urlResolver.ResolveAsync(_mapper.MapToSummaryResponse(item), ct));
 
         return new PagedResponse<PropertySummaryResponse>
         {
             Success = true,
-            Data = mapped,
+            Data = resolved,
             Page = request.Page,
             Limit = request.Limit,
             Total = total
@@ -72,14 +78,17 @@ public class PropertyService : IPropertyService
             throw new NotFoundException("Property", id);
         }
 
-        return _mapper.MapToDetailResponse(property);
+        return await _urlResolver.ResolveAsync(_mapper.MapToDetailResponse(property), ct);
     }
 
 
     public async Task<List<PropertyDetailResponse>> GetByOwnerIdAsync(Guid ownerId, CancellationToken ct)
     {
         var properties = await _propertyRepo.GetByOwnerIdAsync(ownerId);
-        return properties.Select(_mapper.MapToDetailResponse).ToList();
+        var result = new List<PropertyDetailResponse>();
+        foreach (var p in properties)
+            result.Add(await _urlResolver.ResolveAsync(_mapper.MapToDetailResponse(p), ct));
+        return result;
     }
 
     public async Task<PropertyDetailResponse> CreateAsync(CreatePropertyRequest request, Guid ownerId, CancellationToken ct)
@@ -100,8 +109,7 @@ public class PropertyService : IPropertyService
 
         _logger.LogInformation("Property {PropertyId} created successfully in Draft status by owner {OwnerId}", property.PropertyId, ownerId);
 
-        // The tracked entity is complete for a fresh Draft (no images/amenities
-        // yet); only the Owner navigation needs populating for the response.
+        
         property.Owner ??= await _userRepo.GetByIdAsync(ownerId);
         return _mapper.MapToDetailResponse(property);
     }
@@ -182,7 +190,7 @@ public class PropertyService : IPropertyService
         _logger.LogInformation("Wizard draft property {PropertyId} created by owner {OwnerId}", property.PropertyId, ownerId);
 
         var created = await _propertyRepo.GetWithDetailsByIdAsync(property.PropertyId);
-        return _mapper.MapToDetailResponse(created!);
+        return await _urlResolver.ResolveAsync(_mapper.MapToDetailResponse(created!), ct);
     }
 
     public async Task<PropertyDetailResponse> PatchWizardDraftAsync(Guid id, PatchPropertyDraftRequest request, Guid ownerId, CancellationToken ct)
@@ -212,13 +220,13 @@ public class PropertyService : IPropertyService
 
         _logger.LogInformation("Wizard draft {PropertyId} patched by owner {OwnerId}", id, ownerId);
 
-        return _mapper.MapToDetailResponse(property);
+        return await _urlResolver.ResolveAsync(_mapper.MapToDetailResponse(property), ct);
     }
 
     public async Task<PropertyDetailResponse?> GetMyActiveDraftAsync(Guid ownerId, CancellationToken ct)
     {
         var draft = await _propertyRepo.GetActiveDraftByOwnerIdAsync(ownerId);
-        return draft == null ? null : _mapper.MapToDetailResponse(draft);
+        return draft == null ? null : await _urlResolver.ResolveAsync(_mapper.MapToDetailResponse(draft), ct);
     }
 
     public async Task<PagedResponse<ReviewResponse>> GetReviewsAsync(Guid id, int page, int limit, CancellationToken ct)

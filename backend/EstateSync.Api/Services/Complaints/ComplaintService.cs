@@ -10,6 +10,7 @@ using EstateSync.Api.Exceptions;
 using EstateSync.Api.Interfaces.Services.Complaints;
 using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Interfaces.Services.Storage;
+using EstateSync.Api.Interfaces.Services.Shared;
 using EstateSync.Api.Mappers;
 using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
@@ -25,6 +26,7 @@ public class ComplaintService : IComplaintService
     private readonly INotificationSender _notificationSender;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ComplaintMapper _mapper;
+    private readonly IUrlResolverService _urlResolver;
 
     public ComplaintService(
         IComplaintRepository complaintRepo,
@@ -33,7 +35,8 @@ public class ComplaintService : IComplaintService
         IFileStorageService storageService,
         INotificationSender notificationSender,
         IUnitOfWork unitOfWork,
-        ComplaintMapper mapper)
+        ComplaintMapper mapper,
+        IUrlResolverService urlResolver)
     {
         _complaintRepo = complaintRepo ?? throw new ArgumentNullException(nameof(complaintRepo));
         _leaseRepo = leaseRepo ?? throw new ArgumentNullException(nameof(leaseRepo));
@@ -42,6 +45,7 @@ public class ComplaintService : IComplaintService
         _notificationSender = notificationSender ?? throw new ArgumentNullException(nameof(notificationSender));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
     }
 
     public async Task<ComplaintResponse> CreateComplaintAsync(Guid tenantId, CreateComplaintRequest request, CancellationToken ct = default)
@@ -190,19 +194,25 @@ public class ComplaintService : IComplaintService
             throw new ForbiddenException("You do not have permission to view this complaint.");
         }
 
-        return _mapper.MapToResponse(complaint);
+        return await _urlResolver.ResolveAsync(_mapper.MapToResponse(complaint), ct);
     }
 
     public async Task<IEnumerable<ComplaintResponse>> GetTenantComplaintsAsync(Guid tenantId, CancellationToken ct = default)
     {
         var complaints = await _complaintRepo.GetByTenantIdAsync(tenantId);
-        return complaints.Select(_mapper.MapToResponse);
+        var result = new List<ComplaintResponse>();
+        foreach (var c in complaints)
+            result.Add(await _urlResolver.ResolveAsync(_mapper.MapToResponse(c), ct));
+        return result;
     }
 
     public async Task<IEnumerable<ComplaintResponse>> GetOwnerComplaintsAsync(Guid ownerId, CancellationToken ct = default)
     {
         var complaints = await _complaintRepo.GetByOwnerIdAsync(ownerId);
-        return complaints.Select(_mapper.MapToResponse);
+        var result = new List<ComplaintResponse>();
+        foreach (var c in complaints)
+            result.Add(await _urlResolver.ResolveAsync(_mapper.MapToResponse(c), ct));
+        return result;
     }
 
     public async Task<ComplaintResponse> UploadComplaintImageAsync(Guid tenantId, Guid complaintId, IFormFile file, CancellationToken ct = default)

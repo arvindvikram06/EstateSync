@@ -21,7 +21,7 @@ public class AzureBlobFileStorageService : IFileStorageService
     private const string PRIVATE_CONTAINER = "estatesync-private";
 
     // Subfolders that go into the private container (KYC docs, lease PDFs, signatures)
-    private static readonly string[] PRIVATE_SUBFOLDERS = ["kyc", "leases", "signatures"];
+    private static readonly string[] PRIVATE_SUBFOLDERS = ["kyc", "leases", "signatures", "documents"];
 
     private readonly BlobServiceClient _blobServiceClient;
 
@@ -76,6 +76,7 @@ public class AzureBlobFileStorageService : IFileStorageService
     public Task<string> GetFileUrlAsync(string blobPath, CancellationToken ct = default)
     {
         if (string.IsNullOrEmpty(blobPath)) return Task.FromResult(string.Empty);
+        if (blobPath.StartsWith("https://") || blobPath.StartsWith("http://")) return Task.FromResult(blobPath);
 
         var slash = blobPath.IndexOf('/');
         if (slash < 0) return Task.FromResult(blobPath);
