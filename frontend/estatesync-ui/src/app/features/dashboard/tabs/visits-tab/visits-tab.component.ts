@@ -35,6 +35,9 @@ export class VisitsTabComponent implements OnInit {
   readonly visits = signal<SiteVisitResponse[]>([]);
   readonly loading = signal(true);
   readonly actionRunningId = signal<string | null>(null);
+  
+  readonly declineNotesVisitId = signal<string | null>(null);
+  readonly declineReason = signal<string>('');
 
   ngOnInit(): void {
     this.loadVisits();
@@ -73,19 +76,28 @@ export class VisitsTabComponent implements OnInit {
       });
   }
 
-  declineVisit(visit: SiteVisitResponse): void {
-    const note = prompt('Please enter a note for the tenant (e.g. suggesting another time):');
-    if (note === null) return; // User cancelled prompt
+  startDecline(visit: SiteVisitResponse): void {
+    this.declineNotesVisitId.set(visit.siteVisitId);
+    this.declineReason.set('');
+  }
 
+  cancelDecline(): void {
+    this.declineNotesVisitId.set(null);
+    this.declineReason.set('');
+  }
+
+  submitDecline(visit: SiteVisitResponse): void {
     this.actionRunningId.set(visit.siteVisitId);
     this.siteVisitService.updateStatus(visit.siteVisitId, {
       status: 'Declined',
-      ownerNotes: note.trim() || 'No reason provided.'
+      ownerNotes: this.declineReason().trim() || 'No reason provided.'
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: res => {
           this.actionRunningId.set(null);
+          this.declineNotesVisitId.set(null);
+          this.declineReason.set('');
           if (res.success) {
             this.loadVisits();
           }

@@ -80,7 +80,7 @@
                 </button>
                 <button mat-stroked-button color="warn" 
                         [disabled]="actionRunningId() !== null" 
-                        (click)="declineVisit(visit)"
+                        (click)="startDecline(visit)"
                         class="!rounded-lg !text-xs !h-8.5">
                   Decline
                 </button>
@@ -102,6 +102,26 @@
           </div>
 
         </div>
+
+        @if (declineNotesVisitId() === visit.siteVisitId) {
+          <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-2.5 animate-slide-down">
+            <label class="text-[11px] font-semibold text-es-muted uppercase tracking-wider pl-1">Decline Reason</label>
+            <textarea 
+              [value]="declineReason()" 
+              (input)="declineReason.set($any($event.target).value)"
+              placeholder="Provide a reason (e.g. suggesting an alternative date/time)..."
+              class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-es-text focus:outline-none focus:border-es-primary bg-transparent font-medium"
+              rows="3"></textarea>
+            <div class="flex gap-2 justify-end">
+              <button mat-button (click)="cancelDecline()" [disabled]="actionRunningId() !== null" class="!rounded-lg !text-xs !h-8.5">
+                Cancel
+              </button>
+              <button mat-flat-button color="warn" (click)="submitDecline(visit)" [disabled]="actionRunningId() !== null" class="!rounded-lg !text-xs bg-red-600 text-white hover:bg-red-700 !h-8.5 shadow-sm">
+                Submit Decline
+              </button>
+            </div>
+          </div>
+        }
       </div>
     }
   </div>
