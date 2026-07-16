@@ -64,7 +64,7 @@ export class LeaseDetailComponent implements OnInit {
   readonly canTenantSign = computed(() => {
     const l = this.lease();
     const uid = this.uid();
-    return !!l && !!uid && l.tenantId === uid &&
+    return !!l && !!uid && l.tenantId?.toLowerCase() === uid.toLowerCase() &&
       (l.status === 'PendingApproval' || l.status === 'PartialSigned') &&
       !l.tenantSignedAt;
   });
@@ -72,7 +72,7 @@ export class LeaseDetailComponent implements OnInit {
   readonly canOwnerSign = computed(() => {
     const l = this.lease();
     const uid = this.uid();
-    return !!l && !!uid && l.ownerId === uid &&
+    return !!l && !!uid && l.ownerId?.toLowerCase() === uid.toLowerCase() &&
       (l.status === 'PendingApproval' || l.status === 'PartialSigned') &&
       !l.ownerSignedAt;
   });
@@ -80,7 +80,7 @@ export class LeaseDetailComponent implements OnInit {
   readonly canVoid = computed(() => {
     const l = this.lease();
     const uid = this.uid();
-    return !!l && !!uid && l.ownerId === uid &&
+    return !!l && !!uid && l.ownerId?.toLowerCase() === uid.toLowerCase() &&
       (l.status === 'PendingApproval' || l.status === 'PartialSigned');
   });
 
@@ -88,7 +88,7 @@ export class LeaseDetailComponent implements OnInit {
     const l = this.lease();
     const uid = this.uid();
     return !!l && !!uid && l.status === 'Active' &&
-      (l.ownerId === uid || this.auth.isAdmin());
+      (l.ownerId?.toLowerCase() === uid.toLowerCase() || this.auth.isAdmin());
   });
 
   readonly hasPendingVacateNotice = computed(() => {
@@ -99,14 +99,14 @@ export class LeaseDetailComponent implements OnInit {
   readonly isOwnerViewer = computed(() => {
     const l = this.lease();
     const uid = this.uid();
-    return !!l && !!uid && l.ownerId === uid;
+    return !!l && !!uid && l.ownerId?.toLowerCase() === uid.toLowerCase();
   });
 
   readonly backLink = computed(() => {
     const l = this.lease();
     const uid = this.uid();
     if (this.auth.isAdmin()) return ['/admin/dashboard'];
-    if (l && l.ownerId === uid) return ['/owner/dashboard'];
+    if (l && l.ownerId?.toLowerCase() === uid?.toLowerCase()) return ['/owner/dashboard'];
     return ['/dashboard'];
   });
 
@@ -117,8 +117,12 @@ export class LeaseDetailComponent implements OnInit {
   readonly isTenantViewer = computed(() => {
     const l = this.lease();
     const uid = this.uid();
-    return !!l && !!uid && l.tenantId === uid;
+    return !!l && !!uid && l.tenantId?.toLowerCase() === uid.toLowerCase();
   });
+
+  goBack(): void {
+    this.router.navigate(this.backLink(), { queryParams: this.backQueryParams() });
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;

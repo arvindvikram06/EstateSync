@@ -108,7 +108,7 @@ export class LeaseSignComponent implements OnInit {
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.submitting.set(false);
-        this.router.navigate(['/leases', this.leaseId]);
+        this.router.navigate(['/leases', this.leaseId], { replaceUrl: true });
       },
       error: (err) => {
         this.submitting.set(false);

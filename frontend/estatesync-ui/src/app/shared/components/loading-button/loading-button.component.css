@@ -5,3 +5,9 @@
 mat-spinner {
   --mdc-circular-progress-active-indicator-color: white;
 }
+button:disabled {
+  background-color: #e0e0e0 !important;
+  color: #9e9e9e !important;
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+}
