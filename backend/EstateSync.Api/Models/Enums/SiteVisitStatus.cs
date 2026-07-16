@@ -5,5 +5,6 @@ public enum SiteVisitStatus
     Pending,
     Approved,
     Declined,
-    Cancelled
+    Cancelled,
+    Completed
 }

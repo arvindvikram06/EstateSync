@@ -107,13 +107,15 @@
         </mat-form-field>
 
         <!-- Time Selector -->
-        <div class="flex flex-col gap-1">
-          <label class="text-[11px] font-semibold text-es-muted uppercase tracking-wider pl-1">Visit Time</label>
-          <div class="relative">
-            <input type="time" [value]="selectedTime()" (input)="selectedTime.set($any($event.target).value)"
-                   class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-es-text focus:outline-none focus:border-es-primary bg-transparent font-medium" />
-          </div>
-        </div>
+        <mat-form-field appearance="outline" class="w-full !text-xs">
+          <mat-label>Visit Time</mat-label>
+          <mat-icon matPrefix class="!text-[16px] !w-[16px] !h-[16px]">schedule</mat-icon>
+          <mat-select [value]="selectedTime()" (valueChange)="selectedTime.set($event)">
+            @for (slot of timeSlots; track slot.value) {
+              <mat-option [value]="slot.value">{{ slot.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
         <!-- Submit Button -->
         <button type="submit" mat-flat-button color="primary" 

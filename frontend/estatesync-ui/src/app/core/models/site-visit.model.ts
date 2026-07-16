@@ -6,7 +6,7 @@ export interface SiteVisitResponse {
   tenantName: string | null;
   visitDate: string; // ISO string date
   visitTime: string; // e.g. "14:30"
-  status: 'Pending' | 'Approved' | 'Declined' | 'Cancelled';
+  status: 'Pending' | 'Approved' | 'Declined' | 'Cancelled' | 'Completed';
   ownerNotes: string | null;
   createdAt: string;
   updatedAt: string | null;

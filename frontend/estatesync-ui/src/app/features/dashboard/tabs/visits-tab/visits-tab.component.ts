@@ -1,8 +1,13 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, DestroyRef, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit, DestroyRef, input, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SiteVisitService } from '@core/services/property/site-visit.service';
 import { SiteVisitResponse } from '@core/models/site-visit.model';
@@ -15,8 +20,13 @@ import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-
   standalone: true,
   imports: [
     DatePipe,
+    FormsModule,
     MatIconModule,
     MatButtonModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     MatProgressSpinnerModule,
     StatusBadgeComponent,
     EmptyStateComponent,
@@ -35,9 +45,26 @@ export class VisitsTabComponent implements OnInit {
   readonly visits = signal<SiteVisitResponse[]>([]);
   readonly loading = signal(true);
   readonly actionRunningId = signal<string | null>(null);
-  
+
   readonly declineNotesVisitId = signal<string | null>(null);
   readonly declineReason = signal<string>('');
+
+  readonly searchQuery = signal('');
+  readonly dateFilter = signal<Date | null>(null);
+
+  readonly filteredVisits = computed(() => {
+    let result = this.visits();
+    const q = this.searchQuery().toLowerCase().trim();
+    if (q) result = result.filter(v => v.tenantName?.toLowerCase().includes(q));
+    const d = this.dateFilter();
+    if (d) {
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      result = result.filter(v => v.visitDate.startsWith(dateStr));
+    }
+    return result;
+  });
+
+  readonly hasFilters = computed(() => !!this.searchQuery() || !!this.dateFilter());
 
   ngOnInit(): void {
     this.loadVisits();
@@ -58,20 +85,27 @@ export class VisitsTabComponent implements OnInit {
     });
   }
 
+  clearFilters(): void {
+    this.searchQuery.set('');
+    this.dateFilter.set(null);
+  }
+
   approveVisit(visit: SiteVisitResponse): void {
     this.actionRunningId.set(visit.siteVisitId);
-    this.siteVisitService.updateStatus(visit.siteVisitId, {
-      status: 'Approved',
-      ownerNotes: null
-    })
+    this.siteVisitService.updateStatus(visit.siteVisitId, { status: 'Approved', ownerNotes: null })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: res => {
-          this.actionRunningId.set(null);
-          if (res.success) {
-            this.loadVisits();
-          }
-        },
+        next: res => { this.actionRunningId.set(null); if (res.success) this.loadVisits(); },
+        error: () => this.actionRunningId.set(null)
+      });
+  }
+
+  markComplete(visit: SiteVisitResponse): void {
+    this.actionRunningId.set(visit.siteVisitId);
+    this.siteVisitService.updateStatus(visit.siteVisitId, { status: 'Completed', ownerNotes: null })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => { this.actionRunningId.set(null); if (res.success) this.loadVisits(); },
         error: () => this.actionRunningId.set(null)
       });
   }
@@ -98,9 +132,7 @@ export class VisitsTabComponent implements OnInit {
           this.actionRunningId.set(null);
           this.declineNotesVisitId.set(null);
           this.declineReason.set('');
-          if (res.success) {
-            this.loadVisits();
-          }
+          if (res.success) this.loadVisits();
         },
         error: () => this.actionRunningId.set(null)
       });
@@ -108,20 +140,11 @@ export class VisitsTabComponent implements OnInit {
 
   cancelVisit(visit: SiteVisitResponse): void {
     if (!confirm('Are you sure you want to cancel this visit request?')) return;
-
     this.actionRunningId.set(visit.siteVisitId);
-    this.siteVisitService.updateStatus(visit.siteVisitId, {
-      status: 'Cancelled',
-      ownerNotes: null
-    })
+    this.siteVisitService.updateStatus(visit.siteVisitId, { status: 'Cancelled', ownerNotes: null })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: res => {
-          this.actionRunningId.set(null);
-          if (res.success) {
-            this.loadVisits();
-          }
-        },
+        next: res => { this.actionRunningId.set(null); if (res.success) this.loadVisits(); },
         error: () => this.actionRunningId.set(null)
       });
   }

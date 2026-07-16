@@ -1,4 +1,4 @@
-import { Component, OnInit, DestroyRef, inject, input, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, DestroyRef, inject, input, signal, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -9,6 +9,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SiteVisitService } from '@core/services/property/site-visit.service';
 import { AuthService } from '@core/services/auth/auth.service';
@@ -28,10 +29,12 @@ import { SiteVisitResponse } from '@core/models/site-visit.model';
     MatNativeDateModule,
     MatInputModule,
     MatFormFieldModule,
+    MatSelectModule,
     MatProgressSpinnerModule
   ],
   templateUrl: './property-schedule-visit.component.html',
-  styleUrl: './property-schedule-visit.component.css'
+  styleUrl: './property-schedule-visit.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PropertyScheduleVisitComponent implements OnInit {
   propertyId = input.required<string>();
@@ -51,6 +54,19 @@ export class PropertyScheduleVisitComponent implements OnInit {
 
   readonly selectedDate = signal<Date | null>(null);
   readonly selectedTime = signal<string>(''); // "HH:mm"
+
+  readonly timeSlots = [
+    { value: '09:00', label: '9:00 AM' },
+    { value: '10:00', label: '10:00 AM' },
+    { value: '11:00', label: '11:00 AM' },
+    { value: '12:00', label: '12:00 PM' },
+    { value: '13:00', label: '1:00 PM' },
+    { value: '14:00', label: '2:00 PM' },
+    { value: '15:00', label: '3:00 PM' },
+    { value: '16:00', label: '4:00 PM' },
+    { value: '17:00', label: '5:00 PM' },
+    { value: '18:00', label: '6:00 PM' },
+  ];
 
   readonly minDate = new Date();
   readonly maxDate = new Date(new Date().getTime() + 60 * 24 * 60 * 60 * 1000); // 60 days out

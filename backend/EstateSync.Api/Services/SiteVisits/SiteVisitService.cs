@@ -171,6 +171,16 @@ public class SiteVisitService : ISiteVisitService
                 }, ct);
             }
         }
+        else if (request.Status == SiteVisitStatus.Completed)
+        {
+            if (visit.Property == null || visit.Property.OwnerId != userId)
+                throw new ForbiddenException("Only the property owner can mark a visit as completed.");
+
+            if (visit.Status != SiteVisitStatus.Approved)
+                throw new BadRequestException("Only approved visits can be marked as completed.");
+
+            visit.Status = SiteVisitStatus.Completed;
+        }
         else
         {
             throw new BadRequestException("Invalid status transition requested.");
