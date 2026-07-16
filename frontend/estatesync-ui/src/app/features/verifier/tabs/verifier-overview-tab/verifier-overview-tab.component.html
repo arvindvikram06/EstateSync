@@ -14,6 +14,9 @@
         <div class="es-title mb-[3px]">Welcome, {{ userName }}</div>
         <div class="es-text-sm">EstateSync Verification Team — here's your queue for today.</div>
       </div>
+      <button mat-icon-button class="!ml-auto" aria-label="Refresh queue" (click)="load()">
+        <mat-icon>refresh</mat-icon>
+      </button>
     </div>
   </div>
 

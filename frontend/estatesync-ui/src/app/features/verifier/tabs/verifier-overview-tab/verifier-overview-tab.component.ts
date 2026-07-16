@@ -30,6 +30,11 @@ export class VerifierOverviewTabComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.load();
+  }
+
+  load(): void {
+    this.loading.set(true);
     this.adminService.getKycRequests('Pending', 1, 1)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

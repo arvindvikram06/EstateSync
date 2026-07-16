@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { LeaseService } from '@core/services/leasing/lease.service';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 import { LeaseDetailResponse, LeaseStatusString } from '../../../../core/models/lease.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -28,8 +29,9 @@ type FilterTab = 'all' | 'PendingAdminApproval' | 'Active' | 'Voided';
   styleUrl: './admin-leases-tab.component.css',
 })
 export class AdminLeasesTabComponent implements OnInit {
-  private readonly leaseSvc   = inject(LeaseService);
-  private readonly dialog     = inject(MatDialog);
+  private readonly leaseSvc     = inject(LeaseService);
+  private readonly dataRefresh  = inject(DataRefreshService);
+  private readonly dialog       = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly pendingCountChange = output<number>();
@@ -59,6 +61,14 @@ export class AdminLeasesTabComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.load();
+    this.dataRefresh.on('admin-leases').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.load(true);
+    });
+  }
+
+  private load(silent = false): void {
+    if (!silent) this.loading.set(true);
     this.leaseSvc.getAdminLeases().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => {
         this.all.set(res.data ?? []);

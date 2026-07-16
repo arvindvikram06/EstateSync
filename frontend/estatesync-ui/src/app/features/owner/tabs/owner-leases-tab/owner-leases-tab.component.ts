@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LeaseService } from '@core/services/leasing/lease.service';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 import { OwnerLeaseSummaryResponse, LeaseStatusString } from '../../../../core/models/lease.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -37,8 +38,9 @@ const STATUS_PILLS: StatusPill[] = [
   styleUrl: './owner-leases-tab.component.css',
 })
 export class OwnerLeasesTabComponent implements OnInit {
-  private readonly leaseSvc   = inject(LeaseService);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly leaseSvc     = inject(LeaseService);
+  private readonly dataRefresh  = inject(DataRefreshService);
+  private readonly destroyRef   = inject(DestroyRef);
 
   readonly leases  = signal<OwnerLeaseSummaryResponse[]>([]);
   readonly loading = signal(true);
@@ -66,6 +68,14 @@ export class OwnerLeasesTabComponent implements OnInit {
   readonly formatCurrency = formatCurrency;
 
   ngOnInit(): void {
+    this.load();
+    this.dataRefresh.on('leases').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.load(true);
+    });
+  }
+
+  private load(silent = false): void {
+    if (!silent) this.loading.set(true);
     this.leaseSvc.getOwnerLeases().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => { this.leases.set(res.data ?? []); this.loading.set(false); },
       error: () => this.loading.set(false),

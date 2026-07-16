@@ -1,11 +1,12 @@
 import {
-  Component, ChangeDetectionStrategy, inject, signal, computed, input, DestroyRef
+  Component, ChangeDetectionStrategy, inject, signal, computed, input, output, DestroyRef
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { LeaseBillResponse } from '../../../../core/models/lease-bill.model';
@@ -31,6 +32,7 @@ const BILL_COLORS: Record<string, string> = {
     CurrencyPipe, DatePipe,
     MatIconModule, MatButtonModule, MatProgressSpinnerModule,
     MatMenuModule,
+    MatTooltipModule,
     EmptyStateComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,6 +46,9 @@ export class BillsTabComponent {
   // Bills are fetched once by the parent dashboard and shared with this tab.
   readonly bills   = input.required<LeaseBillResponse[]>();
   readonly loading = input(false);
+
+
+  readonly refresh = output<void>();
 
   readonly payingId   = signal<string | null>(null);
   readonly statusFilter = signal<StatusFilter>('All');

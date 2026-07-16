@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, PagedResponse } from '../../models/api-response.model';
 import {
@@ -13,11 +13,6 @@ import {
 export class PropertyService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/api/v1/properties`;
-
-  readonly refreshMyProperties$ = new Subject<void>();
-  triggerRefreshMyProperties(): void {
-    this.refreshMyProperties$.next();
-  }
 
   getProperties(filters: PropertyFilters = {}, page = 1, limit = 12): Observable<PagedResponse<PropertySummaryResponse>> {
     let params = new HttpParams()

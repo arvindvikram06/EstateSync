@@ -5,6 +5,11 @@
   </div>
 
   <div class="filter-bar">
+    <button mat-icon-button aria-label="Refresh KYC requests"
+      [disabled]="loading()" (click)="load()">
+      <mat-icon>refresh</mat-icon>
+    </button>
+
     <div class="filter-search-pill">
       <mat-icon>search</mat-icon>
       <input [formControl]="searchControl" placeholder="Name or email…" autocomplete="off" />

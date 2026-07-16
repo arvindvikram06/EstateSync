@@ -131,4 +131,13 @@ export enum NotificationType {
   LeaseRenewalRequested = 'LeaseRenewalRequested',
   LeaseRenewalApproved = 'LeaseRenewalApproved',
   LeaseRenewalRejected = 'LeaseRenewalRejected',
+  DepositForfeited = 'DepositForfeited',
+  DepositReturnReminder = 'DepositReturnReminder',
+  VacateNoticeSubmitted = 'VacateNoticeSubmitted',
+  VacateNoticeAccepted = 'VacateNoticeAccepted',
+  VacateNoticeRejected = 'VacateNoticeRejected',
+  SiteVisitRequested = 'SiteVisitRequested',
+  SiteVisitApproved = 'SiteVisitApproved',
+  SiteVisitDeclined = 'SiteVisitDeclined',
+  SiteVisitCancelled = 'SiteVisitCancelled',
 }

@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { ComplaintService } from '@core/services/complaint/complaint.service';
 import { LeaseService } from '@core/services/leasing/lease.service';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 import { ComplaintResponse } from '../../../../core/models/complaint.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -26,7 +27,8 @@ import { ComplaintDetailDialogComponent } from '../../../../shared/components/co
 })
 export class ComplaintsTabComponent implements OnInit {
   readonly svc = inject(ComplaintService);
-  private readonly leaseSvc   = inject(LeaseService);
+  private readonly leaseSvc     = inject(LeaseService);
+  private readonly dataRefresh  = inject(DataRefreshService);
   private readonly dialog     = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -48,9 +50,9 @@ export class ComplaintsTabComponent implements OnInit {
   readonly formatDate = formatDate;
 
   ngOnInit(): void {
-    this.svc.getTenantComplaints().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: res => { this.complaints.set(res.data ?? []); this.loading.set(false); },
-      error: () => this.loading.set(false),
+    this.load();
+    this.dataRefresh.on('complaints').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.load(true);
     });
 
     this.leaseSvc.getMyLeases().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -62,6 +64,14 @@ export class ComplaintsTabComponent implements OnInit {
           this.activePropertyTitle.set(active.propertyTitle);
         }
       },
+    });
+  }
+
+  private load(silent = false): void {
+    if (!silent) this.loading.set(true);
+    this.svc.getTenantComplaints().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: res => { this.complaints.set(res.data ?? []); this.loading.set(false); },
+      error: () => this.loading.set(false),
     });
   }
 

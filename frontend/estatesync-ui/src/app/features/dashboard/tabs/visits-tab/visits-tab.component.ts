@@ -10,6 +10,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SiteVisitService } from '@core/services/property/site-visit.service';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 import { SiteVisitResponse } from '@core/models/site-visit.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -40,6 +41,7 @@ export class VisitsTabComponent implements OnInit {
   isOwnerView = input<boolean>(false);
 
   private readonly siteVisitService = inject(SiteVisitService);
+  private readonly dataRefresh = inject(DataRefreshService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly visits = signal<SiteVisitResponse[]>([]);
@@ -68,10 +70,13 @@ export class VisitsTabComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadVisits();
+    this.dataRefresh.on('visits').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.loadVisits(true);
+    });
   }
 
-  loadVisits(): void {
-    this.loading.set(true);
+  loadVisits(silent = false): void {
+    if (!silent) this.loading.set(true);
     const request$ = this.isOwnerView()
       ? this.siteVisitService.getOwnerVisits()
       : this.siteVisitService.getTenantVisits();

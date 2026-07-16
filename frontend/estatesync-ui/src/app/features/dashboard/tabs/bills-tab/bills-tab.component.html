@@ -4,6 +4,10 @@
     <h2 class="es-title">Bills & Payments</h2>
     <p class="text-[13px] text-es-muted mt-1">Track your rent, deposits, and other charges.</p>
   </div>
+  <button mat-icon-button aria-label="Refresh bills" matTooltip="Refresh"
+    [disabled]="loading()" (click)="refresh.emit()">
+    <mat-icon>refresh</mat-icon>
+  </button>
 </div>
 
 @if (loading()) {

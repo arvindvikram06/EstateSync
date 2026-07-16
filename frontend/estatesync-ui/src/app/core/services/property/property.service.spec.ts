@@ -223,13 +223,4 @@ describe('PropertyService', () => {
       expect(url).toContain('/uploads/image.jpg');
     });
   });
-
-  // ── triggerRefreshMyProperties ─────────────────────────────────────────────
-
-  it('emits on refreshMyProperties$ when triggered', () => {
-    let emitted = false;
-    service.refreshMyProperties$.subscribe(() => (emitted = true));
-    service.triggerRefreshMyProperties();
-    expect(emitted).toBe(true);
-  });
 });

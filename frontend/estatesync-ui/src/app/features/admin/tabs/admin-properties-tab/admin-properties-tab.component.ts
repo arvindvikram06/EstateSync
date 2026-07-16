@@ -10,6 +10,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { SkeletonLoaderComponent } from '../../../../shared/components/skeleton-loader/skeleton-loader.component';
 import { AdminService } from '@core/services/admin/admin.service';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 import { formatCurrency } from '../../../../core/utils/format.utils';
 import { PropertySummaryResponse } from '../../../../core/models/admin.model';
 import { AdminReviewDialogComponent, AdminReviewDialogData } from '../../dialogs/admin-review-dialog.component';
@@ -24,6 +25,7 @@ import { AdminReviewDialogComponent, AdminReviewDialogData } from '../../dialogs
 })
 export class AdminPropertiesTabComponent implements OnInit {
   private readonly adminService = inject(AdminService);
+  private readonly dataRefresh  = inject(DataRefreshService);
   private readonly dialog       = inject(MatDialog);
   private readonly destroyRef   = inject(DestroyRef);
 
@@ -34,10 +36,15 @@ export class AdminPropertiesTabComponent implements OnInit {
   readonly limit          = 20;
   readonly formatCurrency = formatCurrency;
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+    this.dataRefresh.on('admin-properties').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.load(true);
+    });
+  }
 
-  load(): void {
-    this.loading.set(true);
+  load(silent = false): void {
+    if (!silent) this.loading.set(true);
     this.adminService.getPendingProperties(this.page(), this.limit)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

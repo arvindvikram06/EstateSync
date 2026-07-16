@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { RentalApplicationService } from '@core/services/leasing/rental-application.service';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 import { OwnerApplicationResponse } from '../../../../core/models/rental-application.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -29,8 +30,9 @@ type AppFilter = 'All' | 'Pending' | 'Approved' | 'Rejected';
 export class OwnerApplicationsTabComponent implements OnInit {
   readonly pendingCountChange = output<number>();
 
-  private readonly svc        = inject(RentalApplicationService);
-  private readonly dialog     = inject(MatDialog);
+  private readonly svc          = inject(RentalApplicationService);
+  private readonly dataRefresh  = inject(DataRefreshService);
+  private readonly dialog       = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly all          = signal<OwnerApplicationResponse[]>([]);
@@ -54,6 +56,14 @@ export class OwnerApplicationsTabComponent implements OnInit {
   readonly formatDate = formatDate;
 
   ngOnInit(): void {
+    this.load();
+    this.dataRefresh.on('applications').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.load(true);
+    });
+  }
+
+  private load(silent = false): void {
+    if (!silent) this.loading.set(true);
     this.svc.getOwnerApplications().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => {
         this.all.set(res.data ?? []);

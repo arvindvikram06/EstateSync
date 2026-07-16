@@ -12,6 +12,10 @@
         <div class="text-[15px] font-bold text-es-text">Withdraw Funds</div>
         <div class="es-text-xs">Choose payout speed — funds are transferred from your Stripe balance to your bank.</div>
       </div>
+      <button mat-icon-button class="!ml-auto" aria-label="Refresh earnings"
+        [disabled]="isLoading()" (click)="loadAll()">
+        <mat-icon>refresh</mat-icon>
+      </button>
     </div>
 
     @if (balanceLoading()) {

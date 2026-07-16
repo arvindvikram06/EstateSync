@@ -59,8 +59,10 @@ export class OwnerEarningsTabComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    // Initial load: fire all three requests in parallel with a single
-    // subscription instead of three independent ones.
+    this.loadAll();
+  }
+
+  loadAll(): void {
     this.isLoading.set(true);
     this.balanceLoading.set(true);
     forkJoin({

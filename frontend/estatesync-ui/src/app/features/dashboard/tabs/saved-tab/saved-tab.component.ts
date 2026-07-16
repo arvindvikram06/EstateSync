@@ -36,12 +36,8 @@ import { EmptyStateComponent } from '../../../../shared/components/empty-state/e
       <div class="flex items-center justify-between mb-6">
         <h3 class="text-sm font-semibold text-es-muted uppercase tracking-wider">My Saved Listings</h3>
         <button type="button" (click)="comparisonService.isCompareMode.set(!comparisonService.isCompareMode())"
-          class="flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-gray-200 px-3 py-1.5 rounded-full transition-all duration-150"
-          [class.bg-es-primary]="comparisonService.isCompareMode()"
-          [class.text-white]="comparisonService.isCompareMode()"
-          [class.border-es-primary]="comparisonService.isCompareMode()"
-          [class.bg-white]="!comparisonService.isCompareMode()"
-          [class.text-es-text]="!comparisonService.isCompareMode()">
+          class="filter-pill flex items-center gap-1.5"
+          [class.filter-pill--active]="comparisonService.isCompareMode()">
           <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">compare_arrows</mat-icon>
           Compare Saved
         </button>

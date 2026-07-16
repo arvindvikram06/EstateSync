@@ -21,7 +21,7 @@
   }
 
   @if (activeTab() === 'bills') {
-    <app-bills-tab [bills]="bills()" [loading]="billsLoading()" />
+    <app-bills-tab [bills]="bills()" [loading]="billsLoading()" (refresh)="loadBills()" />
   }
 
   @if (activeTab() === 'saved') {

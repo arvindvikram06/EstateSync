@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { LeaseService } from '@core/services/leasing/lease.service';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 import { LeaseSummaryResponse, LeaseVacateNoticeResponse } from '../../../../core/models/lease.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -23,8 +24,9 @@ import { VacateNoticeDialogComponent, VacateNoticeDialogData } from './vacate-no
   styleUrl: './leases-tab.component.css',
 })
 export class LeasesTabComponent implements OnInit {
-  private readonly svc        = inject(LeaseService);
-  private readonly dialog     = inject(MatDialog);
+  private readonly svc          = inject(LeaseService);
+  private readonly dataRefresh  = inject(DataRefreshService);
+  private readonly dialog       = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly leases  = signal<LeaseSummaryResponse[]>([]);
@@ -36,6 +38,14 @@ export class LeasesTabComponent implements OnInit {
   readonly formatCurrency = formatCurrency;
 
   ngOnInit(): void {
+    this.load();
+    this.dataRefresh.on('leases').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.load(true);
+    });
+  }
+
+  private load(silent = false): void {
+    if (!silent) this.loading.set(true);
     this.svc.getMyLeases().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => { this.leases.set(res.data ?? []); this.loading.set(false); },
       error: () => this.loading.set(false),

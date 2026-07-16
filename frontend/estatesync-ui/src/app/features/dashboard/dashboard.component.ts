@@ -4,6 +4,7 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { KycStore } from '../../core/stores/kyc.store';
 import { PaymentService } from '@core/services/payment/payment.service';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 import { LeaseBillResponse } from '../../core/models/lease-bill.model';
 import { DashboardLayoutComponent, NavItem } from '../../shared/components/dashboard-layout/dashboard-layout.component';
 import { OverviewTabComponent } from './tabs/overview-tab/overview-tab.component';
@@ -36,6 +37,7 @@ import { VisitsTabComponent } from './tabs/visits-tab/visits-tab.component';
 export class DashboardComponent implements OnInit {
   readonly kycStore               = inject(KycStore);
   private readonly paymentService = inject(PaymentService);
+  private readonly dataRefresh    = inject(DataRefreshService);
   private readonly destroyRef    = inject(DestroyRef);
   private readonly route         = inject(ActivatedRoute);
   private readonly router        = inject(Router);
@@ -80,6 +82,14 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.kycStore.loadExisting();
+    this.loadBills();
+    this.dataRefresh.on('bills').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.loadBills(true);
+    });
+  }
+
+  loadBills(silent = false): void {
+    if (!silent) this.billsLoading.set(true);
     this.paymentService.getTenantBills()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

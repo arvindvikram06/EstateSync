@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { ComplaintService } from '@core/services/complaint/complaint.service';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 import { ComplaintDetailDialogComponent } from '../../../../shared/components/complaint-detail-dialog/complaint-detail-dialog.component';
 import { ComplaintResponse } from '../../../../core/models/complaint.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
@@ -40,6 +41,7 @@ function nextLabel(current: ComplaintResponse['status']): string {
 })
 export class OwnerComplaintsTabComponent implements OnInit {
   private readonly svc = inject(ComplaintService);
+  private readonly dataRefresh = inject(DataRefreshService);
   private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -65,6 +67,14 @@ export class OwnerComplaintsTabComponent implements OnInit {
   readonly formatDate = formatDate;
 
   ngOnInit(): void {
+    this.load();
+    this.dataRefresh.on('complaints').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.load(true);
+    });
+  }
+
+  private load(silent = false): void {
+    if (!silent) this.loading.set(true);
     this.svc.getOwnerComplaints().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => { this.complaints.set(res.data ?? []); this.loading.set(false); },
       error: () => this.loading.set(false),

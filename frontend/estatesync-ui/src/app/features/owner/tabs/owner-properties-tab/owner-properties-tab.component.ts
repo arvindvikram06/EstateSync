@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { PropertyService } from '@core/services/property/property.service';
 import { AuthService } from '@core/services/auth/auth.service';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 import { PropertySummaryResponse } from '../../../../core/models/property.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -39,6 +40,7 @@ type PropFilter = 'All' | 'Draft' | 'PendingApproval' | 'Active' | 'Rejected';
 })
 export class OwnerPropertiesTabComponent implements OnInit {
   private readonly svc         = inject(PropertyService);
+  private readonly dataRefresh = inject(DataRefreshService);
   private readonly authService = inject(AuthService);
   private readonly router      = inject(Router);
   private readonly dialog      = inject(MatDialog);
@@ -63,13 +65,13 @@ export class OwnerPropertiesTabComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadProperties();
-    this.svc.refreshMyProperties$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      this.loadProperties();
+    this.dataRefresh.on('properties').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.loadProperties(true);
     });
   }
 
-  private loadProperties(): void {
-    this.loading.set(true);
+  private loadProperties(silent = false): void {
+    if (!silent) this.loading.set(true);
     this.svc.getMyProperties().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => { this.all.set(res.data ?? []); this.loading.set(false); },
       error: () => this.loading.set(false),

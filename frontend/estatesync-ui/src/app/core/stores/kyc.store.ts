@@ -1,8 +1,9 @@
 import { inject } from '@angular/core';
-import { signalStore, withState, withMethods, patchState } from '@ngrx/signals';
+import { signalStore, withState, withMethods, patchState, withHooks } from '@ngrx/signals';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 import { KycService } from '@core/services/verification/kyc.service';
 import { KycVerificationResponse, DocumentResponse, KycDocumentType, REQUIRED_KYC_DOCS } from '../models/kyc.model';
-import { catchError, map, of, tap, pipe, switchMap, exhaustMap, concatMap } from 'rxjs';
+import { catchError, of, tap, pipe, switchMap, exhaustMap, concatMap } from 'rxjs';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 export type KycStep = 'loading' | 'intro' | 'documents' | 'details' | 'done' | 'pending' | 'approved' | 'rejected';
@@ -119,5 +120,10 @@ export const KycStore = signalStore(
       patchState(store, initialState);
     }
 
+  })),
+  withHooks((store, dataRefresh = inject(DataRefreshService)) => ({
+    onInit() {
+      dataRefresh.on('profile').subscribe(() => store.loadExisting());
+    }
   }))
 );

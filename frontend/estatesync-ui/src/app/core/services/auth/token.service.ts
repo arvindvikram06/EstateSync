@@ -3,9 +3,11 @@ import { jwtDecode } from 'jwt-decode';
 import { AuthResponse } from '../../models/auth.model';
 
 interface JwtPayload {
-  sub: string;
-  email: string;
+  sub?: string;
+  nameid?: string;
+  email?: string;
   name?: string;
+  unique_name?: string;
   role?: string | string[];
   'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'?: string | string[];
   exp: number;
@@ -40,7 +42,12 @@ export class TokenService {
       const p = jwtDecode<JwtPayload>(token);
       const claim = p.role ?? p['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
       const roles = !claim ? [] : Array.isArray(claim) ? claim : [claim];
-      return { userId: p.sub, email: p.email, fullName: p.name ?? '', roles };
+      return { 
+        userId: p.sub ?? p.nameid ?? '', 
+        email: p.email ?? '', 
+        fullName: p.name ?? p.unique_name ?? '', 
+        roles 
+      };
     } catch { return null; }
   }
 

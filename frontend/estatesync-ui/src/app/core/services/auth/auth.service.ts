@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of, tap, catchError, finalize, take } from 'rxjs';
+import { Observable, of, tap, catchError, finalize, take, switchMap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { TokenService } from './token.service';
 import { UserService } from '@core/services/admin/user.service';
@@ -11,6 +11,7 @@ import { AuthResponse, LoginRequest, RegisterRequest, UserProfileResponse } from
 import { KycStore } from '../../stores/kyc.store';
 import { SavedPropertyService } from '@core/services/property/saved-property.service';
 import { SKIP_AUTH_HANDLING } from '../../interceptors/http-context.tokens';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -21,8 +22,13 @@ export class AuthService {
   private readonly notificationService = inject(NotificationService);
   private readonly kycStore = inject(KycStore);
   private readonly savedPropertyService = inject(SavedPropertyService);
+  private readonly dataRefresh = inject(DataRefreshService);
 
   private readonly baseUrl = `${environment.apiUrl}/api/v1/auth`;
+
+  constructor() {
+    this.dataRefresh.on('profile').pipe(switchMap(() => this.syncProfile())).subscribe();
+  }
 
   readonly currentUser = signal<AuthResponse | null>(null);
   private readonly _verificationState = signal<UserProfileResponse | null>(null);
@@ -118,14 +124,24 @@ export class AuthService {
   }
 
   private persist(data: AuthResponse): void {
-    this.tokenService.setToken(data.accessToken);
+    const rawData = data as any;
+    const token = data.accessToken || '';
+    const userId = data.userId || '';
+    const email = data.email || rawData.Email || '';
+    const fullName = data.fullName || rawData.FullName || '';
+    const roles = data.roles || rawData.Roles || [];
+
+    this.tokenService.setToken(token);
     const decoded = this.tokenService.decodeUser();
+    
     const user: AuthResponse = {
-      ...data,
       accessToken: '',
-      roles: decoded?.roles.length ? decoded.roles : data.roles,
-      fullName: decoded?.fullName || data.fullName,
+      userId: userId,
+      email: email,
+      roles: decoded?.roles?.length ? decoded.roles : roles,
+      fullName: decoded?.fullName || fullName,
     };
+    
     this.currentUser.set(user);
     this.userService.getProfile().pipe(take(1)).subscribe({
       next: (res) => { if (res.success && res.data) this._verificationState.set(res.data); },
