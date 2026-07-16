@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject, signal, OnInit, computed, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, of } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { switchMap, catchError, debounceTime } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,34 +42,48 @@ export class PropertiesComponent implements OnInit {
   readonly page = signal(1);
   readonly limit = 12;
 
-  readonly searchFilter  = signal<string>('');
+  readonly searchFilter   = signal<string>('');
   readonly typeFilter     = signal<string>('');
-  readonly bedroomsFilter = signal<string>('');
-  readonly rentFilter     = signal<string>('');
+  readonly bedroomsMin    = signal<number | null>(null);
+  readonly rentMin        = signal<number | null>(null);
+  readonly rentMax        = signal<number | null>(null);
+  readonly rentPreset     = signal<string>('');
+  readonly showCustomRent = signal(false);
 
-  readonly activeFilterCount = computed(() =>
-    [this.searchFilter(), this.typeFilter(), this.bedroomsFilter(), this.rentFilter()]
-      .filter(Boolean).length
-  );
+  private readonly rentCustomChange$ = new Subject<void>();
+
+  readonly activeFilterCount = computed(() => {
+    let n = 0;
+    if (this.searchFilter()) n++;
+    if (this.typeFilter()) n++;
+    if (this.bedroomsMin() !== null) n++;
+    if (this.rentMin() !== null || this.rentMax() !== null) n++;
+    return n;
+  });
 
   readonly showClearAll = computed(() => this.activeFilterCount() > 1);
+
+  readonly isCustomBedrooms = computed(() => {
+    const b = this.bedroomsMin();
+    return b !== null && ![2, 3, 4].includes(b);
+  });
 
   readonly typeOptions = [
     { label: 'All', value: '' },
     { label: 'Villa', value: 'Villa' },
     { label: 'Ind. House', value: 'IndependentHouse' },
   ];
-  readonly bedroomsOptions = [
-    { label: 'Any', value: '' },
-    { label: '2+', value: '2' },
-    { label: '3+', value: '3' },
-    { label: '4+', value: '4' },
+  readonly bedroomOptions = [
+    { label: 'Any', value: null as number | null },
+    { label: '2+', value: 2 },
+    { label: '3+', value: 3 },
+    { label: '4+', value: 4 },
   ];
-  readonly rentOptions = [
-    { label: 'Any', value: '' },
-    { label: 'Under ₹40K', value: 'under40' },
-    { label: '₹40K–₹70K', value: '40to70' },
-    { label: 'Above ₹70K', value: 'above70' },
+  readonly rentPresets = [
+    { label: 'Any',          value: '' },
+    { label: 'Under ₹40K',  value: 'under40' },
+    { label: '₹40K–₹70K',  value: '40to70' },
+    { label: 'Above ₹70K',  value: 'above70' },
   ];
 
   ngOnInit(): void {
@@ -79,14 +93,11 @@ export class PropertiesComponent implements OnInit {
         this.isLoading.set(true);
         const filters: PropertyFilters = {};
 
-        if (this.searchFilter())    filters['search']       = this.searchFilter();
-        if (this.typeFilter())      filters['propertyType'] = this.typeFilter();
-        if (this.bedroomsFilter())  filters['bedrooms']     = Number(this.bedroomsFilter());
-
-        const rent = this.rentFilter();
-        if (rent === 'under40')  { filters['maxRent'] = 40000; }
-        if (rent === '40to70')   { filters['minRent'] = 40000; filters['maxRent'] = 70000; }
-        if (rent === 'above70')  { filters['minRent'] = 70000; }
+        if (this.searchFilter())       filters['search']       = this.searchFilter();
+        if (this.typeFilter())         filters['propertyType'] = this.typeFilter();
+        if (this.bedroomsMin() !== null) filters['bedrooms']   = this.bedroomsMin()!;
+        if (this.rentMin() !== null)   filters['minRent']      = this.rentMin()!;
+        if (this.rentMax() !== null)   filters['maxRent']      = this.rentMax()!;
 
         return this.propertyService.getProperties(filters, this.page(), this.limit).pipe(
           catchError(() => {
@@ -113,18 +124,69 @@ export class PropertiesComponent implements OnInit {
       this.page.set(1);
       this.loadProperties();
     });
+
+    // Debounced trigger for custom rent inputs
+    this.rentCustomChange$.pipe(
+      debounceTime(600),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => { this.page.set(1); this.loadProperties(); });
   }
 
-  setType(value: string): void     { this.typeFilter.set(value);     this.page.set(1); this.loadProperties(); }
-  setBedrooms(value: string): void { this.bedroomsFilter.set(value); this.page.set(1); this.loadProperties(); }
-  setRent(value: string): void     { this.rentFilter.set(value);     this.page.set(1); this.loadProperties(); }
-  clearSearch(): void              { this.searchFilter.set('');      this.page.set(1); this.loadProperties(); }
+  setType(v: string): void          { this.typeFilter.set(v);   this.page.set(1); this.loadProperties(); }
+  clearSearch(): void                { this.searchFilter.set(''); this.page.set(1); this.loadProperties(); }
+
+  setBedrooms(v: number | null): void {
+    this.bedroomsMin.set(v);
+    this.page.set(1);
+    this.loadProperties();
+  }
+
+  onCustomBedrooms(e: Event): void {
+    const v = parseInt((e.target as HTMLInputElement).value, 10);
+    this.bedroomsMin.set(isNaN(v) || v < 1 ? null : v);
+    this.page.set(1);
+    this.loadProperties();
+  }
+
+  setRentPreset(preset: string): void {
+    this.rentPreset.set(preset);
+    this.showCustomRent.set(false);
+    this.rentMin.set(null);
+    this.rentMax.set(null);
+    if (preset === 'under40')       { this.rentMax.set(40000); }
+    else if (preset === '40to70')   { this.rentMin.set(40000); this.rentMax.set(70000); }
+    else if (preset === 'above70')  { this.rentMin.set(70000); }
+    this.page.set(1);
+    this.loadProperties();
+  }
+
+  toggleCustomRent(): void {
+    const next = !this.showCustomRent();
+    this.showCustomRent.set(next);
+    if (next) { this.rentPreset.set(''); this.rentMin.set(null); this.rentMax.set(null); }
+    else       { this.page.set(1); this.loadProperties(); }
+  }
+
+  onCustomRentMin(e: Event): void {
+    const v = +(e.target as HTMLInputElement).value;
+    this.rentMin.set(v > 0 ? v : null);
+    this.rentCustomChange$.next();
+  }
+
+  onCustomRentMax(e: Event): void {
+    const v = +(e.target as HTMLInputElement).value;
+    this.rentMax.set(v > 0 ? v : null);
+    this.rentCustomChange$.next();
+  }
 
   clearFilters(): void {
     this.searchFilter.set('');
     this.typeFilter.set('');
-    this.bedroomsFilter.set('');
-    this.rentFilter.set('');
+    this.bedroomsMin.set(null);
+    this.rentMin.set(null);
+    this.rentMax.set(null);
+    this.rentPreset.set('');
+    this.showCustomRent.set(false);
     this.page.set(1);
     this.loadProperties();
   }

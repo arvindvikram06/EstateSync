@@ -5,83 +5,88 @@
 
 <!-- Filter bar -->
 <section class="sticky top-16 z-10 bg-white border-b border-es-border-light shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-  <div class="max-w-[1240px] mx-auto px-4 sm:px-6 py-3 flex items-center flex-wrap gap-x-3 sm:gap-x-6 gap-y-2">
 
-    <!-- Active search chip -->
-    @if (searchFilter()) {
-      <div class="search-chip flex items-center gap-1.5 pl-3 pr-1.5 py-[5px] rounded-full text-[12px] font-semibold">
-        <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">search</mat-icon>
-        {{ searchFilter() }}
-        <button type="button" (click)="clearSearch()"
-          class="search-chip__close flex items-center justify-center w-[18px] h-[18px] rounded-full ml-0.5 border-none cursor-pointer">
-          <mat-icon class="!text-[11px] !w-[11px] !h-[11px] es-text-primary">close</mat-icon>
-        </button>
-      </div>
-    }
-
-    <!-- Divider if search chip visible -->
-    @if (searchFilter()) {
-      <div class="h-5 w-px bg-es-border-light hidden sm:block"></div>
-    }
+  <!-- Row 1: scrollable pill strip -->
+  <div class="filter-strip">
 
     <!-- Type filter -->
-    <div class="flex items-center gap-1.5 max-w-full">
-      <span class="text-[11px] font-semibold text-es-muted uppercase tracking-[0.4px] shrink-0">Type</span>
-      <div class="flex gap-1 overflow-x-auto no-scrollbar">
-        @for (opt of typeOptions; track opt.value) {
-          <button type="button" class="filter-pill" [class.filter-pill--active]="typeFilter() === opt.value"
-            (click)="setType(opt.value)">{{ opt.label }}</button>
-        }
-      </div>
+    <div class="filter-group">
+      <span class="filter-label">Type</span>
+      @for (opt of typeOptions; track opt.value) {
+        <button type="button" class="filter-pill" [class.filter-pill--active]="typeFilter() === opt.value"
+          (click)="setType(opt.value)">{{ opt.label }}</button>
+      }
     </div>
 
-    <div class="h-5 w-px bg-es-border-light hidden sm:block"></div>
+    <div class="filter-sep"></div>
 
     <!-- Bedrooms filter -->
-    <div class="flex items-center gap-1.5 max-w-full">
-      <span class="text-[11px] font-semibold text-es-muted uppercase tracking-[0.4px] shrink-0">Beds</span>
-      <div class="flex gap-1 overflow-x-auto no-scrollbar">
-        @for (opt of bedroomsOptions; track opt.value) {
-          <button type="button" class="filter-pill" [class.filter-pill--active]="bedroomsFilter() === opt.value"
-            (click)="setBedrooms(opt.value)">{{ opt.label }}</button>
-        }
+    <div class="filter-group">
+      <span class="filter-label">Beds</span>
+      @for (opt of bedroomOptions; track opt.value) {
+        <button type="button" class="filter-pill"
+          [class.filter-pill--active]="!isCustomBedrooms() && bedroomsMin() === opt.value"
+          (click)="setBedrooms(opt.value)">{{ opt.label }}</button>
+      }
+      <div class="filter-pill-custom" [class.filter-pill-custom--active]="isCustomBedrooms()">
+        <input type="number" min="1" max="20" placeholder="5+"
+          class="filter-custom-input"
+          [value]="isCustomBedrooms() ? bedroomsMin() : ''"
+          (input)="onCustomBedrooms($event)" />
       </div>
     </div>
 
-    <div class="h-5 w-px bg-es-border-light hidden sm:block"></div>
+    <div class="filter-sep"></div>
 
     <!-- Rent filter -->
-    <div class="flex items-center gap-1.5 max-w-full">
-      <span class="text-[11px] font-semibold text-es-muted uppercase tracking-[0.4px] shrink-0">Rent</span>
-      <div class="flex gap-1 overflow-x-auto no-scrollbar">
-        @for (opt of rentOptions; track opt.value) {
-          <button type="button" class="filter-pill" [class.filter-pill--active]="rentFilter() === opt.value"
-            (click)="setRent(opt.value)">{{ opt.label }}</button>
-        }
-      </div>
+    <div class="filter-group">
+      <span class="filter-label">Rent</span>
+      @for (opt of rentPresets; track opt.value) {
+        <button type="button" class="filter-pill"
+          [class.filter-pill--active]="!showCustomRent() && rentPreset() === opt.value"
+          (click)="setRentPreset(opt.value)">{{ opt.label }}</button>
+      }
+      <button type="button" class="filter-pill" [class.filter-pill--active]="showCustomRent()"
+        (click)="toggleCustomRent()">Custom</button>
     </div>
 
-    <!-- Clear all -->
-    @if (showClearAll()) {
-      <div class="h-5 w-px bg-es-border-light hidden sm:block"></div>
-      <button type="button" (click)="clearFilters()"
-        class="flex items-center gap-1 text-[12px] font-semibold cursor-pointer border-none bg-transparent es-text-primary"
-       >
-        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">close</mat-icon>
-        Clear all
-      </button>
-    }
+    <div class="filter-sep"></div>
 
-    <!-- Compare Listings Toggle -->
-    <div class="h-5 w-px bg-es-border-light hidden sm:block"></div>
+    <!-- Compare toggle -->
     <button type="button" (click)="comparisonService.isCompareMode.set(!comparisonService.isCompareMode())"
-      class="filter-pill flex items-center gap-1.5"
+      class="filter-pill flex items-center gap-1.5 shrink-0"
       [class.filter-pill--active]="comparisonService.isCompareMode()">
       <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">compare_arrows</mat-icon>
       Compare
     </button>
 
   </div>
+
+  <!-- Row 2: custom rent inputs (expands bar downward, never disrupts row 1) -->
+  @if (showCustomRent()) {
+    <div class="border-t border-es-border-light">
+      <div class="max-w-[1240px] mx-auto px-4 sm:px-6 py-2 flex items-center gap-3">
+        <span class="text-[11px] font-semibold text-es-muted uppercase tracking-[0.4px] shrink-0">Price range</span>
+        <div class="flex items-center gap-2">
+          <div class="filter-pill-custom filter-rent-input">
+            <span class="text-[11px] text-es-muted shrink-0">₹</span>
+            <input type="number" min="0" placeholder="Min"
+              class="filter-custom-input w-20"
+              (input)="onCustomRentMin($event)" />
+          </div>
+          <span class="text-[12px] text-es-muted">–</span>
+          <div class="filter-pill-custom filter-rent-input">
+            <span class="text-[11px] text-es-muted shrink-0">₹</span>
+            <input type="number" min="0" placeholder="Max"
+              class="filter-custom-input w-20"
+              (input)="onCustomRentMax($event)" />
+          </div>
+          <span class="text-[11px] text-es-muted">per month</span>
+        </div>
+      </div>
+    </div>
+  }
+
 </section>
 
 <!-- Listings -->

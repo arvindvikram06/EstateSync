@@ -44,4 +44,62 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.app-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.app-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--es-text-secondary);
+}
+
+.app-meta-item mat-icon {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  color: var(--es-text-soft);
+}
+
+.app-remarks {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--es-text-secondary);
+  background: var(--mat-sys-surface-container-low);
+  border-radius: 6px;
+  padding: 6px 8px;
+  max-width: 480px;
+}
+
+.app-remarks mat-icon {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--es-text-soft);
+}
+
+.app-lease-hint {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--es-text-secondary);
+}
+
+.app-lease-hint mat-icon {
+  font-size: 13px !important;
+  width: 13px !important;
+  height: 13px !important;
 }

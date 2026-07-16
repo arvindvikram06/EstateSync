@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RentalApplicationService } from '@core/services/leasing/rental-application.service';
 import { ErrorHandlerService } from '@core/services/shared/error-handler.service';
+import { DataRefreshService } from '@core/services/shared/data-refresh.service';
 import { RentalApplicationResponse } from '../../../../core/models/rental-application.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
@@ -26,6 +27,7 @@ type FilterStatus = 'All' | 'Pending' | 'Approved' | 'Rejected';
 export class ApplicationsTabComponent implements OnInit {
   private readonly svc          = inject(RentalApplicationService);
   private readonly errorHandler = inject(ErrorHandlerService);
+  private readonly dataRefresh  = inject(DataRefreshService);
   private readonly destroyRef   = inject(DestroyRef);
 
   readonly all          = signal<RentalApplicationResponse[]>([]);
@@ -44,6 +46,14 @@ export class ApplicationsTabComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.load();
+    this.dataRefresh.on('applications').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.load(true);
+    });
+  }
+
+  private load(silent = false): void {
+    if (!silent) this.loading.set(true);
     this.svc.getMyApplications().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: res => { this.all.set(res.data ?? []); this.loading.set(false); },
       error: () => this.loading.set(false),

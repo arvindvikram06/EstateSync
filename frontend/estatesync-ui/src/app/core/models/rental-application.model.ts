@@ -3,10 +3,18 @@ export interface RentalApplicationResponse {
   propertyId: string;
   propertyTitle: string;
   propertyPrimaryImage: string | null;
+  tenantId: string;
+  tenantName: string | null;
   status: 'Pending' | 'Approved' | 'Rejected' | 'Withdrawn';
-  appliedAt: string;
-  reviewedAt: string | null;
+  message: string;
+  expectedMoveInDate: string;
+  durationMonths: number;
+  commuteDistance: number;
+  leaseId: string | null;
+  leaseStatus: string | null;
   reviewRemarks: string | null;
+  reviewedAt: string | null;
+  appliedAt: string;
 }
 
 export interface CreateRentalApplicationRequest {

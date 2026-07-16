@@ -1,3 +1,43 @@
+/* Scrollable single-row strip — never wraps, scrolls on mobile */
+.filter-strip {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 10px 16px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.filter-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--es-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.filter-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--es-border-light);
+  flex-shrink: 0;
+  margin: 0 12px;
+}
+
 .filter-pill {
   border: 1px solid var(--es-border);
   border-radius: 20px;
@@ -27,6 +67,51 @@
 .filter-pill--active:hover {
   background: color-mix(in srgb, var(--mat-sys-primary) 88%, black);
   border-color: color-mix(in srgb, var(--mat-sys-primary) 88%, black);
+}
+
+.filter-pill-custom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--es-border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  background: white;
+  transition: border-color 0.12s;
+}
+
+.filter-pill-custom--active {
+  border-color: var(--mat-sys-primary);
+  background: color-mix(in srgb, var(--mat-sys-primary) 8%, white);
+}
+
+.filter-rent-input {
+  border-radius: 8px;
+}
+
+.filter-custom-input {
+  width: 52px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--es-text);
+  -moz-appearance: textfield;
+}
+
+.filter-custom-input.w-20 {
+  width: 80px;
+}
+
+.filter-custom-input::-webkit-outer-spin-button,
+.filter-custom-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.filter-custom-input::placeholder {
+  color: var(--es-text-secondary);
 }
 
 @keyframes slideUp {

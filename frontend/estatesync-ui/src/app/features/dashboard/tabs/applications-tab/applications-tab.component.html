@@ -26,16 +26,45 @@
         <div class="app-icon">
           <mat-icon class="!text-[20px] !w-[20px] !h-[20px] es-text-primary">home</mat-icon>
         </div>
+
         <div class="flex-1 min-w-0">
           <div class="es-detail-value truncate">{{ app.propertyTitle }}</div>
-          <div class="es-text-xs mt-[3px]">
-            Applied {{ formatDate(app.appliedAt) }}
+          <div class="es-text-xs mt-[3px] mb-3">Applied {{ formatDate(app.appliedAt) }}</div>
+
+          <div class="app-meta">
+            <div class="app-meta-item">
+              <mat-icon>calendar_today</mat-icon>
+              <span>Move-in {{ formatDate(app.expectedMoveInDate) }}</span>
+            </div>
+            <div class="app-meta-item">
+              <mat-icon>schedule</mat-icon>
+              <span>{{ app.durationMonths }} months</span>
+            </div>
+            @if (app.commuteDistance) {
+              <div class="app-meta-item">
+                <mat-icon>directions_car</mat-icon>
+                <span>{{ app.commuteDistance }} km commute</span>
+              </div>
+            }
           </div>
+
+          @if (app.reviewRemarks) {
+            <div class="app-remarks">
+              <mat-icon>comment</mat-icon>
+              <span>{{ app.reviewRemarks }}</span>
+            </div>
+          }
         </div>
+
         <div class="flex flex-col items-end gap-2 shrink-0">
           <app-status-badge [status]="app.status" />
           @if (app.reviewedAt) {
             <span class="es-text-hint">{{ formatDate(app.reviewedAt) }}</span>
+          }
+          @if (app.leaseId) {
+            <span class="app-lease-hint">
+              <mat-icon>description</mat-icon>Lease created
+            </span>
           }
           @if (app.status === 'Pending') {
             <button mat-stroked-button class="cancel-app-btn"
