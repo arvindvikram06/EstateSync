@@ -1,0 +1,131 @@
+<div class="schedule-card bg-white border border-gray-100 rounded-2xl p-5 shadow-sm mt-4">
+  <h3 class="text-base font-bold text-es-text mb-4 flex items-center gap-2">
+    <mat-icon class="text-es-primary">calendar_month</mat-icon>
+    Schedule a Site Visit
+  </h3>
+
+  @if (!isLoggedIn()) {
+    <div class="text-center py-4">
+      <p class="text-xs text-es-muted mb-4">You must be signed in as a tenant to book a site visit.</p>
+      <a mat-stroked-button color="primary" routerLink="/auth/login" class="w-full !rounded-xl">
+        Sign in to book
+      </a>
+    </div>
+  } @else if (loading()) {
+    <div class="flex justify-center py-6">
+      <mat-spinner diameter="30" />
+    </div>
+  } @else {
+
+    <!-- Success / Error messages -->
+    @if (successMessage(); as msg) {
+      <div class="bg-emerald-50 border border-emerald-100 text-emerald-800 text-xs rounded-xl p-3 mb-4 flex items-start gap-2">
+        <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-emerald-600 mt-0.5">check_circle</mat-icon>
+        <span>{{ msg }}</span>
+      </div>
+    }
+    @if (errorMessage(); as err) {
+      <div class="bg-red-50 border border-red-100 text-red-800 text-xs rounded-xl p-3 mb-4 flex items-start gap-2">
+        <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-red-600 mt-0.5">error</mat-icon>
+        <span>{{ err }}</span>
+      </div>
+    }
+
+    <!-- Case 1: Active Visit (Pending or Approved) -->
+    @if (activeVisit(); as visit) {
+      <div class="active-visit-box rounded-xl p-4 text-center border" 
+           [class.bg-blue-50/50]="visit.status === 'Pending'" 
+           [class.border-blue-100]="visit.status === 'Pending'"
+           [class.bg-emerald-50/50]="visit.status === 'Approved'"
+           [class.border-emerald-100]="visit.status === 'Approved'">
+        
+        <mat-icon class="!text-[36px] !w-[36px] !h-[36px] mb-2" 
+                  [class.text-blue-500]="visit.status === 'Pending'"
+                  [class.text-emerald-500]="visit.status === 'Approved'">
+          {{ visit.status === 'Approved' ? 'event_available' : 'schedule' }}
+        </mat-icon>
+
+        <h4 class="text-sm font-bold text-es-text mb-1">
+          {{ visit.status === 'Approved' ? 'Visit Confirmed!' : 'Visit Requested' }}
+        </h4>
+
+        <p class="text-xs text-es-muted mb-4 leading-normal">
+          Scheduled for: <strong>{{ visit.visitDate | date:'yyyy-MM-dd' }}</strong> at <strong>{{ visit.visitTime }}</strong>
+          @if (visit.status === 'Pending') {
+            <span class="block mt-1 text-[11px] text-blue-600 font-medium">Awaiting owner confirmation</span>
+          } @else {
+            <span class="block mt-1 text-[11px] text-emerald-600 font-medium">Owner approved ✓</span>
+          }
+        </p>
+
+        @if (visit.ownerNotes) {
+          <div class="bg-white border border-gray-100 text-left text-xs p-2.5 rounded-lg mb-4 text-es-muted">
+            <span class="font-semibold block text-[10px] uppercase text-es-faint tracking-wider mb-0.5">Owner instructions</span>
+            {{ visit.ownerNotes }}
+          </div>
+        }
+
+        <button mat-button color="warn" (click)="cancelActiveVisit()" [disabled]="submitting()" class="w-full !rounded-xl !text-xs">
+          Cancel Request
+        </button>
+      </div>
+    }
+
+    <!-- Case 2: Declined Visit -->
+    @else if (declinedVisit(); as visit) {
+      <div class="bg-red-50/50 border border-red-100 rounded-xl p-4 text-center">
+        <mat-icon class="!text-[36px] !w-[36px] !h-[36px] text-red-500 mb-2">event_busy</mat-icon>
+        <h4 class="text-sm font-bold text-es-text mb-1">Visit Request Declined</h4>
+        
+        <p class="text-xs text-es-muted mb-3 leading-normal">
+          Your request for <strong>{{ visit.visitDate | date:'yyyy-MM-dd' }}</strong> at <strong>{{ visit.visitTime }}</strong> was declined.
+        </p>
+
+        @if (visit.ownerNotes) {
+          <div class="bg-white border border-red-100/50 text-left text-xs p-2.5 rounded-lg mb-4 text-es-muted">
+            <span class="font-semibold block text-[10px] uppercase text-red-400 tracking-wider mb-0.5">Owner Note</span>
+            {{ visit.ownerNotes }}
+          </div>
+        }
+
+        <button mat-flat-button color="primary" (click)="reschedule()" class="w-full !rounded-xl !text-xs bg-es-primary text-white">
+          Reschedule Visit
+        </button>
+      </div>
+    }
+
+    <!-- Case 3: Empty Form (No pending or declined requests showing) -->
+    @else {
+      <form (ngSubmit)="submitRequest()" class="flex flex-col gap-3">
+        <!-- Date Selector -->
+        <mat-form-field appearance="outline" class="w-full !text-xs">
+          <mat-label>Choose Date</mat-label>
+          <input matInput [matDatepicker]="picker" [min]="minDate" [max]="maxDate" 
+                 [value]="selectedDate()" (dateChange)="selectedDate.set($event.value)" readonly>
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Time Selector -->
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-semibold text-es-muted uppercase tracking-wider pl-1">Visit Time</label>
+          <div class="relative">
+            <input type="time" [value]="selectedTime()" (input)="selectedTime.set($any($event.target).value)"
+                   class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-es-text focus:outline-none focus:border-es-primary bg-transparent font-medium" />
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" mat-flat-button color="primary" 
+                [disabled]="submitting() || !selectedDate() || !selectedTime()" 
+                class="w-full !h-11 !text-xs !font-semibold !rounded-xl !mt-2 bg-es-primary text-white hover:bg-es-primary/95 shadow-sm">
+          @if (submitting()) {
+            Submitting...
+          } @else {
+            Request Visit
+          }
+        </button>
+      </form>
+    }
+  }
+</div>

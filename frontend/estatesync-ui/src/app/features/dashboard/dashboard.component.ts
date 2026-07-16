@@ -13,6 +13,7 @@ import { BillsTabComponent } from './tabs/bills-tab/bills-tab.component';
 import { ComplaintsTabComponent } from './tabs/complaints-tab/complaints-tab.component';
 import { VerificationsTabComponent } from './tabs/verifications-tab/verifications-tab.component';
 import { SavedTabComponent } from './tabs/saved-tab/saved-tab.component';
+import { VisitsTabComponent } from './tabs/visits-tab/visits-tab.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -26,6 +27,7 @@ import { SavedTabComponent } from './tabs/saved-tab/saved-tab.component';
     ComplaintsTabComponent,
     VerificationsTabComponent,
     SavedTabComponent,
+    VisitsTabComponent,
     RouterModule,
     MatButtonModule,
   ],
@@ -67,6 +69,7 @@ export class DashboardComponent implements OnInit {
       { id: 'leases',       label: 'Leases',       icon: 'article' },
       { id: 'bills',        label: 'Bills',        icon: 'receipt_long', badge: pendingBills || undefined },
       { id: 'saved',        label: 'Saved',        icon: 'favorite' },
+      { id: 'visits',       label: 'Visits',       icon: 'calendar_month' },
       { id: 'complaints',   label: 'Complaints',   icon: 'report_problem' },
       { id: 'verifications',label: 'Verifications',icon: 'verified_user' },
     ];

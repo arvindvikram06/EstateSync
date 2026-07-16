@@ -221,6 +221,10 @@
           }
         </div>
 
+        @if (!isMyProperty()) {
+          <app-property-schedule-visit [propertyId]="p.propertyId" [ownerId]="p.ownerId" />
+        }
+
         <!-- Owner verified badge -->
         <div class="mt-4 py-4 flex items-center justify-center gap-1.5">
           <mat-icon class="!text-[20px] !w-[20px] !h-[20px] es-text-success">verified_user</mat-icon>

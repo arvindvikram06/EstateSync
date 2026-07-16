@@ -45,6 +45,7 @@ public partial class AppDbContext : DbContext
     public DbSet<StripeCustomerProfile> StripeCustomerProfiles => Set<StripeCustomerProfile>();
     public DbSet<OwnerSettlement> OwnerSettlements => Set<OwnerSettlement>();
     public DbSet<OwnerProfile> OwnerProfiles => Set<OwnerProfile>();
+    public DbSet<SiteVisit> SiteVisits => Set<SiteVisit>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -70,6 +71,7 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<LeaseBill>().HasQueryFilter(x => x.DeletedAt == null && (x.Lease == null || x.Lease.DeletedAt == null));
         modelBuilder.Entity<LeaseVacateNotice>().HasQueryFilter(x => x.DeletedAt == null && (x.Lease == null || x.Lease.DeletedAt == null));
         modelBuilder.Entity<Notification>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<SiteVisit>().HasQueryFilter(x => x.DeletedAt == null);
 
         modelBuilder.Entity<PropertyImage>().HasQueryFilter(x => x.Property != null && x.Property.DeletedAt == null);
         modelBuilder.Entity<SavedProperty>().HasQueryFilter(x => x.Property != null && x.Property.DeletedAt == null);

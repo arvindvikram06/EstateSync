@@ -28,6 +28,10 @@
     <app-saved-tab />
   }
 
+  @if (activeTab() === 'visits') {
+    <app-visits-tab />
+  }
+
   @if (activeTab() === 'complaints') {
     <app-complaints-tab />
   }

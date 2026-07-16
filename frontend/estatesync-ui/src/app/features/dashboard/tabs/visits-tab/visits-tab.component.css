@@ -1,0 +1,24 @@
+/* Local component styling */
+.mat-spinner {
+  display: inline-block;
+}
+
+button[mat-flat-button] {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
