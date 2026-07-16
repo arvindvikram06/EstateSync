@@ -59,9 +59,10 @@ export class PropertyScheduleVisitComponent implements OnInit {
     this.visits().find(v => v.status === 'Pending' || v.status === 'Approved')
   );
 
-  readonly declinedVisit = computed(() => 
-    this.visits().find(v => v.status === 'Declined')
-  );
+  readonly declinedVisit = computed(() => {
+    const declined = this.visits().filter(v => v.status === 'Declined');
+    return declined.length > 0 ? declined[declined.length - 1] : undefined;
+  });
 
   ngOnInit(): void {
     if (this.isLoggedIn()) {
