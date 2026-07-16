@@ -1,0 +1,174 @@
+<div class="dialog-container flex flex-col h-full bg-white text-es-text">
+  <!-- Header -->
+  <header class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+    <div class="flex items-center gap-2">
+      <mat-icon class="text-es-primary">compare_arrows</mat-icon>
+      <h2 class="text-lg font-bold tracking-tight">Compare Properties</h2>
+    </div>
+    <button mat-icon-button (click)="close()" aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <!-- Body -->
+  <div class="flex-1 overflow-auto px-6 py-6 min-h-0">
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center py-20 gap-3 text-es-muted">
+        <mat-spinner diameter="40" aria-label="Loading comparison data" />
+        <span class="text-sm">Fetching detailed comparison data…</span>
+      </div>
+    } @else if (detailedProperties().length === 0) {
+      <div class="flex flex-col items-center justify-center py-20 text-es-muted">
+        <mat-icon class="!text-[48px] !w-[48px] !h-[48px] mb-2 text-gray-300">error_outline</mat-icon>
+        <span class="text-sm">Failed to load property details for comparison.</span>
+      </div>
+    } @else {
+      <div class="comparison-grid border border-gray-100 rounded-card overflow-hidden">
+        <table class="w-full border-collapse text-left text-sm">
+          <thead>
+            <tr class="bg-gray-50/50">
+              <th class="p-4 font-semibold text-es-muted border-b border-gray-100 w-[200px]">Attribute</th>
+              @for (prop of detailedProperties(); track prop.propertyId) {
+                <th class="p-4 font-semibold text-es-text border-b border-gray-100 w-[260px] min-w-[220px]">
+                  <div class="flex flex-col gap-3">
+                    <!-- Image -->
+                    <div class="relative overflow-hidden aspect-[3/2] bg-gray-100 rounded-card shadow-sm w-full">
+                      @if (prop.images && prop.images.length > 0 && prop.images[0].image) {
+                        <img class="w-full h-full object-cover" [src]="imageUrl(prop.images[0].image)" [alt]="prop.title" />
+                      } @else {
+                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-es-primary to-indigo-800 text-white/70">
+                          <mat-icon class="!text-[36px] !w-[36px] !h-[36px]">
+                            {{ prop.propertyType === 'Villa' ? 'villa' : 'home_work' }}
+                          </mat-icon>
+                        </div>
+                      }
+                      <span class="absolute top-2 left-2 px-2 py-0.5 bg-white/95 text-es-text text-[10px] font-semibold rounded-full shadow-sm">
+                        {{ prop.propertyType === 'Villa' ? 'Villa' : 'House' }}
+                      </span>
+                    </div>
+                    <!-- Title -->
+                    <div class="font-bold text-[15px] leading-tight truncate-2-lines text-es-text h-10" [title]="prop.title">
+                      {{ prop.title }}
+                    </div>
+                  </div>
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rent -->
+            <tr>
+              <td class="p-4 font-semibold text-es-muted border-b border-gray-100">Monthly Rent</td>
+              @for (prop of detailedProperties(); track prop.propertyId) {
+                <td class="p-4 font-bold text-es-text border-b border-gray-100 text-base">
+                  {{ formatRent(prop.monthlyRent) }}<span class="text-xs font-normal text-es-muted"> / mo</span>
+                </td>
+              }
+            </tr>
+            <!-- Deposit -->
+            <tr>
+              <td class="p-4 font-semibold text-es-muted border-b border-gray-100">Security Deposit</td>
+              @for (prop of detailedProperties(); track prop.propertyId) {
+                <td class="p-4 font-semibold text-es-text border-b border-gray-100 text-sm">
+                  {{ formatRent(prop.securityDeposit) }}
+                </td>
+              }
+            </tr>
+            <!-- Size -->
+            <tr>
+              <td class="p-4 font-semibold text-es-muted border-b border-gray-100">Rooms</td>
+              @for (prop of detailedProperties(); track prop.propertyId) {
+                <td class="p-4 text-es-text border-b border-gray-100">
+                  <div class="flex items-center gap-1.5">
+                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-muted">king_bed</mat-icon>
+                    <span>{{ prop.bedrooms }} Beds</span>
+                    <span class="text-gray-300 mx-1">|</span>
+                    <mat-icon class="!text-[16px] !w-[16px] !h-[16px] text-es-muted">bathtub</mat-icon>
+                    <span>{{ prop.bathrooms }} Baths</span>
+                  </div>
+                </td>
+              }
+            </tr>
+            <!-- Area -->
+            <tr>
+              <td class="p-4 font-semibold text-es-muted border-b border-gray-100">Buildup Area</td>
+              @for (prop of detailedProperties(); track prop.propertyId) {
+                <td class="p-4 text-es-text border-b border-gray-100">
+                  {{ prop.buildupArea ? prop.buildupArea + ' sq ft' : '--' }}
+                </td>
+              }
+            </tr>
+            <!-- Land Area -->
+            <tr>
+              <td class="p-4 font-semibold text-es-muted border-b border-gray-100">Land Area</td>
+              @for (prop of detailedProperties(); track prop.propertyId) {
+                <td class="p-4 text-es-text border-b border-gray-100">
+                  {{ prop.landArea ? prop.landArea + ' sq ft' : '--' }}
+                </td>
+              }
+            </tr>
+            <!-- Location -->
+            <tr>
+              <td class="p-4 font-semibold text-es-muted border-b border-gray-100">Location</td>
+              @for (prop of detailedProperties(); track prop.propertyId) {
+                <td class="p-4 text-es-text border-b border-gray-100 leading-snug">
+                  <div class="font-medium">{{ prop.city }}, {{ prop.state }}</div>
+                  <div class="text-xs text-es-muted mt-0.5 truncate max-w-[240px]" [title]="prop.addressLine">
+                    {{ prop.addressLine }}
+                  </div>
+                </td>
+              }
+            </tr>
+            <!-- Description -->
+            <tr>
+              <td class="p-4 font-semibold text-es-muted border-b border-gray-100">Description</td>
+              @for (prop of detailedProperties(); track prop.propertyId) {
+                <td class="p-4 text-es-muted border-b border-gray-100 text-xs leading-normal">
+                  <div class="line-clamp-4 overflow-hidden" [title]="prop.description">
+                    {{ prop.description }}
+                  </div>
+                </td>
+              }
+            </tr>
+            <!-- Owner -->
+            <tr>
+              <td class="p-4 font-semibold text-es-muted border-b border-gray-100">Owner</td>
+              @for (prop of detailedProperties(); track prop.propertyId) {
+                <td class="p-4 text-es-text border-b border-gray-100 text-sm">
+                  {{ prop.ownerName }}
+                </td>
+              }
+            </tr>
+            <!-- Amenities Header -->
+            <tr class="bg-gray-50/50">
+              <td colspan="4" class="p-3 font-bold text-es-text text-xs uppercase tracking-wider border-b border-gray-100">
+                Amenities Comparison
+              </td>
+            </tr>
+            <!-- Amenities Rows -->
+            @for (amenity of allAmenities(); track amenity) {
+              <tr>
+                <td class="p-3 pl-6 text-es-text font-medium border-b border-gray-100">{{ amenity }}</td>
+                @for (prop of detailedProperties(); track prop.propertyId) {
+                  <td class="p-3 border-b border-gray-100">
+                    @if (hasAmenity(prop, amenity)) {
+                      <div class="flex items-center gap-1 text-emerald-600 font-semibold text-xs">
+                        <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-emerald-500">check_circle</mat-icon>
+                        <span>Available</span>
+                      </div>
+                    } @else {
+                      <div class="flex items-center gap-1 text-red-500 font-semibold text-xs">
+                        <mat-icon class="!text-[18px] !w-[18px] !h-[18px] text-red-400">cancel</mat-icon>
+                        <span class="text-gray-400 font-normal">Not available</span>
+                      </div>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

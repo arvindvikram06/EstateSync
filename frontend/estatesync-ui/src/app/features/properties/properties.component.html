@@ -72,6 +72,19 @@
       </button>
     }
 
+    <!-- Compare Listings Toggle -->
+    <div class="h-5 w-px bg-es-border-light hidden sm:block"></div>
+    <button type="button" (click)="comparisonService.isCompareMode.set(!comparisonService.isCompareMode())"
+      class="flex items-center gap-1.5 text-[12px] font-semibold cursor-pointer border border-es-border-light px-3 py-1.5 rounded-full transition-all duration-150"
+      [class.bg-es-primary]="comparisonService.isCompareMode()"
+      [class.text-white]="comparisonService.isCompareMode()"
+      [class.border-es-primary]="comparisonService.isCompareMode()"
+      [class.bg-white]="!comparisonService.isCompareMode()"
+      [class.text-es-text]="!comparisonService.isCompareMode()">
+      <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">compare_arrows</mat-icon>
+      Compare
+    </button>
+
   </div>
 </section>
 
@@ -118,3 +131,26 @@
 
   </div>
 </main>
+
+<!-- Bottom floating comparison drawer -->
+@if (comparisonService.selectedCount() > 0) {
+  <div class="fixed bottom-4 left-4 right-4 bg-white border border-gray-100 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] py-4 px-6 z-50 rounded-card animate-slide-up">
+    <div class="max-w-[1200px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-4 flex-wrap">
+        <span class="text-sm font-semibold text-es-text shrink-0">Comparing ({{ comparisonService.selectedCount() }}/3)</span>
+        <div class="flex gap-2 flex-wrap">
+          @for (p of comparisonService.selectedProperties(); track p.propertyId) {
+            <div class="flex items-center gap-1.5 bg-gray-50 border border-gray-100 px-3 py-1 rounded-full text-xs text-es-text shadow-sm">
+              <span class="truncate max-w-[150px] font-medium">{{ p.title }}</span>
+              <button (click)="comparisonService.toggleProperty(p)" class="text-es-muted hover:text-red-500 border-none bg-transparent cursor-pointer flex items-center justify-center font-bold text-sm">×</button>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="flex gap-3 w-full sm:w-auto shrink-0 justify-end">
+        <button mat-button (click)="comparisonService.clear()" class="!rounded-full text-xs">Clear all</button>
+        <button mat-flat-button color="primary" [disabled]="comparisonService.selectedCount() < 2" (click)="openComparison()" class="!rounded-full text-xs shadow-sm bg-es-primary text-white hover:bg-es-primary/95">Compare Now</button>
+      </div>
+    </div>
+  </div>
+}

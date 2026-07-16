@@ -28,3 +28,18 @@
   background: color-mix(in srgb, var(--mat-sys-primary) 88%, black);
   border-color: color-mix(in srgb, var(--mat-sys-primary) 88%, black);
 }
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
