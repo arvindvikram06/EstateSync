@@ -1,0 +1,68 @@
+<footer class="es-footer">
+  <div class="es-footer__inner">
+
+    <!-- Brand column -->
+    <div class="es-footer__brand">
+      <div class="es-footer__logo">
+        <mat-icon class="es-footer__logo-icon">home_work</mat-icon>
+        <span class="es-footer__logo-name">EstateSync</span>
+      </div>
+      <p class="es-footer__tagline">
+        Find your perfect home — seamlessly. From search to signed lease, all in one place.
+      </p>
+      <div class="es-footer__socials">
+        <a class="es-footer__social-btn" aria-label="Twitter / X">
+          <mat-icon>close</mat-icon>
+        </a>
+        <a class="es-footer__social-btn" aria-label="Instagram">
+          <mat-icon>photo_camera</mat-icon>
+        </a>
+        <a class="es-footer__social-btn" aria-label="LinkedIn">
+          <mat-icon>work</mat-icon>
+        </a>
+      </div>
+    </div>
+
+    <!-- Explore column -->
+    <div class="es-footer__col">
+      <h4 class="es-footer__col-title">Explore</h4>
+      <ul class="es-footer__links">
+        <li><a routerLink="/properties" class="es-footer__link">Browse Properties</a></li>
+        <li><a routerLink="/auth/register" class="es-footer__link">Sign Up</a></li>
+        <li><a routerLink="/auth/login" class="es-footer__link">Sign In</a></li>
+        <li><a routerLink="/dashboard" class="es-footer__link">My Dashboard</a></li>
+      </ul>
+    </div>
+
+    <!-- For Owners column -->
+    <div class="es-footer__col">
+      <h4 class="es-footer__col-title">For Owners</h4>
+      <ul class="es-footer__links">
+        <li><a routerLink="/owner/dashboard" class="es-footer__link">Owner Dashboard</a></li>
+        <li><a routerLink="/properties/create" class="es-footer__link">List a Property</a></li>
+        <li><a routerLink="/kyc" class="es-footer__link">Verify Identity</a></li>
+      </ul>
+    </div>
+
+    <!-- Legal column -->
+    <div class="es-footer__col">
+      <h4 class="es-footer__col-title">Legal</h4>
+      <ul class="es-footer__links">
+        <li><span class="es-footer__link">Privacy Policy</span></li>
+        <li><span class="es-footer__link">Terms of Service</span></li>
+        <li><span class="es-footer__link">Cookie Policy</span></li>
+        <li><span class="es-footer__link">Contact Us</span></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="es-footer__bottom">
+    <div class="es-footer__bottom-inner">
+      <span>© {{ year }} EstateSync. All rights reserved.</span>
+      <span class="es-footer__bottom-divider">·</span>
+      <span>Built for modern renters &amp; owners</span>
+    </div>
+  </div>
+</footer>
