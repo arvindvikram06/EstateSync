@@ -41,5 +41,3 @@ infra/
 .DS_Store
 **/.DS_Store
 
-# Frontend production environment (contains Azure URLs)
-frontend/estatesync-ui/src/environments/environment.production.ts
