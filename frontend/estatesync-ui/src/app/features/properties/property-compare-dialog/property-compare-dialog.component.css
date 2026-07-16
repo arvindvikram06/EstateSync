@@ -1,0 +1,57 @@
+.dialog-container {
+  max-height: 90vh;
+}
+
+.comparison-grid {
+  border-radius: 12px;
+  border: 1px solid var(--es-border-light, #eef2f6);
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  overflow-x: auto;
+}
+
+.comparison-grid table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.comparison-grid th, .comparison-grid td {
+  border-right: 1px solid var(--es-border-light, #f1f5f9);
+}
+
+.comparison-grid th:last-child, .comparison-grid td:last-child {
+  border-right: none;
+}
+
+.comparison-grid tr:hover td {
+  background-color: var(--es-bg-light, #fafbfd);
+}
+
+.truncate-2-lines {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+::ng-deep .compare-dialog-panel .mat-mdc-dialog-container {
+  padding: 0 !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+.filter-pill {
+  transition: all 0.2s ease-in-out;
+}

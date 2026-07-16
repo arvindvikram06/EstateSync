@@ -14,11 +14,20 @@
         </mat-icon>
       </div>
       }
-      <!-- Type pill -->
-      <span
-        class="absolute top-3 left-3 px-2.5 py-1 bg-white/95 text-es-text text-[11px] font-semibold rounded-full shadow-sm">
-        {{ property().propertyType === 'Villa' ? 'Villa' : 'House' }}
-      </span>
+      <!-- Type pill / Compare Checkbox -->
+      @if (!comparisonService.isCompareMode()) {
+        <span
+          class="absolute top-3 left-3 px-2.5 py-1 bg-white/95 text-es-text text-[11px] font-semibold rounded-full shadow-sm">
+          {{ property().propertyType === 'Villa' ? 'Villa' : 'House' }}
+        </span>
+      } @else {
+        <div class="absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-white/95 shadow-sm flex items-center justify-center cursor-pointer hover:scale-110 transition-transform" 
+             (click)="toggleCompare($event)">
+          <input type="checkbox" [checked]="isSelected()" [disabled]="!canSelect()" 
+            class="w-4 h-4 rounded cursor-pointer accent-es-primary border-gray-300"
+            (click)="$event.preventDefault()" />
+        </div>
+      }
       <!-- Save heart -->
       <button type="button" (click)="toggleSave($event)"
         class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/95 shadow-sm border-none cursor-pointer flex items-center justify-center hover:scale-110 transition-transform"
