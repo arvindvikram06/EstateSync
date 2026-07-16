@@ -25,4 +25,4 @@ jobs:
           app_location: /frontend/estatesync-ui
           api_location: ''
           output_location: dist/estatesync-ui/browser
-          app_build_command: npm run build -- --configuration production && cp dist/estatesync-ui/browser/index.csr.html dist/estatesync-ui/browser/index.html
+          app_build_command: npm run build -- --configuration production
