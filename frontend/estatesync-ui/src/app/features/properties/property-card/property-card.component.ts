@@ -7,6 +7,7 @@ import { PropertySummaryResponse } from '../../../core/models/property.model';
 import { PropertyService } from '@core/services/property/property.service';
 import { SavedPropertyService } from '@core/services/property/saved-property.service';
 import { AuthService } from '@core/services/auth/auth.service';
+import { ComparisonService } from '@core/services/property/comparison.service';
 import { formatCurrency } from '../../../core/utils/format.utils';
 
 const GRADIENTS = [
@@ -35,6 +36,7 @@ function hashCode(s: string): number {
 export class PropertyCardComponent implements OnInit {
   readonly property = input.required<PropertySummaryResponse>();
   readonly propertyService = inject(PropertyService);
+  readonly comparisonService = inject(ComparisonService);
   private readonly savedPropertyService = inject(SavedPropertyService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -46,6 +48,9 @@ export class PropertyCardComponent implements OnInit {
   readonly isSaved = computed(() =>
     this.savedPropertyService.savedIds().has(this.property().propertyId)
   );
+
+  readonly isSelected = computed(() => this.comparisonService.isSelected(this.property().propertyId));
+  readonly canSelect = computed(() => !this.comparisonService.isFull() || this.isSelected());
 
   readonly formatRent = formatCurrency;
 
@@ -61,5 +66,11 @@ export class PropertyCardComponent implements OnInit {
       return;
     }
     this.savedPropertyService.toggle(this.property().propertyId);
+  }
+
+  toggleCompare(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.comparisonService.toggleProperty(this.property());
   }
 }

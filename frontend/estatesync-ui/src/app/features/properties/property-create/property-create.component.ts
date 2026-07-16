@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocomplete, MatAutocompleteTrigger } from '@angular/material/autocomplete';
-import { MatOption } from '@angular/material/core';
+import { MatOption, ErrorStateMatcher } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -84,6 +84,13 @@ export class PropertyCreateComponent implements OnInit {
   readonly stateCode    = signal('');
   readonly stateDisplay = signal('');
   readonly cityDisplay  = signal('');
+
+  readonly stateErrorMatcher: ErrorStateMatcher = {
+    isErrorState: () => this.locationForm.controls.state.invalid && this.locationForm.controls.state.touched,
+  };
+  readonly cityErrorMatcher: ErrorStateMatcher = {
+    isErrorState: () => this.locationForm.controls.city.invalid && this.locationForm.controls.city.touched,
+  };
 
   readonly locationForm = this.fb.nonNullable.group({
     state:       ['', Validators.required],
@@ -379,12 +386,14 @@ export class PropertyCreateComponent implements OnInit {
   exitWithoutSaving(): void {
     const property = this.createdProperty();
     this.clearWizardStorage();
+    const nav = () => this.router.navigate(['/owner/dashboard'], { queryParams: { tab: 'properties' } });
     if (property) {
-      this.propSvc.deleteProperty(property.propertyId)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe();
+      // Navigate inside the callback — navigating first destroys the component and
+      // takeUntilDestroyed would cancel the in-flight DELETE before it reaches the server.
+      this.propSvc.deleteProperty(property.propertyId).subscribe({ next: nav, error: nav });
+    } else {
+      nav();
     }
-    this.router.navigate(['/owner/dashboard'], { queryParams: { tab: 'properties' } });
   }
 
   startOver(): void {
@@ -558,9 +567,17 @@ export class PropertyCreateComponent implements OnInit {
     }
   }
 
-  onCitySelected(city: ICity): void {
-    this.cityDisplay.set(city.name);
-    this.locationForm.controls.city.setValue(city.name);
+  onCitySelected(cityName: string): void {
+    this.cityDisplay.set(cityName);
+    this.locationForm.controls.city.setValue(cityName);
+  }
+
+  onStateBlur(): void {
+    this.locationForm.controls.state.markAsTouched();
+  }
+
+  onCityBlur(): void {
+    this.locationForm.controls.city.markAsTouched();
   }
 
   // ── Step 3 ────────────────────────────────────────────────────────

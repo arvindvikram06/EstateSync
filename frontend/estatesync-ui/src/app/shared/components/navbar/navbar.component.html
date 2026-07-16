@@ -141,6 +141,10 @@
       }
     </button>
 
+    <a class="mobile-drawer__link" routerLink="/profile" (click)="closeMobileMenu()">
+      <mat-icon>person</mat-icon> My profile
+    </a>
+
     @if (isOwner()) {
       <a class="mobile-drawer__link" routerLinkActive="mobile-drawer__link--active" routerLink="/owner/dashboard" (click)="closeMobileMenu()">
         <mat-icon>home_work</mat-icon> Owner Dashboard

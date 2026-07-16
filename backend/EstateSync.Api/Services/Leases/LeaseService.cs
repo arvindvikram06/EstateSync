@@ -9,6 +9,7 @@ using EstateSync.Api.Common;
 using EstateSync.Api.DTOs.Leases;
 using EstateSync.Api.Exceptions;
 using EstateSync.Api.Interfaces.Services.Leases;
+using EstateSync.Api.Interfaces.Services.Shared;
 using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Interfaces.Services.Storage;
 using EstateSync.Api.Mappers;
@@ -33,6 +34,7 @@ public class LeaseService : ILeaseService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IUserRepository _userRepo;
     private readonly ILeaseVacateNoticeRepository _vacateNoticeRepo;
+    private readonly IUrlResolverService _urlResolver;
 
     public LeaseService(
         ILeaseRepository leaseRepo,
@@ -48,7 +50,8 @@ public class LeaseService : ILeaseService
         ILeaseDocumentService leaseDocumentService,
         IHttpContextAccessor httpContextAccessor,
         IUserRepository userRepo,
-        ILeaseVacateNoticeRepository vacateNoticeRepo)
+        ILeaseVacateNoticeRepository vacateNoticeRepo,
+        IUrlResolverService urlResolver)
     {
         _leaseRepo = leaseRepo ?? throw new ArgumentNullException(nameof(leaseRepo));
         _applicationRepo = applicationRepo ?? throw new ArgumentNullException(nameof(applicationRepo));
@@ -64,6 +67,7 @@ public class LeaseService : ILeaseService
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
         _vacateNoticeRepo = vacateNoticeRepo ?? throw new ArgumentNullException(nameof(vacateNoticeRepo));
+        _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
     }
 
     public async Task<LeaseResponse> CreateLeaseAsync(CreateLeaseRequest request, Guid ownerId, CancellationToken ct)
@@ -140,7 +144,7 @@ public class LeaseService : ILeaseService
         }
 
         _logger.LogInformation("Lease {LeaseId} created and agreement PDF generated at {Url}", leaseId, pdfUrl);
-        return _mapper.MapToResponse(lease);
+        return await _urlResolver.ResolveAsync(_mapper.MapToResponse(lease), ct);
     }
 
     public async Task<LeaseResponse> UpdateLeaseAsync(Guid leaseId, UpdateLeaseRequest request, Guid ownerId, CancellationToken ct)
@@ -166,7 +170,7 @@ public class LeaseService : ILeaseService
 
         await _unitOfWork.SaveChangesAsync(ct);
         _logger.LogInformation("Lease {LeaseId} updated by owner {OwnerId}", leaseId, ownerId);
-        return _mapper.MapToResponse(lease);
+        return await _urlResolver.ResolveAsync(_mapper.MapToResponse(lease), ct);
     }
 
     public async Task<LeaseResponse> SignLeaseAsync(Guid leaseId, SignLeaseRequest request, Guid userId, CancellationToken ct)
@@ -232,7 +236,7 @@ public class LeaseService : ILeaseService
         }
 
         await _unitOfWork.SaveChangesAsync(ct);
-        return _mapper.MapToResponse(lease);
+        return await _urlResolver.ResolveAsync(_mapper.MapToResponse(lease), ct);
     }
 
     public async Task VoidLeaseAsync(Guid leaseId, string? reason, Guid ownerId, CancellationToken ct)
@@ -315,7 +319,7 @@ public class LeaseService : ILeaseService
     public async Task<LeaseResponse> GetLeaseByIdAsync(Guid leaseId, Guid userId, bool isAdmin, CancellationToken ct)
     {
         var lease = await GetAuthorizedLeaseAsync(leaseId, userId, isAdmin);
-        return _mapper.MapToResponse(lease);
+        return await _urlResolver.ResolveAsync(_mapper.MapToResponse(lease), ct);
     }
 
     public async Task<List<LeaseBillDetailResponse>> GetLeaseBillsAsync(Guid leaseId, Guid userId, bool isAdmin, CancellationToken ct)
@@ -374,10 +378,11 @@ public class LeaseService : ILeaseService
     public async Task<PagedResponse<LeaseResponse>> GetTenantLeasesAsync(Guid tenantId, int page, int limit, CancellationToken ct)
     {
         var paged = await _leaseRepo.GetByTenantIdPagedAsync(tenantId, page, limit);
+        var data = await Task.WhenAll(paged.Items.Select(l => _urlResolver.ResolveAsync(_mapper.MapToResponse(l), ct)));
         return new PagedResponse<LeaseResponse>
         {
             Success = true,
-            Data = paged.Items.Select(_mapper.MapToResponse),
+            Data = data,
             Page = page,
             Limit = limit,
             Total = paged.Total
@@ -387,10 +392,11 @@ public class LeaseService : ILeaseService
     public async Task<PagedResponse<LeaseResponse>> GetOwnerLeasesAsync(Guid ownerId, int page, int limit, CancellationToken ct)
     {
         var paged = await _leaseRepo.GetByOwnerIdPagedAsync(ownerId, page, limit);
+        var data = await Task.WhenAll(paged.Items.Select(l => _urlResolver.ResolveAsync(_mapper.MapToResponse(l), ct)));
         return new PagedResponse<LeaseResponse>
         {
             Success = true,
-            Data = paged.Items.Select(_mapper.MapToResponse),
+            Data = data,
             Page = page,
             Limit = limit,
             Total = paged.Total
@@ -400,10 +406,11 @@ public class LeaseService : ILeaseService
     public async Task<PagedResponse<LeaseResponse>> GetAllLeasesAsync(int page, int limit, CancellationToken ct)
     {
         var paged = await _leaseRepo.GetAllPagedAsync(page, limit);
+        var data = await Task.WhenAll(paged.Items.Select(l => _urlResolver.ResolveAsync(_mapper.MapToResponse(l), ct)));
         return new PagedResponse<LeaseResponse>
         {
             Success = true,
-            Data = paged.Items.Select(_mapper.MapToResponse),
+            Data = data,
             Page = page,
             Limit = limit,
             Total = paged.Total

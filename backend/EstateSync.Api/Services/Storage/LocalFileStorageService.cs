@@ -83,5 +83,9 @@ public class LocalFileStorageService : IFileStorageService
 
     // Local dev: the stored path is already a usable relative URL (/uploads/...).
     public Task<string> GetFileUrlAsync(string blobPath, CancellationToken ct = default)
-        => Task.FromResult(blobPath);
+    {
+        if (string.IsNullOrEmpty(blobPath)) return Task.FromResult(string.Empty);
+        if (blobPath.StartsWith("https://") || blobPath.StartsWith("http://")) return Task.FromResult(blobPath);
+        return Task.FromResult(blobPath);
+    }
 }

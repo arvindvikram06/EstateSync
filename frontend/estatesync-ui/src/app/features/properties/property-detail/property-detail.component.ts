@@ -7,8 +7,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { PropertyService } from '@core/services/property/property.service';
+import { SavedPropertyService } from '@core/services/property/saved-property.service';
 import { AuthService } from '@core/services/auth/auth.service';
 import { PropertyDetailResponse } from '../../../core/models/property.model';
 import { formatCurrency } from '../../../core/utils/format.utils';
@@ -28,6 +30,7 @@ import * as L from 'leaflet';
     MatIconModule,
     MatProgressSpinnerModule,
     PropertyScheduleVisitComponent,
+    MatSnackBarModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './property-detail.component.html',
@@ -36,12 +39,14 @@ import * as L from 'leaflet';
 export class PropertyDetailComponent implements OnInit {
   @ViewChild('mapEl') mapElRef!: ElementRef<HTMLDivElement>;
 
-  private readonly route       = inject(ActivatedRoute);
-  private readonly router      = inject(Router);
-  private readonly propService = inject(PropertyService);
-  private readonly authService = inject(AuthService);
-  private readonly dialog      = inject(MatDialog);
-  private readonly destroyRef  = inject(DestroyRef);
+  private readonly route            = inject(ActivatedRoute);
+  private readonly router           = inject(Router);
+  private readonly propService      = inject(PropertyService);
+  private readonly savedPropService = inject(SavedPropertyService);
+  private readonly authService      = inject(AuthService);
+  private readonly dialog           = inject(MatDialog);
+  private readonly snack            = inject(MatSnackBar);
+  private readonly destroyRef       = inject(DestroyRef);
 
   readonly property    = signal<PropertyDetailResponse | null>(null);
   readonly loading     = signal(true);
@@ -52,6 +57,11 @@ export class PropertyDetailComponent implements OnInit {
   readonly user       = this.authService.currentUser;
   readonly isLoggedIn = this.authService.isLoggedIn;
   readonly isOwner    = this.authService.isOwner;
+
+  readonly isSaved = computed(() => {
+    const p = this.property();
+    return !!p && this.savedPropService.savedIds().has(p.propertyId);
+  });
 
   private map?: L.Map;
 
@@ -79,6 +89,8 @@ export class PropertyDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (this.authService.isLoggedIn()) this.savedPropService.ensureIdsLoaded();
+
     const id = this.route.snapshot.paramMap.get('id')!;
     this.propService.getProperty(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -86,6 +98,23 @@ export class PropertyDetailComponent implements OnInit {
         next: res => { this.property.set(res.data); this.loading.set(false); },
         error: () => { this.error.set('Property not found.'); this.loading.set(false); }
       });
+  }
+
+  toggleSave(): void {
+    if (!this.authService.isLoggedIn()) { this.router.navigate(['/auth/login']); return; }
+    const p = this.property();
+    if (p) this.savedPropService.toggle(p.propertyId);
+  }
+
+  share(): void {
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: this.property()?.title ?? 'Property', url });
+    } else {
+      navigator.clipboard.writeText(url).then(() =>
+        this.snack.open('Link copied to clipboard', 'OK', { duration: 2500 })
+      );
+    }
   }
 
 imageUrl(path: string | null): string {

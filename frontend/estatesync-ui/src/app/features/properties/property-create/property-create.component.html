@@ -78,9 +78,11 @@
             <mat-label>State</mat-label>
             <mat-icon matPrefix>map</mat-icon>
             <input matInput
+              [errorStateMatcher]="stateErrorMatcher"
               [matAutocomplete]="stateAuto"
               [value]="stateDisplay()"
               (input)="onStateInput($any($event.target).value)"
+              (blur)="onStateBlur()"
               placeholder="Type to search…" />
             <mat-autocomplete #stateAuto (optionSelected)="onStateSelected($event.option.value)">
               @for (s of filteredStates(); track s.isoCode) {
@@ -88,7 +90,7 @@
               }
             </mat-autocomplete>
             @if (locationForm.controls.state.invalid && locationForm.controls.state.touched) {
-              <mat-error>State is required</mat-error>
+              <mat-error>{{ stateDisplay() ? 'Choose an option from the list' : 'State is required' }}</mat-error>
             }
           </mat-form-field>
 
@@ -96,18 +98,20 @@
             <mat-label>City</mat-label>
             <mat-icon matPrefix>{{ stateCode() ? 'location_city' : 'lock' }}</mat-icon>
             <input matInput
+              [errorStateMatcher]="cityErrorMatcher"
               [matAutocomplete]="cityAuto"
               [value]="cityDisplay()"
               [disabled]="!stateCode()"
               (input)="onCityInput($any($event.target).value)"
+              (blur)="onCityBlur()"
               [placeholder]="stateCode() ? 'Type to search…' : 'Select a state first'" />
             <mat-autocomplete #cityAuto (optionSelected)="onCitySelected($event.option.value)">
               @for (c of filteredCities(); track c.name) {
-                <mat-option [value]="c">{{ c.name }}</mat-option>
+                <mat-option [value]="c.name">{{ c.name }}</mat-option>
               }
             </mat-autocomplete>
             @if (locationForm.controls.city.invalid && locationForm.controls.city.touched) {
-              <mat-error>City is required</mat-error>
+              <mat-error>{{ cityDisplay() ? 'Choose an option from the list' : 'City is required' }}</mat-error>
             }
           </mat-form-field>
 

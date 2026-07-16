@@ -7,9 +7,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { PropertyService } from '@core/services/property/property.service';
+import { ComparisonService } from '@core/services/property/comparison.service';
 import { PropertySummaryResponse, PropertyFilters } from '../../core/models/property.model';
 import { PropertyCardComponent } from './property-card/property-card.component';
+import { PropertyCompareDialogComponent } from './property-compare-dialog/property-compare-dialog.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 
 @Component({
@@ -27,6 +30,8 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 })
 export class PropertiesComponent implements OnInit {
   private readonly propertyService = inject(PropertyService);
+  readonly comparisonService = inject(ComparisonService);
+  private readonly dialog = inject(MatDialog);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly loadTrigger$ = new Subject<void>();
@@ -136,5 +141,17 @@ export class PropertiesComponent implements OnInit {
   onPageChange(e: PageEvent): void {
     this.page.set(e.pageIndex + 1);
     this.loadProperties();
+  }
+
+  openComparison(): void {
+    const selected = this.comparisonService.selectedProperties();
+    if (selected.length < 2) return;
+    this.dialog.open(PropertyCompareDialogComponent, {
+      data: { properties: selected },
+      width: '95vw',
+      maxWidth: '1000px',
+      maxHeight: '90vh',
+      panelClass: 'compare-dialog-panel'
+    });
   }
 }
