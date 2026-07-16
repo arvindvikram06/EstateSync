@@ -63,8 +63,23 @@ public class RentalApplicationService : IRentalApplicationService
 
         await ValidateCreateApplicationAsync(propertyId, tenant, property, tenantId, request.ExpectedMoveInDate);
 
-        var application = CreateApplicationEntity(propertyId, tenantId, request);
-        await _rentalAppRepo.AddAsync(application);
+        var existing = await _rentalAppRepo.GetRejectedOrWithdrawnAsync(propertyId, tenantId);
+        RentalApplication application;
+        if (existing != null)
+        {
+            existing.Message = request.Message;
+            existing.ExpectedMoveInDate = request.ExpectedMoveInDate;
+            existing.DurationMonths = request.DurationMonths;
+            existing.CommuteDistance = request.CommuteDistance;
+            existing.Status = ApplicationStatus.Pending;
+            existing.CreatedAt = DateTime.UtcNow;
+            application = existing;
+        }
+        else
+        {
+            application = CreateApplicationEntity(propertyId, tenantId, request);
+            await _rentalAppRepo.AddAsync(application);
+        }
 
         await SendApplicationReceivedNotificationAsync(property.OwnerId, application.ApplicationId, property.Title);
         await _unitOfWork.SaveChangesAsync(ct);

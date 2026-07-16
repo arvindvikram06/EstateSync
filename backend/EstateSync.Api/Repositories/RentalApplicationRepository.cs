@@ -26,7 +26,19 @@ public class RentalApplicationRepository : BaseRepository<RentalApplication>, IR
     public async Task<bool> HasTenantAppliedAsync(Guid propertyId, Guid tenantId)
     {
         return await _dbSet
-            .AnyAsync(ra => ra.PropertyId == propertyId && ra.TenantId == tenantId);
+            .AnyAsync(ra => ra.PropertyId == propertyId
+                         && ra.TenantId == tenantId
+                         && ra.Status != ApplicationStatus.Rejected
+                         && ra.Status != ApplicationStatus.Withdrawn);
+    }
+
+    public async Task<RentalApplication?> GetRejectedOrWithdrawnAsync(Guid propertyId, Guid tenantId)
+    {
+        return await _dbSet
+            .FirstOrDefaultAsync(ra => ra.PropertyId == propertyId
+                                    && ra.TenantId == tenantId
+                                    && (ra.Status == ApplicationStatus.Rejected
+                                     || ra.Status == ApplicationStatus.Withdrawn));
     }
 
     public async Task<RentalApplication?> GetWithDetailsByIdAsync(Guid applicationId)

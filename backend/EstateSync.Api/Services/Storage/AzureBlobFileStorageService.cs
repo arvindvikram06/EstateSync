@@ -20,7 +20,6 @@ public class AzureBlobFileStorageService : IFileStorageService
     private const string PUBLIC_CONTAINER = "estatesync-public";
     private const string PRIVATE_CONTAINER = "estatesync-private";
 
-    // Subfolders that go into the private container (KYC docs, lease PDFs, signatures)
     private static readonly string[] PRIVATE_SUBFOLDERS = ["kyc", "leases", "signatures", "documents"];
 
     private readonly BlobServiceClient _blobServiceClient;

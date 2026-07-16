@@ -53,16 +53,20 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            // Token-based fuzzy match: every word must appear somewhere in
-            // Title/City/State, in any order ("delhi new" finds "New Delhi").
             var tokens = search.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             foreach (var token in tokens)
             {
                 var pattern = $"%{token}%";
+                // Also match when spaces are stripped from both sides ("tamilnadu" → "Tamil Nadu")
+                var strippedToken = token.Replace(" ", "");
+                var strippedPattern = $"%{strippedToken}%";
                 query = query.Where(p =>
                     EF.Functions.ILike(p.Title, pattern) ||
                     EF.Functions.ILike(p.City, pattern) ||
-                    EF.Functions.ILike(p.State, pattern));
+                    EF.Functions.ILike(p.State, pattern) ||
+                    EF.Functions.ILike(p.Title.Replace(" ", ""), strippedPattern) ||
+                    EF.Functions.ILike(p.City.Replace(" ", ""), strippedPattern) ||
+                    EF.Functions.ILike(p.State.Replace(" ", ""), strippedPattern));
             }
         }
 
@@ -76,7 +80,7 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
             query = query.Where(p => p.MonthlyRent <= maxRent.Value);
 
         if (bedrooms.HasValue)
-            query = query.Where(p => p.Bedrooms == bedrooms.Value);
+            query = query.Where(p => p.Bedrooms >= bedrooms.Value);
 
         if (!string.IsNullOrEmpty(propertyType))
         {

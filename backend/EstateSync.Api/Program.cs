@@ -308,7 +308,14 @@ Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 
 // Configure the HTTP request pipeline.
-app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging(options =>
+{
+    // Drop CORS preflight noise; keep errors at Error level
+    options.GetLevel = (httpContext, _, ex) =>
+        ex != null || httpContext.Response.StatusCode >= 500 ? Serilog.Events.LogEventLevel.Error
+        : HttpMethods.IsOptions(httpContext.Request.Method) ? Serilog.Events.LogEventLevel.Verbose
+        : Serilog.Events.LogEventLevel.Information;
+});
 
 app.UseExceptionHandler();
 
