@@ -31,6 +31,8 @@ using EstateSync.Api.Interfaces.Services.Payments;
 using EstateSync.Api.Services.Payments;
 using EstateSync.Api.Interfaces.Services.Complaints;
 using EstateSync.Api.Services.Complaints;
+using EstateSync.Api.Interfaces.Services.SiteVisits;
+using EstateSync.Api.Services.SiteVisits;
 using EstateSync.Api.Interfaces.Services.Users;
 using EstateSync.Api.Services.Users;
 using EstateSync.Api.Interfaces.Services.Admin;
@@ -153,6 +155,7 @@ builder.Services.AddScoped<IRentalApplicationRepository, RentalApplicationReposi
 builder.Services.AddScoped<IComplaintRepository, ComplaintRepository>();
 builder.Services.AddScoped<ILeaseVacateNoticeRepository, LeaseVacateNoticeRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<ISiteVisitRepository, SiteVisitRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IKycVerificationRepository, KycVerificationRepository>();
@@ -176,6 +179,7 @@ builder.Services.AddSingleton<EstateSync.Api.Mappers.RentalApplicationMapper>();
 builder.Services.AddSingleton<EstateSync.Api.Mappers.LeaseMapper>();
 builder.Services.AddSingleton<EstateSync.Api.Mappers.AuditLogMapper>();
 builder.Services.AddSingleton<EstateSync.Api.Mappers.ComplaintMapper>();
+builder.Services.AddSingleton<EstateSync.Api.Mappers.SiteVisitMapper>();
 
 // Register Services
 builder.Services.AddScoped<IPropertyService, PropertyService>();
@@ -199,6 +203,7 @@ builder.Services.AddScoped<IKycService, KycService>();
 builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
 builder.Services.AddScoped<IRentalApplicationService, RentalApplicationService>();
 builder.Services.AddScoped<ILeaseService, LeaseService>();
+builder.Services.AddScoped<ISiteVisitService, SiteVisitService>();
 builder.Services.AddScoped<ILeaseDocumentService, LeaseDocumentService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IStripeConnectedAccountService, StripeConnectedAccountService>();

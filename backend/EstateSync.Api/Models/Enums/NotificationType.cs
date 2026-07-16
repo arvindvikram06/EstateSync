@@ -30,5 +30,9 @@ public enum NotificationType
     LeaseRenewalRejected,
     VacateNoticeSubmitted,
     VacateNoticeAccepted,
-    VacateNoticeRejected
+    VacateNoticeRejected,
+    SiteVisitRequested,
+    SiteVisitApproved,
+    SiteVisitDeclined,
+    SiteVisitCancelled
 }

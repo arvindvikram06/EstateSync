@@ -1,0 +1,9 @@
+/* Local component styling */
+.mat-spinner {
+  display: inline-block;
+}
+
+button[mat-flat-button] {
+  padding-left: 16px;
+  padding-right: 16px;
+}

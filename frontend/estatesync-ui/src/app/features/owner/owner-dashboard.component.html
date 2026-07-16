@@ -20,6 +20,9 @@
   @if (activeTab() === 'complaints') {
     <app-owner-complaints-tab />
   }
+  @if (activeTab() === 'visits') {
+    <app-visits-tab [isOwnerView]="true" />
+  }
   @if (activeTab() === 'earnings') {
     <app-owner-earnings-tab />
   }

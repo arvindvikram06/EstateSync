@@ -8,6 +8,7 @@ import { OwnerApplicationsTabComponent } from './tabs/owner-applications-tab/own
 import { OwnerLeasesTabComponent } from './tabs/owner-leases-tab/owner-leases-tab.component';
 import { OwnerComplaintsTabComponent } from './tabs/owner-complaints-tab/owner-complaints-tab.component';
 import { OwnerEarningsTabComponent } from './tabs/owner-earnings-tab/owner-earnings-tab.component';
+import { VisitsTabComponent } from '../dashboard/tabs/visits-tab/visits-tab.component';
 
 @Component({
   selector: 'app-owner-dashboard',
@@ -20,6 +21,7 @@ import { OwnerEarningsTabComponent } from './tabs/owner-earnings-tab/owner-earni
     OwnerLeasesTabComponent,
     OwnerComplaintsTabComponent,
     OwnerEarningsTabComponent,
+    VisitsTabComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './owner-dashboard.component.html',
@@ -36,6 +38,7 @@ export class OwnerDashboardComponent {
     { id: 'applications', label: 'Applications',  icon: 'mail' },
     { id: 'leases',       label: 'Leases',        icon: 'article' },
     { id: 'complaints',   label: 'Complaints',    icon: 'report_problem' },
+    { id: 'visits',       label: 'Visits',        icon: 'calendar_month' },
     { id: 'earnings',     label: 'Earnings',      icon: 'payments' },
   ]);
 

@@ -1141,6 +1141,54 @@ namespace EstateSync.Api.Migrations
                     b.ToTable("SavedProperties", (string)null);
                 });
 
+            modelBuilder.Entity("EstateSync.Api.Models.SiteVisit", b =>
+                {
+                    b.Property<Guid>("SiteVisitId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("OwnerNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("PropertyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("VisitDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<TimeOnly>("VisitTime")
+                        .HasColumnType("time without time zone");
+
+                    b.HasKey("SiteVisitId")
+                        .HasName("PK_SiteVisitId");
+
+                    b.HasIndex("PropertyId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("SiteVisits", (string)null);
+                });
+
             modelBuilder.Entity("EstateSync.Api.Models.StripeConnectedAccount", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1659,6 +1707,25 @@ namespace EstateSync.Api.Migrations
                     b.Navigation("Property");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EstateSync.Api.Models.SiteVisit", b =>
+                {
+                    b.HasOne("EstateSync.Api.Models.Property", "Property")
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EstateSync.Api.Models.User", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Property");
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.StripeConnectedAccount", b =>

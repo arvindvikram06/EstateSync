@@ -1,0 +1,20 @@
+.schedule-card {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.active-visit-box {
+  transition: all 0.2s ease-in-out;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(48%) sepia(13%) saturate(3207%) hue-rotate(185deg) brightness(95%) contrast(80%);
+}
+
+::ng-deep .schedule-card .mat-mdc-form-field {
+  width: 100%;
+}
+
+::ng-deep .schedule-card .mat-mdc-form-field-subscript-wrapper {
+  display: none !important;
+}

@@ -13,6 +13,8 @@ const STATUS_CLASS: Record<string, string> = {
   resolved:             'es-badge--resolved',
   verified:             'es-badge--approved',
   rejected:             'es-badge--rejected',
+  declined:             'es-badge--rejected',
+  cancelled:            'es-badge--closed',
   voided:               'es-badge--rejected',
   failed:               'es-badge--failed',
   partialsigned:        'es-badge--partial',

@@ -1,0 +1,108 @@
+@if (loading()) {
+  <div class="py-12">
+    <app-skeleton-loader [rows]="4" />
+  </div>
+} @else if (visits().length === 0) {
+  @if (isOwnerView()) {
+    <app-empty-state 
+      icon="calendar_month" 
+      title="No visit requests received" 
+      subtitle="Tenants will schedule visits here once they are interested in your properties." />
+  } @else {
+    <app-empty-state 
+      icon="calendar_month" 
+      title="No visits scheduled yet" 
+      subtitle="Find properties and book a site visit from their detail page to see them in person!" />
+  }
+} @else {
+  <div class="flex items-center justify-between mb-6">
+    <h3 class="text-sm font-semibold text-es-muted uppercase tracking-wider">
+      {{ isOwnerView() ? 'Incoming Visit Requests' : 'My Scheduled Visits' }}
+    </h3>
+  </div>
+
+  <div class="grid gap-4">
+    @for (visit of visits(); track visit.siteVisitId) {
+      <div class="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-[0_4px_16px_rgba(0,0,0,0.02)] transition-shadow duration-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          
+          <!-- Property & Visit details -->
+          <div class="flex-1">
+            <div class="flex items-center gap-3 mb-2 flex-wrap">
+              <h4 class="font-bold text-es-text text-base m-0 leading-tight">
+                {{ visit.propertyTitle }}
+              </h4>
+              <app-status-badge [status]="visit.status" />
+            </div>
+
+            <div class="flex flex-col gap-1.5 text-xs text-es-muted">
+              <div class="flex items-center gap-1.5">
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-es-faint">event</mat-icon>
+                <span>Date: <strong>{{ visit.visitDate | date:'yyyy-MM-dd' }}</strong></span>
+                <span class="text-gray-200">|</span>
+                <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-es-faint">schedule</mat-icon>
+                <span>Time: <strong>{{ visit.visitTime }}</strong></span>
+              </div>
+
+              @if (isOwnerView()) {
+                <div class="flex items-center gap-1.5 mt-0.5">
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-es-faint">person</mat-icon>
+                  <span>Tenant: <strong>{{ visit.tenantName }}</strong></span>
+                </div>
+              } @else {
+                <div class="flex items-center gap-1.5 mt-0.5">
+                  <mat-icon class="!text-[15px] !w-[15px] !h-[15px] text-es-faint">assignment_ind</mat-icon>
+                  <span>Your Role: <strong>Visitor</strong></span>
+                </div>
+              }
+            </div>
+
+            <!-- Notes Section -->
+            @if (visit.ownerNotes) {
+              <div class="mt-3 bg-gray-50 border border-gray-100/80 rounded-lg p-3 text-xs text-es-muted leading-relaxed">
+                <strong class="text-[10px] uppercase text-es-faint tracking-wider block mb-1">
+                  {{ visit.status === 'Declined' ? 'Decline Reason' : 'Owner Notes' }}
+                </strong>
+                {{ visit.ownerNotes }}
+              </div>
+            }
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-2 shrink-0 sm:self-center">
+            @if (isOwnerView()) {
+              @if (visit.status === 'Pending') {
+                <button mat-flat-button color="primary" 
+                        [disabled]="actionRunningId() !== null" 
+                        (click)="approveVisit(visit)"
+                        class="!rounded-lg !text-xs bg-es-primary text-white hover:bg-es-primary/95 !h-8.5 shadow-sm">
+                  Confirm
+                </button>
+                <button mat-stroked-button color="warn" 
+                        [disabled]="actionRunningId() !== null" 
+                        (click)="declineVisit(visit)"
+                        class="!rounded-lg !text-xs !h-8.5">
+                  Decline
+                </button>
+              }
+            } @else {
+              @if (visit.status === 'Pending' || visit.status === 'Approved') {
+                <button mat-button color="warn" 
+                        [disabled]="actionRunningId() !== null" 
+                        (click)="cancelVisit(visit)"
+                        class="!rounded-lg !text-xs !h-8.5">
+                  Cancel Request
+                </button>
+              }
+            }
+            
+            @if (actionRunningId() === visit.siteVisitId) {
+              <mat-spinner diameter="18" class="ml-2"></mat-spinner>
+            }
+          </div>
+
+        </div>
+      </div>
+    }
+  </div>
+}

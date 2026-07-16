@@ -14,6 +14,7 @@ import { PropertyDetailResponse } from '../../../core/models/property.model';
 import { formatCurrency } from '../../../core/utils/format.utils';
 import { ApplyDialogComponent } from './apply-dialog.component';
 import { ImageGalleryDialogComponent } from './image-gallery-dialog.component';
+import { PropertyScheduleVisitComponent } from './property-schedule-visit.component';
 import * as L from 'leaflet';
 
 
@@ -26,6 +27,7 @@ import * as L from 'leaflet';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    PropertyScheduleVisitComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './property-detail.component.html',

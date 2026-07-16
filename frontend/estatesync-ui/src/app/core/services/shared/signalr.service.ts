@@ -51,6 +51,12 @@ export class SignalRService implements OnDestroy {
         case 'PropertyRejected':
           this.propertyService.triggerRefreshMyProperties();
           break;
+        case 'SiteVisitRequested':
+        case 'SiteVisitApproved':
+        case 'SiteVisitDeclined':
+        case 'SiteVisitCancelled':
+          // Supported types that trigger notification badge/popup
+          break;
         default:
           if (notification.entityType === 'Property' && (notification.title?.includes('Approved') || notification.title?.includes('Rejected'))) {
             this.propertyService.triggerRefreshMyProperties();
