@@ -3,6 +3,7 @@ import {
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { debounceTime } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -65,7 +66,7 @@ export class AdminKycTabComponent implements OnInit {
       this.page.set(1);
       this.load();
     });
-    this.searchControl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(v => {
+    this.searchControl.valueChanges.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef)).subscribe(v => {
       this.searchTerm.set(v ?? '');
     });
   }

@@ -4,13 +4,14 @@ import {
 import { SlicePipe, TitleCasePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { debounceTime } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { formatCurrency } from '../../../../core/utils/format.utils';
+import { formatCurrency, formatUsd } from '../../../../core/utils/format.utils';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { AdminService } from '@core/services/admin/admin.service';
@@ -103,26 +104,30 @@ export class AdminFinancialTabComponent implements OnInit {
   readonly limit = 20;
 
   ngOnInit(): void {
-    this.loadSummary();
-    this.loadSettlements();
-    this.loadAccounts();
-    this.loadPayments();
+    this.loadAll();
 
     this.settlementStatus.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.settlementPage.set(1); this.loadSettlements();
     });
-    this.settlementSearch.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(v => {
+    this.settlementSearch.valueChanges.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef)).subscribe(v => {
       this.settlementQ.set(v ?? '');
     });
-    this.accountSearch.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(v => {
+    this.accountSearch.valueChanges.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef)).subscribe(v => {
       this.accountQ.set(v ?? '');
     });
     this.paymentStatus.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.paymentPage.set(1); this.loadPayments();
     });
-    this.paymentSearch.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(v => {
+    this.paymentSearch.valueChanges.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef)).subscribe(v => {
       this.paymentQ.set(v ?? '');
     });
+  }
+
+  loadAll(): void {
+    this.loadSummary();
+    this.loadSettlements();
+    this.loadAccounts();
+    this.loadPayments();
   }
 
   loadSummary(): void {
@@ -194,7 +199,8 @@ export class AdminFinancialTabComponent implements OnInit {
       });
   }
 
-  readonly fmt = formatCurrency;
+  readonly fmt    = formatUsd;
+  readonly fmtInr = formatCurrency;
 
   settlementPages = computed(() => Math.ceil(this.settlementTotal() / this.limit));
   accountPages    = computed(() => Math.ceil(this.accountTotal() / this.limit));

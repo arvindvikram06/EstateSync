@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, catchError, switchMap, throwError, map, finalize, shareReplay } from 'rxjs';
 import { AuthService } from '@core/services/auth/auth.service';
+import { TokenService } from '@core/services/auth/token.service';
 import { ErrorHandlerService } from '@core/services/shared/error-handler.service';
 import { SKIP_AUTH_HANDLING } from './http-context.tokens';
 
@@ -12,6 +13,7 @@ let refresh$: Observable<string> | null = null;
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const authService = inject(AuthService);
+  const tokenService = inject(TokenService);
   const errorHandler = inject(ErrorHandlerService);
 
   return next(req).pipe(
@@ -30,7 +32,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         // All other 401s: try one silent refresh then retry the original request.
         if (!refresh$) {
           refresh$ = authService.refreshToken().pipe(
-            map(res => res.data.accessToken),
+            map(() => tokenService.getToken() ?? ''),
             finalize(() => { refresh$ = null; }),
             shareReplay({ bufferSize: 1, refCount: false })
           );

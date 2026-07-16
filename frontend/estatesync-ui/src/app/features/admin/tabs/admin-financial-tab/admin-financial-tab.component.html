@@ -1,5 +1,13 @@
-<h2 class="es-page-title">Financial Dashboard</h2>
-<p class="text-sm text-es-muted mb-6">Settlements, Stripe accounts, and payment ledger.</p>
+<div class="flex items-start justify-between">
+  <div>
+    <h2 class="es-page-title">Financial Dashboard</h2>
+    <p class="text-sm text-es-muted mb-6">Settlements, Stripe accounts, and payment ledger.</p>
+  </div>
+  <button mat-icon-button aria-label="Refresh financial data"
+    [disabled]="summaryLoading()" (click)="loadAll()">
+    <mat-icon>refresh</mat-icon>
+  </button>
+</div>
 
 <!-- ── Summary cards ──────────────────────────────────────────────────────── -->
 @if (summaryLoading()) {
@@ -14,25 +22,26 @@
   </div>
 } @else if (summary()) {
   <div class="grid grid-cols-2 md:grid-cols-3 gap-5 mb-8">
+    <!-- col 1 (positions 1 & 3 in 2-col): INR figures from DB -->
+    <div class="fin-card">
+      <div class="fin-icon stat-icon--sky"><mat-icon class="es-text-sky">currency_rupee</mat-icon></div>
+      <div class="fin-value">{{ fmtInr(summary()!.totalPlatformFeesCollected) }}</div>
+      <div class="fin-label">Platform fees collected</div>
+    </div>
     <div class="fin-card">
       <div class="fin-icon stat-icon--success"><mat-icon class="es-text-success">payments</mat-icon></div>
       <div class="fin-value">{{ fmt(summary()!.totalPaid) }}</div>
       <div class="fin-label">Total paid out</div>
     </div>
     <div class="fin-card">
+      <div class="fin-icon stat-icon--primary"><mat-icon class="es-text-primary">account_balance</mat-icon></div>
+      <div class="fin-value">{{ fmtInr(summary()!.totalPaymentsVolume) }}</div>
+      <div class="fin-label">Total payments volume</div>
+    </div>
+    <div class="fin-card">
       <div class="fin-icon stat-icon--warning"><mat-icon class="es-text-warning">schedule</mat-icon></div>
       <div class="fin-value">{{ fmt(summary()!.totalPending) }}</div>
       <div class="fin-label">Pending payouts</div>
-    </div>
-    <div class="fin-card">
-      <div class="fin-icon stat-icon--sky"><mat-icon class="es-text-sky">currency_rupee</mat-icon></div>
-      <div class="fin-value">{{ fmt(summary()!.totalPlatformFeesCollected) }}</div>
-      <div class="fin-label">Platform fees collected</div>
-    </div>
-    <div class="fin-card">
-      <div class="fin-icon stat-icon--primary"><mat-icon class="es-text-primary">account_balance</mat-icon></div>
-      <div class="fin-value">{{ fmt(summary()!.totalPaymentsVolume) }}</div>
-      <div class="fin-label">Total payments volume</div>
     </div>
     <div class="fin-card">
       <div class="fin-icon stat-icon--danger"><mat-icon class="es-text-danger">error_outline</mat-icon></div>
@@ -246,8 +255,8 @@
                     <div class="user-name">{{ p.paidByName }}</div>
                     <div class="es-text-xs">{{ p.paidByEmail }}</div>
                   </td>
-                  <td class="font-semibold text-es-text">{{ fmt(p.amount) }}</td>
-                  <td class="es-text-sm">{{ fmt(p.platformFee) }}</td>
+                  <td class="font-semibold text-es-text">{{ fmtInr(p.amount) }}</td>
+                  <td class="es-text-sm">{{ fmtInr(p.platformFee) }}</td>
                   <td><app-status-badge [status]="p.paymentStatus" /></td>
                   <td class="!text-[11px] font-mono !text-es-muted max-w-[180px] overflow-hidden text-ellipsis">{{ p.transactionId }}</td>
                   <td class="es-text-sm">{{ p.paidDate | slice:0:10 }}</td>
