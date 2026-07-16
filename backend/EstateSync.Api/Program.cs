@@ -254,7 +254,8 @@ builder.Services.AddHangfire(config => config
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
     .UsePostgreSqlStorage(o => o.UseNpgsqlConnection(
-        builder.Configuration.GetConnectionString("DefaultConnection")!)));
+        builder.Configuration.GetConnectionString("DefaultConnection")!))
+    .WithJobExpirationTimeout(TimeSpan.FromDays(3)));
 builder.Services.AddHangfireServer();
 
 builder.Services.AddScoped<LeaseExpiryJob>();
@@ -263,11 +264,11 @@ builder.Services.AddScoped<PenaltyJob>();
 builder.Services.AddScoped<PropertyStatusUpdateJob>();
 builder.Services.AddScoped<RefreshTokenCleanupJob>();
 builder.Services.AddScoped<VacateNoticeJob>();
+builder.Services.AddScoped<EstateSync.Api.Services.Email.EmailSenderJob>();
 
-// ── Email (SMTP via background queue) ─────────────────────────
+// ── Email (SMTP via Hangfire — durable, survives pod restarts) ──
 builder.Services.Configure<EstateSync.Api.Common.EmailSettings>(builder.Configuration.GetSection("Email"));
-builder.Services.AddSingleton<EstateSync.Api.Interfaces.Services.Email.IEmailQueue, EstateSync.Api.Services.Email.EmailQueue>();
-builder.Services.AddHostedService<EstateSync.Api.Services.Email.EmailDispatcher>();
+builder.Services.AddScoped<EstateSync.Api.Interfaces.Services.Email.IEmailQueue, EstateSync.Api.Services.Email.EmailQueue>();
 
 var app = builder.Build();
 
