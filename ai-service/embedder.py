@@ -1,15 +1,11 @@
-import voyageai
-from config import settings
+from sentence_transformers import SentenceTransformer
 
-_client = voyageai.Client(api_key=settings.VOYAGE_API_KEY)
-_MODEL = "voyage-3-lite"
+_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
 def embed_text(text: str) -> list[float]:
-    result = _client.embed([text], model=_MODEL, input_type="query")
-    return result.embeddings[0]
+    return _model.encode(text, normalize_embeddings=True).tolist()
 
 
 def embed_batch(texts: list[str]) -> list[list[float]]:
-    result = _client.embed(texts, model=_MODEL, input_type="document")
-    return result.embeddings
+    return _model.encode(texts, normalize_embeddings=True).tolist()

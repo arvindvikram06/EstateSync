@@ -1,5 +1,38 @@
 FAQ_CHUNKS: list[dict] = [
     {
+        "chunk_id": "platform-overview",
+        "topic": "What is EstateSync",
+        "content": (
+            "EstateSync is a rental property management platform that connects property owners and tenants. "
+            "Owners can list properties, manage rental applications, create leases, and receive rent payments. "
+            "Tenants can search for properties, apply for rentals, sign leases, and pay rent — all in one place. "
+            "To get started, create an account and complete your identity verification. "
+            "Owners need an additional step to connect their payment account before listing properties."
+        ),
+    },
+    {
+        "chunk_id": "property-search",
+        "topic": "Searching and Browsing Properties",
+        "content": (
+            "To find a property, go to the Properties page from the main navigation. "
+            "You can search by city or state using the search bar at the top. "
+            "Use the filters to narrow results by property type, number of bedrooms, and rent range. "
+            "Click on any property card to view full details including photos, description, amenities, and rent. "
+            "If you are interested in a property, you can save it, request a visit, or apply directly from the property detail page."
+        ),
+    },
+    {
+        "chunk_id": "property-visit",
+        "topic": "Requesting a Property Visit",
+        "content": (
+            "If you want to visit a property before applying, open the property detail page and click Request a Visit. "
+            "Your visit request will be sent to the property owner. "
+            "The owner will review your request and either approve or reject it. "
+            "You will receive a notification once the owner responds. "
+            "Once approved, coordinate the visit timing directly with the owner."
+        ),
+    },
+    {
         "chunk_id": "kyc-create-draft",
         "topic": "Starting KYC (Identity Verification)",
         "content": (
@@ -263,6 +296,64 @@ FAQ_CHUNKS: list[dict] = [
             "or when a complaint is updated. "
             "Click the bell icon in the top navigation bar to view all your notifications. "
             "You can mark them as read one by one or all at once."
+        ),
+    },
+    {
+        "chunk_id": "lease-admin-approval",
+        "topic": "What Happens After Both Parties Sign the Lease",
+        "content": (
+            "Once both the owner and tenant have signed the lease, it is sent to EstateSync for a final review. "
+            "You will receive a notification confirming that the lease is under review. "
+            "An admin will review the signed lease and either approve or reject it. "
+            "If approved, the lease becomes active immediately and two bills are generated — "
+            "a security deposit bill and your first rent bill. "
+            "If rejected, both parties are notified with a reason and the lease is cancelled."
+        ),
+    },
+    {
+        "chunk_id": "security-deposit",
+        "topic": "Security Deposit Bill",
+        "content": (
+            "When your lease is approved and becomes active, a security deposit bill is automatically generated. "
+            "The deposit amount is set by the owner and agreed upon in the lease terms. "
+            "You will see this bill in the Bills tab of your lease page. "
+            "Pay the deposit the same way you pay rent — click Pay and complete the payment securely. "
+            "The security deposit is held as a guarantee and may be used to cover any unpaid dues or damages at the end of your lease."
+        ),
+    },
+    {
+        "chunk_id": "late-payment-penalty",
+        "topic": "Late Payment Penalty on Overdue Bills",
+        "content": (
+            "If a rent bill is not paid by its due date, a late payment penalty may be automatically added to your account. "
+            "You will receive a notification when a penalty is applied. "
+            "The penalty bill will appear in the Bills tab of your lease alongside your overdue rent. "
+            "To avoid penalties, pay your rent bills before the due date shown on each bill. "
+            "If you believe a penalty was applied in error, contact support through the Complaints section."
+        ),
+    },
+    {
+        "chunk_id": "account-profile",
+        "topic": "Managing Your Profile and Password",
+        "content": (
+            "To update your personal details, click your avatar in the top navigation bar and go to Profile. "
+            "You can update your name and phone number from the profile page. "
+            "To change your password, go to Profile and click Change Password. "
+            "You will need to enter your current password followed by your new password. "
+            "If you have forgotten your password, use the Forgot Password option on the login page — "
+            "a reset link will be sent to your registered email address."
+        ),
+    },
+    {
+        "chunk_id": "vacate-notice-owner",
+        "topic": "Handling a Tenant Vacate Notice as Owner",
+        "content": (
+            "When a tenant submits a vacate notice, you will receive a notification on your Owner dashboard. "
+            "Open the lease and review the vacate notice details including the tenant's intended exit date. "
+            "You can choose to Accept or Reject the notice. "
+            "If you accept, the lease will be scheduled to close on the tenant's exit date. "
+            "If a penalty applies due to short notice, it will be automatically added to the tenant's bills. "
+            "If you reject the notice, the tenant will be notified and the lease continues as normal."
         ),
     },
 ]

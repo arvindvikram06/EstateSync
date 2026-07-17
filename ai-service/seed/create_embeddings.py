@@ -16,7 +16,7 @@ OUTPUT = Path(__file__).parent.parent / "embeddings.json"
 
 
 def main():
-    print(f"Embedding {len(FAQ_CHUNKS)} chunks via Voyage AI...")
+    print(f"Embedding {len(FAQ_CHUNKS)} chunks.")
     texts = [c["content"] for c in FAQ_CHUNKS]
     embeddings = embed_batch(texts)
 

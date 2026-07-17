@@ -6,7 +6,7 @@ _chunks: list[dict] = []
 _embeddings: np.ndarray | None = None
 
 EMBEDDINGS_FILE = Path(__file__).parent / "embeddings.json"
-SIMILARITY_THRESHOLD = 0.5  # cosine similarity — chunks below this are considered irrelevant
+SIMILARITY_THRESHOLD = 0.35  # cosine similarity — chunks below this are considered irrelevant
 
 
 def load():
