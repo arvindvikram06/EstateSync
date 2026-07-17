@@ -245,6 +245,16 @@ builder.Services.AddRateLimiter(options =>
                 PermitLimit = 3,
                 Window = TimeSpan.FromMinutes(15)
             }));
+
+    options.AddPolicy("ai-chat", httpContext =>
+        System.Threading.RateLimiting.RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "anonymous",
+            factory: _ => new System.Threading.RateLimiting.SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 4
+            }));
 });
 
 // ── Redis (password reset tokens) ─────────────────────────────

@@ -5,6 +5,7 @@ using EstateSync.Api.DTOs.Ai;
 using EstateSync.Api.Interfaces.Services.Ai;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EstateSync.Api.Controllers;
 
@@ -21,6 +22,7 @@ public class AiController : ControllerBase
     }
 
     [HttpPost("chat")]
+    [EnableRateLimiting("ai-chat")]
     public async Task<ActionResult<ApiResponse<string>>> Chat([FromBody] AiChatRequest request, CancellationToken ct)
     {
         var reply = await _aiService.ChatAsync(request.Message, ct);
