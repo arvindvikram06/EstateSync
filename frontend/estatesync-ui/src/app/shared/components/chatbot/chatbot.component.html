@@ -1,0 +1,79 @@
+<!-- Floating FAB -->
+<button class="chatbot-fab" (click)="toggle()" [attr.aria-label]="isOpen() ? 'Close assistant' : 'Open assistant'">
+  <mat-icon>{{ isOpen() ? 'close' : 'chat' }}</mat-icon>
+</button>
+
+<!-- Chat Panel -->
+@if (isOpen()) {
+  <div class="chatbot-panel">
+    <!-- Header -->
+    <div class="chatbot-header">
+      <div class="chatbot-header__info">
+        <div class="chatbot-header__avatar">
+          <mat-icon>support_agent</mat-icon>
+        </div>
+        <div>
+          <div class="chatbot-header__title">EstateSync Assistant</div>
+          <div class="chatbot-header__subtitle">Ask me anything about the platform</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="chatbot-messages" #messagesList>
+      @if (!hasMessages()) {
+        <div class="chatbot-empty">
+          <mat-icon class="chatbot-empty__icon">chat_bubble_outline</mat-icon>
+          <p>Hi! How can I help you today?</p>
+          <div class="chatbot-suggestions">
+            <button class="chatbot-suggestion" (click)="inputText = 'How do I complete my KYC?'; sendMessage()">How do I complete KYC?</button>
+            <button class="chatbot-suggestion" (click)="inputText = 'How do I pay my rent?'; sendMessage()">How do I pay rent?</button>
+            <button class="chatbot-suggestion" (click)="inputText = 'How do I sign a lease?'; sendMessage()">How do I sign a lease?</button>
+          </div>
+        </div>
+      }
+
+      @for (msg of messages(); track $index) {
+        <div class="chatbot-msg" [class.chatbot-msg--user]="msg.role === 'user'" [class.chatbot-msg--assistant]="msg.role === 'assistant'">
+          @if (msg.role === 'assistant') {
+            <div class="chatbot-msg__avatar">
+              <mat-icon>support_agent</mat-icon>
+            </div>
+          }
+          <div class="chatbot-msg__bubble">{{ msg.text }}</div>
+        </div>
+      }
+
+      @if (chatbotService.isLoading()) {
+        <div class="chatbot-msg chatbot-msg--assistant">
+          <div class="chatbot-msg__avatar">
+            <mat-icon>support_agent</mat-icon>
+          </div>
+          <div class="chatbot-msg__bubble chatbot-msg__bubble--typing">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Input -->
+    <div class="chatbot-input">
+      <input
+        class="chatbot-input__field"
+        type="text"
+        placeholder="Type your question..."
+        [(ngModel)]="inputText"
+        (keydown.enter)="sendMessage()"
+        [disabled]="chatbotService.isLoading()"
+      />
+      <button
+        class="chatbot-input__send"
+        (click)="sendMessage()"
+        [disabled]="chatbotService.isLoading() || !inputText.trim()"
+        aria-label="Send"
+      >
+        <mat-icon>send</mat-icon>
+      </button>
+    </div>
+  </div>
+}

@@ -28,6 +28,8 @@ using EstateSync.Api.Interfaces.Services.Leases;
 using EstateSync.Api.Services.Leases;
 using QuestPDF.Infrastructure;
 using EstateSync.Api.Interfaces.Services.AuditLogs;
+using EstateSync.Api.Interfaces.Services.Ai;
+using EstateSync.Api.Services.Ai;
 using EstateSync.Api.Services.AuditLogs;
 using EstateSync.Api.Interfaces.Services.Payments;
 using EstateSync.Api.Services.Payments;
@@ -221,6 +223,10 @@ builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IAdminFinancialService, AdminFinancialService>();
 builder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
 builder.Services.AddScoped<INotificationSender, NotificationSender>();
+
+// Register AI Service
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IAiService, AiService>();
 
 // Register Auth Services
 builder.Services.AddScoped<IAuthService, AuthService>();
