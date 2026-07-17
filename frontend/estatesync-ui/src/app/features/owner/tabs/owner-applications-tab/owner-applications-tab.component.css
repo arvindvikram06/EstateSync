@@ -34,3 +34,36 @@
   color: var(--es-danger) !important;
   border-color: var(--es-danger-border) !important;
 }
+
+/* Mobile — stack the action column into a full-width bar below the info
+   so the tenant info column keeps its width and never wraps character-by-character */
+@media (max-width: 640px) {
+  .app-card {
+    flex-wrap: wrap;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .app-actions {
+    width: 100%;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--es-border-light);
+  }
+
+  .app-actions__meta {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px;
+  }
+
+  .app-actions__buttons {
+    margin-top: 0 !important;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

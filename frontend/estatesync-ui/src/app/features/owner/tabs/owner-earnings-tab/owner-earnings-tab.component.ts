@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { PaymentService } from '@core/services/payment/payment.service';
+import { formatUsd } from '@core/utils/format.utils';
 import { OwnerAvailableBalance, OwnerEarningsSummaryResponse, OwnerSettlementResponse, RequestPayoutResult } from '../../../../core/models/lease-bill.model';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { PageSpinnerComponent } from '../../../../shared/components/page-spinner/page-spinner.component';
@@ -195,6 +196,8 @@ export class OwnerEarningsTabComponent implements OnInit {
         error: () => this.stripeLoading.set(false),
       });
   }
+
+  readonly usd = formatUsd;
 
   getBadgeClass(status: string): string {
     switch (status) {

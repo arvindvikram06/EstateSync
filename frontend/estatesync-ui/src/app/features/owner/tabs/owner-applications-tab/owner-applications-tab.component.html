@@ -41,12 +41,14 @@
           }
         </div>
 
-        <div class="flex flex-col items-end gap-2 shrink-0">
-          <app-status-badge [status]="app.status" />
-          @if (app.reviewedAt) {
-            <span class="es-text-hint">{{ formatDate(app.reviewedAt) }}</span>
-          }
-          <div class="flex gap-2 mt-1">
+        <div class="app-actions flex flex-col items-end gap-2 shrink-0">
+          <div class="app-actions__meta flex flex-col items-end gap-1">
+            <app-status-badge [status]="app.status" />
+            @if (app.reviewedAt) {
+              <span class="es-text-hint">{{ formatDate(app.reviewedAt) }}</span>
+            }
+          </div>
+          <div class="app-actions__buttons flex gap-2 mt-1">
             @if (app.status === 'Pending') {
               <button mat-flat-button color="primary" class="!rounded-full !h-8 !text-xs !px-3"
                 (click)="openReview(app, 'approve')">

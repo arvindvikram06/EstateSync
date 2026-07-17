@@ -50,12 +50,42 @@
   background: var(--es-brand);
   color: white;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .chatbot-header__info {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+}
+
+.chatbot-header__close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.chatbot-header__close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.chatbot-header__close mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
 }
 
 .chatbot-header__avatar {
@@ -284,4 +314,38 @@
 .chatbot-input__send:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Mobile — panel fills the screen with small margins */
+@media (max-width: 640px) {
+  .chatbot-fab {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .chatbot-panel {
+    bottom: 16px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    height: 80dvh;
+    max-height: calc(100dvh - 32px);
+    border-radius: 16px;
+  }
+
+  /* Larger tap targets and inputs on touch screens */
+  .chatbot-input__field {
+    font-size: 16px; /* prevents iOS zoom-on-focus */
+    padding: 10px 16px;
+  }
+
+  .chatbot-input__send {
+    width: 40px;
+    height: 40px;
+  }
+
+  .chatbot-msg__bubble {
+    max-width: 82%;
+    font-size: 14px;
+  }
 }

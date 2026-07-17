@@ -34,7 +34,7 @@
       @if (balance()!.pending > 0) {
         <div class="flex items-center gap-2 mb-4 text-[12px] text-es-warning">
           <mat-icon class="!text-[14px] !w-[14px] !h-[14px] text-es-warning">schedule</mat-icon>
-          {{ balance()!.pending | currency:balance()!.currency:'symbol':'1.0-2' }} still processing (will appear soon)
+          {{ usd(balance()!.pending) }} still processing (will appear soon)
         </div>
       }
 
@@ -52,7 +52,7 @@
           </div>
           <div>
             <div class="text-[22px] font-extrabold text-es-text tracking-[-0.3px]">
-              {{ balance()!.available | currency:balance()!.currency:'symbol':'1.0-2' }}
+              {{ usd(balance()!.available) }}
             </div>
             <div class="es-text-hint mt-0.5">
               @if (balance()!.available > 0) {
@@ -86,7 +86,7 @@
           </div>
           <div>
             <div class="text-[22px] font-extrabold text-es-text tracking-[-0.3px]">
-              {{ balance()!.instantAvailable | currency:balance()!.currency:'symbol':'1.0-2' }}
+              {{ usd(balance()!.instantAvailable) }}
             </div>
             <div class="es-text-hint mt-0.5">
               @if (balance()!.instantAvailable > 0) {
@@ -122,7 +122,7 @@
           {{ payoutSuccess()!.method === 'instant' ? 'Instant payout' : 'Standard payout' }} initiated!
         </div>
         <div class="text-[13px] mt-0.5">
-          {{ payoutSuccess()!.amount | currency:payoutSuccess()!.currency:'symbol':'1.0-2' }} is on its way to your bank.
+          {{ usd(payoutSuccess()!.amount) }} is on its way to your bank.
           @if (payoutSuccess()!.method === 'instant') {
             Expected arrival: within minutes.
           } @else {
@@ -150,7 +150,7 @@
         <div>
           <p class="text-xs text-es-muted font-medium mb-0.5">Total Earned</p>
           <p class="text-[22px] font-bold text-es-text leading-tight">
-            {{ summary()!.totalPaid | currency:(balance()?.currency ?? 'USD'):'symbol':'1.0-2' }}
+            {{ usd(summary()!.totalPaid) }}
           </p>
           <p class="text-xs text-es-muted mt-0.5">{{ summary()!.totalPayouts }} payout{{ summary()!.totalPayouts !== 1 ? 's' : '' }}</p>
         </div>
@@ -163,7 +163,7 @@
         <div>
           <p class="text-xs text-es-muted font-medium mb-0.5">Pending Payout</p>
           <p class="text-[22px] font-bold text-es-text leading-tight">
-            {{ summary()!.totalPending | currency:(balance()?.currency ?? 'USD'):'symbol':'1.0-2' }}
+            {{ usd(summary()!.totalPending) }}
           </p>
           <p class="text-xs text-es-muted mt-0.5">In Stripe balance</p>
         </div>
@@ -177,7 +177,7 @@
           <p class="text-xs text-es-muted font-medium mb-0.5">Last Payout</p>
           @if (summary()!.lastPayoutDate) {
             <p class="text-[22px] font-bold text-es-text leading-tight">
-              {{ summary()!.lastPayoutAmount! | currency:(balance()?.currency ?? 'USD'):'symbol':'1.0-2' }}
+              {{ usd(summary()!.lastPayoutAmount!) }}
             </p>
             <p class="text-xs text-es-muted mt-0.5">{{ summary()!.lastPayoutDate | date:'d MMM yyyy' }}</p>
           } @else {
@@ -244,7 +244,7 @@
                   <span class="text-es-muted font-mono text-xs">{{ item.stripePayoutId }}</span>
                 </td>
                 <td class="px-6 py-4 font-semibold text-es-text">
-                  {{ item.amount | currency:item.currency:'symbol':'1.2-2' }}
+                  {{ usd(item.amount) }}
                   <span class="text-xs font-normal text-es-muted ml-1 uppercase">{{ item.currency }}</span>
                 </td>
                 <td class="px-6 py-4">
