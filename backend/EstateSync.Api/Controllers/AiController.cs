@@ -25,7 +25,18 @@ public class AiController : ControllerBase
     [EnableRateLimiting("ai-chat")]
     public async Task<ActionResult<ApiResponse<string>>> Chat([FromBody] AiChatRequest request, CancellationToken ct)
     {
-        var reply = await _aiService.ChatAsync(request.Message, ct);
+        var message = new string(request.Message
+            .Where(c => !char.IsControl(c))
+            .ToArray())
+            .Trim();
+
+        if (string.IsNullOrEmpty(message))
+            return BadRequest(ApiResponse<string>.Fail("Message cannot be empty."));
+
+        if (message.Length > 500)
+            return BadRequest(ApiResponse<string>.Fail("Message must be 500 characters or fewer."));
+
+        var reply = await _aiService.ChatAsync(message, ct);
         return Ok(ApiResponse<string>.Ok(reply));
     }
 }
