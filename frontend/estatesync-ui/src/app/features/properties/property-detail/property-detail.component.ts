@@ -1,6 +1,6 @@
 import {
   Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, DestroyRef,
-  ElementRef, ViewChild, effect
+  ElementRef, ViewChild, ChangeDetectorRef
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -48,6 +48,7 @@ export class PropertyDetailComponent implements OnInit {
   private readonly dialog           = inject(MatDialog);
   private readonly snack            = inject(MatSnackBar);
   private readonly destroyRef       = inject(DestroyRef);
+  private readonly cdr              = inject(ChangeDetectorRef);
 
   readonly property    = signal<PropertyDetailResponse | null>(null);
   readonly loading     = signal(true);
@@ -65,6 +66,7 @@ export class PropertyDetailComponent implements OnInit {
   });
 
   private map?: L.Map;
+  private mapFrame?: number;
 
   readonly isMyProperty = computed(() => {
     const p = this.property();
@@ -81,22 +83,23 @@ export class PropertyDetailComponent implements OnInit {
 
   readonly formatCurrency = formatCurrency;
 
-  constructor() {
-    effect(() => {
-      if (!this.loading() && this.property()) {
-        queueMicrotask(() => this.initMap());
-      }
-    });
-  }
-
   ngOnInit(): void {
     if (this.authService.isLoggedIn()) this.savedPropService.ensureIdsLoaded();
+
+    this.destroyRef.onDestroy(() => {
+      if (this.mapFrame !== undefined) cancelAnimationFrame(this.mapFrame);
+      this.map?.remove();
+    });
 
     this.route.paramMap.pipe(
       map(params => params.get('id')),
       filter((id): id is string => !!id),
       distinctUntilChanged(),
       tap(() => {
+        if (this.mapFrame !== undefined) {
+          cancelAnimationFrame(this.mapFrame);
+          this.mapFrame = undefined;
+        }
         this.map?.remove();
         this.map = undefined;
         this.property.set(null);
@@ -119,7 +122,20 @@ export class PropertyDetailComponent implements OnInit {
           images: property.images ?? [],
         } : null);
         this.loading.set(false);
+        // Materialize the @if view before Leaflet mutates its map element. WebKit can
+        // otherwise retain an incomplete layout until a full browser refresh.
+        this.cdr.detectChanges();
+        this.scheduleMapInitialization();
       });
+  }
+
+  private scheduleMapInitialization(): void {
+    this.mapFrame = requestAnimationFrame(() => {
+      this.mapFrame = requestAnimationFrame(() => {
+        this.mapFrame = undefined;
+        this.initMap();
+      });
+    });
   }
 
   toggleSave(): void {

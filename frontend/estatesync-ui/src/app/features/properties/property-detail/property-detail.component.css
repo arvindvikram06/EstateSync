@@ -62,6 +62,10 @@
   align-items: start;
 }
 
+.content-grid > * {
+  min-width: 0;
+}
+
 .specs-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -81,10 +85,14 @@
 }
 
 .map-container {
+  position: relative;
   height: 350px;
   width: 100%;
   border-radius: 12px;
-  z-index: 1;
+  overflow: hidden;
+  isolation: isolate;
+  contain: layout paint;
+  z-index: 0;
 }
 
 .pricing-sticky {
@@ -92,6 +100,10 @@
   top: 88px;
   align-self: start;
 }
+
+/* Leaflet uses transformed, absolutely positioned panes. Explicit paint
+   containment prevents WebKit from compositing those panes over earlier
+   siblings after client-side navigation. */
 
 .pricing-divider {
   border: none;
@@ -186,5 +198,3 @@
     padding: 18px;
   }
 }
-
-

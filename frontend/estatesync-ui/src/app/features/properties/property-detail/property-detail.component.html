@@ -113,19 +113,19 @@
         }
 
         <!-- Section 4: Amenities -->
-        @if ((p.amenities ?? []).length > 0) {
-          <div class="py-6 border-0 border-b border-solid border-es-border-light">
-            <h2 class="text-[18px] font-bold text-es-text mb-4">What this place offers</h2>
-            <div class="amenities-grid">
-              @for (amenity of (p.amenities ?? []); track amenity) {
-                <div class="flex items-center gap-3">
-                  <mat-icon class="!text-[20px] !w-[20px] !h-[20px] es-text-primary">check_circle</mat-icon>
-                  <span class="es-text-body-lg">{{ amenity }}</span>
-                </div>
-              }
-            </div>
+        <div class="py-6 border-0 border-b border-solid border-es-border-light">
+          <h2 class="text-[18px] font-bold text-es-text mb-4">What this place offers</h2>
+          <div class="amenities-grid">
+            @for (amenity of p.amenities; track $index) {
+              <div class="flex items-center gap-3">
+                <mat-icon class="!text-[20px] !w-[20px] !h-[20px] es-text-primary">check_circle</mat-icon>
+                <span class="es-text-body-lg">{{ amenity }}</span>
+              </div>
+            } @empty {
+              <p class="text-sm text-es-muted">No amenities have been listed.</p>
+            }
           </div>
-        }
+        </div>
 
         <!-- Section 5: Location -->
         <div class="pt-6">

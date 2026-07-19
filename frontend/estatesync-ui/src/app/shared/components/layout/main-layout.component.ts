@@ -12,7 +12,6 @@ const DASHBOARD_PREFIXES = [
   '/kyc',
   '/leases',
   '/profile',
-  '/properties/',
 ];
 
 @Component({
@@ -20,7 +19,8 @@ const DASHBOARD_PREFIXES = [
   standalone: true,
   imports: [RouterOutlet, NavbarComponent, FooterComponent, ChatbotComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './main-layout.component.html'
+  templateUrl: './main-layout.component.html',
+  styleUrl: './main-layout.component.css'
 })
 export class MainLayoutComponent {
   private readonly router = inject(Router);
@@ -32,6 +32,7 @@ export class MainLayoutComponent {
   readonly showFooter = computed(() => {
     this.navEnd();
     const url = this.router.url.split('?')[0];
-    return !DASHBOARD_PREFIXES.some(prefix => url.startsWith(prefix));
+    const isPropertyForm = url === '/properties/create' || /^\/properties\/[^/]+\/edit$/.test(url);
+    return !isPropertyForm && !DASHBOARD_PREFIXES.some(prefix => url.startsWith(prefix));
   });
 }

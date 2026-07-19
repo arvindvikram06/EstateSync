@@ -1,6 +1,8 @@
 <app-navbar />
 <div class="h-16 shrink-0"></div>
-<router-outlet />
+<main class="main-layout-content">
+  <router-outlet />
+</main>
 @if (showFooter()) {
   <app-footer />
 }
