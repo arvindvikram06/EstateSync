@@ -1,16 +1,18 @@
 name: Deploy AI Service
 
 on:
-  # Automatic deploys are disabled until the ACR/kubeconfig secrets are configured.
-  # Re-enable by uncommenting the push trigger below.
-  # push:
-  #   branches: [main]
-  #   paths:
-  #     - 'ai-service/**'
-  #     - 'infra/k8s/ai-service.yaml'
-  #     - '.github/workflows/deploy-ai-service.yml'
+  Automatic deploys are disabled until the ACR/kubeconfig secrets are configured.
+  Re-enable by uncommenting the push trigger below.
+  push:
+    branches: [main]
+    paths:
+      - 'ai-service/**'
+      - 'infra/k8s/ai-service.yaml'
+      - '.github/workflows/deploy-ai-service.yml'
   workflow_dispatch:
-
+concurrency:
+  group: production-ai-service
+  cancel-in-progress: false
 jobs:
   deploy:
     environment: production
