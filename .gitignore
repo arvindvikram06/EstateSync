@@ -16,6 +16,9 @@ docs/PASSWORD_RESET_WITH_REDIS.md
 
 **/artifacts
 
+.DS_Store
+**/.DS_Store
+
 **/CLAUDE.md
 
 **/.claude

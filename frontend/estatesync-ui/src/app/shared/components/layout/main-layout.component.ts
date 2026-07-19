@@ -5,6 +5,7 @@ import { filter } from 'rxjs';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { FooterComponent } from './footer.component';
 import { ChatbotComponent } from '../chatbot/chatbot.component';
+import { AuthService } from '@core/services/auth/auth.service';
 
 const DASHBOARD_PREFIXES = [
   '/dashboard',
@@ -24,6 +25,9 @@ const DASHBOARD_PREFIXES = [
 })
 export class MainLayoutComponent {
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+
+  readonly isLoggedIn = this.authService.isLoggedIn;
 
   private readonly navEnd = toSignal(
     this.router.events.pipe(filter(e => e instanceof NavigationEnd))

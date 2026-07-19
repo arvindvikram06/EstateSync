@@ -6,4 +6,6 @@
 @if (showFooter()) {
   <app-footer />
 }
-<app-chatbot />
+@if (isLoggedIn()) {
+  <app-chatbot />
+}
