@@ -13,4 +13,5 @@ public interface IUserRepository : IRepository<User>
     Task<bool> IsUserVerifiedOwnerAsync(Guid userId);
     Task<User?> GetByIdWithRolesAsync(Guid userId);
     Task<User?> GetByIdWithProfileAsync(Guid userId);
+    Task<(List<User> Items, int Total)> GetAllUsersAsync(string? search, string? role, bool? isActive, int limit, int offset);
 }

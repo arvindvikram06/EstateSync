@@ -11,6 +11,7 @@ using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
 using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Interfaces.Services.Properties;
+using EstateSync.Api.Interfaces.Services.Shared;
 
 namespace EstateSync.Api.Services.Properties;
 
@@ -22,6 +23,7 @@ public class PropertyApprovalService : IPropertyApprovalService
     private readonly IUnitOfWork _unitOfWork;
     private readonly PropertyMapper _mapper;
     private readonly ILogger<PropertyApprovalService> _logger;
+    private readonly IUrlResolverService _urlResolver;
 
     public PropertyApprovalService(
         IPropertyRepository propertyRepo,
@@ -29,7 +31,8 @@ public class PropertyApprovalService : IPropertyApprovalService
         INotificationSender notificationSender,
         IUnitOfWork unitOfWork,
         PropertyMapper mapper,
-        ILogger<PropertyApprovalService> logger)
+        ILogger<PropertyApprovalService> logger,
+        IUrlResolverService urlResolver)
     {
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
@@ -37,6 +40,7 @@ public class PropertyApprovalService : IPropertyApprovalService
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
     }
 
     public async Task SubmitForApprovalAsync(Guid id, Guid ownerId, CancellationToken ct)
@@ -143,12 +147,33 @@ public class PropertyApprovalService : IPropertyApprovalService
         var offset = (page - 1) * limit;
         var (items, total) = await _propertyRepo.GetPendingApprovalPropertiesAsync(limit, offset);
 
-        var mapped = items.Select(_mapper.MapToSummaryResponse).ToList();
+        var resolved = new System.Collections.Generic.List<PropertySummaryResponse>();
+        foreach (var item in items)
+            resolved.Add(await _urlResolver.ResolveAsync(_mapper.MapToSummaryResponse(item), ct));
 
         return new PagedResponse<PropertySummaryResponse>
         {
             Success = true,
-            Data = mapped,
+            Data = resolved,
+            Page = page,
+            Limit = limit,
+            Total = total
+        };
+    }
+
+    public async Task<PagedResponse<PropertySummaryResponse>> GetAllAdminPropertiesAsync(string? search, string? status, int page, int limit, CancellationToken ct)
+    {
+        var offset = (page - 1) * limit;
+        var (items, total) = await _propertyRepo.GetAllAdminAsync(search, status, limit, offset);
+
+        var resolved = new System.Collections.Generic.List<PropertySummaryResponse>();
+        foreach (var item in items)
+            resolved.Add(await _urlResolver.ResolveAsync(_mapper.MapToSummaryResponse(item), ct));
+
+        return new PagedResponse<PropertySummaryResponse>
+        {
+            Success = true,
+            Data = resolved,
             Page = page,
             Limit = limit,
             Total = total

@@ -127,4 +127,34 @@ public class PropertyRepository : BaseRepository<Property>, IPropertyRepository
 
         return (items, total);
     }
+
+    public async Task<(IEnumerable<Property> Items, int Total)> GetAllAdminAsync(string? search, string? status, int limit, int offset)
+    {
+        var query = _dbSet.AsNoTracking()
+            .Include(p => p.PropertyImages)
+            .Include(p => p.Owner).ThenInclude(o => o!.OwnerProfile)
+            .Where(p => p.Status != PropertyStatus.Draft)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var lower = search.ToLower();
+            query = query.Where(p =>
+                p.Title.ToLower().Contains(lower) ||
+                p.City.ToLower().Contains(lower) ||
+                p.State.ToLower().Contains(lower));
+        }
+
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<PropertyStatus>(status, true, out var parsedStatus))
+            query = query.Where(p => p.Status == parsedStatus);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip(offset)
+            .Take(limit)
+            .ToListAsync();
+
+        return (items, total);
+    }
 }

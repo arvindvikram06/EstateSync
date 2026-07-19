@@ -1,6 +1,7 @@
 using System;
 using EstateSync.Api.Common;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using EstateSync.Api.Data;
@@ -63,6 +64,35 @@ public class UserRepository : BaseRepository<User>, IUserRepository
         return await _dbSet
             .Include(u => u.OwnerProfile)
             .FirstOrDefaultAsync(u => u.UserId == userId);
+    }
+
+    public async Task<(List<User> Items, int Total)> GetAllUsersAsync(string? search, string? role, bool? isActive, int limit, int offset)
+    {
+        var query = _dbSet
+            .AsNoTracking()
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var lower = search.ToLower();
+            query = query.Where(u => u.FullName.ToLower().Contains(lower) || u.Email.ToLower().Contains(lower));
+        }
+
+        if (!string.IsNullOrWhiteSpace(role))
+            query = query.Where(u => u.UserRoles.Any(ur => ur.Role != null && ur.Role.Name == role));
+
+        if (isActive.HasValue)
+            query = query.Where(u => u.IsActive == isActive.Value);
+
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(u => u.CreatedAt)
+            .Skip(offset)
+            .Take(limit)
+            .ToListAsync();
+
+        return (items, total);
     }
 
 }

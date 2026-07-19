@@ -20,4 +20,5 @@ public interface IPropertyRepository : IRepository<Property>
         int offset);
     Task<(IEnumerable<Property> Items, int Total)> GetPendingApprovalPropertiesAsync(int limit, int offset);
     Task<Property?> GetActiveDraftByOwnerIdAsync(Guid ownerId);
+    Task<(IEnumerable<Property> Items, int Total)> GetAllAdminAsync(string? search, string? status, int limit, int offset);
 }

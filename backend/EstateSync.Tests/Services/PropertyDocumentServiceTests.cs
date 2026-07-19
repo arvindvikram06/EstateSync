@@ -73,7 +73,9 @@ public class PropertyDocumentServiceTests
 
         _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(propertyId)).ReturnsAsync(property);
         _fileStorageServiceMock.Setup(x => x.SaveFileAsync(fileMock.Object, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync("/uploads/properties/deed.pdf");
+            .ReturnsAsync("estatesync-private/properties/deed.pdf");
+        _fileStorageServiceMock.Setup(x => x.GetFileUrlAsync("estatesync-private/properties/deed.pdf", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("https://storage.example.com/properties/deed.pdf?sig=test");
 
         // Act
         var result = await _propertyDocumentService.UploadDocumentAsync(propertyId, fileMock.Object, DocumentType.OwnershipCertificate, ownerId, CancellationToken.None);
@@ -81,7 +83,7 @@ public class PropertyDocumentServiceTests
         // Assert
         result.Should().NotBeNull();
         result.DocumentType.Should().Be("OwnershipCertificate");
-        result.DocumentUrl.Should().Be("/uploads/properties/deed.pdf");
+        result.DocumentUrl.Should().Be("https://storage.example.com/properties/deed.pdf?sig=test");
         
         property.PropertyDocuments.Should().HaveCount(1);
         property.PropertyDocuments.First().Document.Should().NotBeNull();
@@ -136,7 +138,9 @@ public class PropertyDocumentServiceTests
 
         _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(propertyId)).ReturnsAsync(property);
         _fileStorageServiceMock.Setup(x => x.SaveFileAsync(fileMock.Object, It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync("/uploads/properties/new.pdf");
+            .ReturnsAsync("estatesync-private/properties/new.pdf");
+        _fileStorageServiceMock.Setup(x => x.GetFileUrlAsync("estatesync-private/properties/new.pdf", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("https://storage.example.com/properties/new.pdf?sig=test");
 
         // Act
         var result = await _propertyDocumentService.UploadDocumentAsync(propertyId, fileMock.Object, DocumentType.OwnershipCertificate, ownerId, CancellationToken.None);
@@ -144,7 +148,7 @@ public class PropertyDocumentServiceTests
         // Assert
         result.Should().NotBeNull();
         result.OriginalFileName.Should().Be("new.pdf");
-        result.DocumentUrl.Should().Be("/uploads/properties/new.pdf");
+        result.DocumentUrl.Should().Be("https://storage.example.com/properties/new.pdf?sig=test");
         result.ReviewStatus.Should().Be("Pending");
 
         _fileStorageServiceMock.Verify(x => x.DeleteFileAsync("/uploads/properties/old.pdf"), Times.Once);
@@ -213,6 +217,8 @@ public class PropertyDocumentServiceTests
         };
 
         _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(propertyId)).ReturnsAsync(property);
+        _fileStorageServiceMock.Setup(x => x.GetFileUrlAsync(doc.DocumentUrl, It.IsAny<CancellationToken>()))
+            .ReturnsAsync("https://storage.example.com/properties/deed.pdf?sig=owner");
 
         // Act
         var result = await _propertyDocumentService.GetPropertyDocumentsAsync(propertyId, ownerId, false, CancellationToken.None);
@@ -221,6 +227,7 @@ public class PropertyDocumentServiceTests
         result.Should().NotBeNull();
         result.Should().HaveCount(1);
         result.First().DocumentId.Should().Be(documentId);
+        result.First().DocumentUrl.Should().Be("https://storage.example.com/properties/deed.pdf?sig=owner");
     }
 
     [Test]
@@ -256,6 +263,8 @@ public class PropertyDocumentServiceTests
         };
 
         _propertyRepoMock.Setup(x => x.GetWithDetailsByIdAsync(propertyId)).ReturnsAsync(property);
+        _fileStorageServiceMock.Setup(x => x.GetFileUrlAsync(doc.DocumentUrl, It.IsAny<CancellationToken>()))
+            .ReturnsAsync("https://storage.example.com/properties/deed.pdf?sig=admin");
 
         // Act
         var result = await _propertyDocumentService.GetPropertyDocumentsAsync(propertyId, adminId, true, CancellationToken.None);
@@ -264,6 +273,7 @@ public class PropertyDocumentServiceTests
         result.Should().NotBeNull();
         result.Should().HaveCount(1);
         result.First().DocumentId.Should().Be(documentId);
+        result.First().DocumentUrl.Should().Be("https://storage.example.com/properties/deed.pdf?sig=admin");
     }
 
     [Test]

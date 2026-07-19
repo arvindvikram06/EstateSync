@@ -11,6 +11,7 @@ using EstateSync.Api.Interfaces.Services.Auth;
 using EstateSync.Api.Interfaces.Services.Leases;
 using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
+using EstateSync.Api.Repositories;
 
 namespace EstateSync.Api.Services.Admin;
 
@@ -89,5 +90,47 @@ public class AdminService : IAdminService
         var verifiers = await _userRepo.GetUsersByRoleAsync(Roles.Verifier);
         return verifiers.Select(u => new StaffResponse(
             u.UserId, u.FullName, u.Email, u.PhoneNumber, u.IsActive, u.CreatedAt));
+    }
+
+    public async Task<PagedResponse<AdminUserResponse>> GetUsersAsync(string? search, string? role, bool? isActive, int page, int limit, CancellationToken ct = default)
+    {
+        var offset = (page - 1) * limit;
+        var (items, total) = await _userRepo.GetAllUsersAsync(search, role, isActive, limit, offset);
+
+        var data = items.Select(u => new AdminUserResponse(
+            u.UserId,
+            u.FullName,
+            u.Email,
+            u.PhoneNumber,
+            u.IsActive,
+            u.IsEmailVerified,
+            u.IsKycVerified,
+            u.IsOwnerVerified,
+            u.UserRoles.Select(ur => ur.Role?.Name ?? string.Empty).Where(n => !string.IsNullOrEmpty(n)).ToList(),
+            u.CreatedAt,
+            u.LastLogin
+        )).ToList();
+
+        return new PagedResponse<AdminUserResponse>
+        {
+            Success = true,
+            Data = data,
+            Page = page,
+            Limit = limit,
+            Total = total
+        };
+    }
+
+    public async Task SetUserActiveAsync(Guid userId, bool isActive, CancellationToken ct = default)
+    {
+        var user = await _userRepo.GetByIdWithRolesAsync(userId)
+            ?? throw new NotFoundException("User", userId);
+
+        if (user.UserRoles.Any(ur => ur.Role?.Name == Roles.Admin))
+            throw new BadRequestException("Admin accounts cannot be disabled.");
+
+        user.IsActive = isActive;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 }

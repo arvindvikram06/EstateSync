@@ -57,7 +57,9 @@ public class PropertyDocumentService : IPropertyDocumentService
         // await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
 
-        return _mapper.MapToDocumentResponse(doc);
+        var response = _mapper.MapToDocumentResponse(doc);
+        var resolvedUrl = await _fileStorageService.GetFileUrlAsync(response.DocumentUrl, ct);
+        return response with { DocumentUrl = resolvedUrl };
     }
 
     public async Task<List<DocumentResponse>> GetPropertyDocumentsAsync(Guid propertyId, Guid userId, bool isAdmin, CancellationToken ct)
@@ -73,10 +75,19 @@ public class PropertyDocumentService : IPropertyDocumentService
             throw new ForbiddenException("You are not authorized to view these documents.");
         }
 
-        return property.PropertyDocuments
+        var documents = property.PropertyDocuments
             .Where(pd => pd.Document != null)
             .Select(pd => _mapper.MapToDocumentResponse(pd.Document!))
             .ToList();
+
+        var resolvedDocuments = new List<DocumentResponse>(documents.Count);
+        foreach (var document in documents)
+        {
+            var resolvedUrl = await _fileStorageService.GetFileUrlAsync(document.DocumentUrl, ct);
+            resolvedDocuments.Add(document with { DocumentUrl = resolvedUrl });
+        }
+
+        return resolvedDocuments;
     }
 
     private void ValidateUploadRequest(Property property, IFormFile file, DocumentType documentType, Guid ownerId)

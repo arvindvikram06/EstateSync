@@ -8,6 +8,7 @@ using EstateSync.Api.Common;
 using EstateSync.Api.DTOs.Properties;
 using EstateSync.Api.Exceptions;
 using EstateSync.Api.Interfaces.Services.Properties;
+using EstateSync.Api.Interfaces.Services.Shared;
 using EstateSync.Api.Mappers;
 using EstateSync.Api.Models;
 using EstateSync.Api.Models.Enums;
@@ -21,17 +22,20 @@ public class SavedPropertyService : ISavedPropertyService
     private readonly IPropertyRepository _propertyRepo;
     private readonly IUnitOfWork _unitOfWork;
     private readonly PropertyMapper _mapper;
+    private readonly IUrlResolverService _urlResolver;
 
     public SavedPropertyService(
         ISavedPropertyRepository savedPropertyRepo,
         IPropertyRepository propertyRepo,
         IUnitOfWork unitOfWork,
-        PropertyMapper mapper)
+        PropertyMapper mapper,
+        IUrlResolverService urlResolver)
     {
         _savedPropertyRepo = savedPropertyRepo ?? throw new ArgumentNullException(nameof(savedPropertyRepo));
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
     }
 
     public async Task SaveAsync(Guid userId, Guid propertyId, CancellationToken ct = default)
@@ -76,12 +80,13 @@ public class SavedPropertyService : ISavedPropertyService
         var offset = (page - 1) * limit;
         var (items, total) = await _savedPropertyRepo.GetByUserAsync(userId, limit, offset);
 
+        var resolved = new List<PropertySummaryResponse>();
+        foreach (var sp in items.Where(sp => sp.Property != null))
+            resolved.Add(await _urlResolver.ResolveAsync(_mapper.MapToSummaryResponse(sp.Property!), ct));
+
         return new PagedResponse<PropertySummaryResponse>
         {
-            Data = items
-                .Where(sp => sp.Property != null)
-                .Select(sp => _mapper.MapToSummaryResponse(sp.Property!))
-                .ToList(),
+            Data = resolved,
             Page = page,
             Limit = limit,
             Total = total,

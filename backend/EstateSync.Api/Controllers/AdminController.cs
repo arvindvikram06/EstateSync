@@ -88,6 +88,19 @@ public class AdminController : ControllerBase
 
     // ── Properties ────────────────────────────────────────────────────────────
 
+    [HttpGet("properties")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<PagedResponse<PropertySummaryResponse>>> GetAllProperties(
+        [FromQuery] string? search,
+        [FromQuery] string? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _propertyApprovalService.GetAllAdminPropertiesAsync(search, status, page, limit, ct);
+        return Ok(result);
+    }
+
     [HttpGet("properties/pending-approval")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<PagedResponse<PropertySummaryResponse>>> GetPendingProperties(
@@ -117,6 +130,31 @@ public class AdminController : ControllerBase
     {
         await _adminService.ApproveLeaseAsync(leaseId, request.Approve, request.Remarks, User.GetUserId(), ct);
         return Ok(new ApiResponse<object> { Message = request.Approve ? "Lease approved and activated." : "Lease rejected." });
+    }
+
+    // ── User Management ───────────────────────────────────────────────────────
+
+    [HttpGet("users")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<PagedResponse<AdminUserResponse>>> GetUsers(
+        [FromQuery] string? search,
+        [FromQuery] string? role,
+        [FromQuery] bool? isActive,
+        [FromQuery] int page = 1,
+        [FromQuery] int limit = 20,
+        CancellationToken ct = default)
+    {
+        var result = await _adminService.GetUsersAsync(search, role, isActive, page, limit, ct);
+        return Ok(result);
+    }
+
+    [HttpPut("users/{userId:guid}/set-active")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<object>>> SetUserActive(
+        Guid userId, [FromQuery] bool active, CancellationToken ct)
+    {
+        await _adminService.SetUserActiveAsync(userId, active, ct);
+        return Ok(new ApiResponse<object> { Message = active ? "User account enabled." : "User account disabled." });
     }
 
     // ── Staff / Verifier Management ───────────────────────────────────────────
