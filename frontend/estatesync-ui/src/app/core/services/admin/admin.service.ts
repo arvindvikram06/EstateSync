@@ -19,6 +19,7 @@ import {
   AuditLogResponse,
   AdminLeaseApprovalRequest,
   AdminLeaseSummary,
+  AdminUserResponse,
 } from '../../models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -55,6 +56,13 @@ export class AdminService {
     return this.http.get<PagedResponse<PropertySummaryResponse>>(`${this.base}/properties/pending-approval`, { params });
   }
 
+  getAllProperties(filters?: { search?: string; status?: string }, page = 1, limit = 20): Observable<PagedResponse<PropertySummaryResponse>> {
+    let params = new HttpParams().set('page', page).set('limit', limit);
+    if (filters?.search) params = params.set('search', filters.search);
+    if (filters?.status) params = params.set('status', filters.status);
+    return this.http.get<PagedResponse<PropertySummaryResponse>>(`${this.base}/properties`, { params });
+  }
+
   approveProperty(id: string, req: ApprovePropertyRequest): Observable<ApiResponse<object>> {
     return this.http.put<ApiResponse<object>>(`${this.base}/properties/${id}/approval`, req);
   }
@@ -68,6 +76,20 @@ export class AdminService {
 
   approveLease(leaseId: string, req: AdminLeaseApprovalRequest): Observable<ApiResponse<object>> {
     return this.http.put<ApiResponse<object>>(`${this.base}/leases/${leaseId}/approval`, req);
+  }
+
+  // ── Users ──────────────────────────────────────────────────────────────────
+
+  getUsers(filters?: { search?: string; role?: string; isActive?: boolean }, page = 1, limit = 20): Observable<PagedResponse<AdminUserResponse>> {
+    let params = new HttpParams().set('page', page).set('limit', limit);
+    if (filters?.search !== undefined && filters.search !== '') params = params.set('search', filters.search);
+    if (filters?.role) params = params.set('role', filters.role);
+    if (filters?.isActive !== undefined) params = params.set('isActive', String(filters.isActive));
+    return this.http.get<PagedResponse<AdminUserResponse>>(`${this.base}/users`, { params });
+  }
+
+  setUserActive(userId: string, active: boolean): Observable<ApiResponse<object>> {
+    return this.http.put<ApiResponse<object>>(`${this.base}/users/${userId}/set-active?active=${active}`, {});
   }
 
   // ── Staff ──────────────────────────────────────────────────────────────────

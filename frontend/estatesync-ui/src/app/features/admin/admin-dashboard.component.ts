@@ -15,6 +15,7 @@ import { AdminVerifiersTabComponent } from './tabs/admin-verifiers-tab/admin-ver
 import { AdminFinancialTabComponent } from './tabs/admin-financial-tab/admin-financial-tab.component';
 import { AdminComplaintsTabComponent } from './tabs/admin-complaints-tab/admin-complaints-tab.component';
 import { AdminAuditLogsTabComponent } from './tabs/admin-audit-logs-tab/admin-audit-logs-tab.component';
+import { AdminUsersTabComponent } from './tabs/admin-users-tab/admin-users-tab.component';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -29,6 +30,7 @@ import { AdminAuditLogsTabComponent } from './tabs/admin-audit-logs-tab/admin-au
     AdminFinancialTabComponent,
     AdminComplaintsTabComponent,
     AdminAuditLogsTabComponent,
+    AdminUsersTabComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-dashboard.component.html',
@@ -54,6 +56,7 @@ export class AdminDashboardComponent implements OnInit {
     { id: 'kyc',        label: 'KYC Verifications',   icon: 'verified_user' },
     { id: 'properties', label: 'Property Approvals',  icon: 'home_work' },
     { id: 'leases',             label: 'Lease Approvals',      icon: 'article', badge: this.pendingLeaseCount() || undefined },
+    { id: 'users',               label: 'Users',                icon: 'people' },
     { id: 'verifiers',          label: 'Verifiers',            icon: 'manage_accounts' },
     { id: 'financial',          label: 'Financial Dashboard',  icon: 'payments' },
     { id: 'complaints',         label: 'Complaints',           icon: 'support_agent' },

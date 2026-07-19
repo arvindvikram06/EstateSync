@@ -81,6 +81,21 @@ export interface ApprovePropertyRequest {
   approveRemarks: string;
 }
 
+// Users (admin view)
+export interface AdminUserResponse {
+  userId: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string | null;
+  isActive: boolean;
+  isEmailVerified: boolean;
+  isKycVerified: boolean;
+  isOwnerVerified: boolean;
+  roles: string[];
+  createdAt: string;
+  lastLogin: string | null;
+}
+
 // Staff (verifiers)
 export interface StaffResponse {
   userId: string;

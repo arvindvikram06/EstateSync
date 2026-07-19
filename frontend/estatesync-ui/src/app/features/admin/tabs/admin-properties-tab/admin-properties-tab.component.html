@@ -1,14 +1,45 @@
 <div class="tab-header">
   <div>
-    <h2 class="tab-title">Property Approvals</h2>
-    <p class="tab-subtitle">Properties submitted by owners awaiting approval.</p>
+    <h2 class="tab-title">Properties</h2>
+    @if (!loading()) {
+      <p class="tab-subtitle">{{ totalCount() }} propert{{ totalCount() === 1 ? 'y' : 'ies' }} found</p>
+    }
   </div>
+</div>
+
+<!-- Filters -->
+<div class="flex flex-wrap items-center gap-3 mb-6 p-4 bg-gray-50 border border-gray-100 rounded-xl">
+
+  <mat-form-field appearance="outline" class="flex-1 min-w-[200px] !text-xs" subscriptSizing="dynamic">
+    <mat-label>Search by title, city or state</mat-label>
+    <mat-icon matPrefix class="!text-[16px] !w-[16px] !h-[16px]">search</mat-icon>
+    <input matInput [ngModel]="search()" (ngModelChange)="search.set($event); onSearchInput()"
+           [ngModelOptions]="{standalone: true}" placeholder="Title, city, state..." />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="w-[190px] !text-xs" subscriptSizing="dynamic">
+    <mat-label>Status</mat-label>
+    <mat-icon matPrefix class="!text-[16px] !w-[16px] !h-[16px]">filter_list</mat-icon>
+    <mat-select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); onFilterChange()"
+                [ngModelOptions]="{standalone: true}">
+      @for (opt of statusOptions; track opt.value) {
+        <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  @if (hasFilters()) {
+    <button mat-button (click)="clearFilters()" class="!text-xs !rounded-full shrink-0">
+      <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">close</mat-icon>
+      Clear
+    </button>
+  }
 </div>
 
 @if (loading()) {
   <app-skeleton-loader type="table" [rows]="6" />
 } @else if (items().length === 0) {
-  <app-empty-state icon="home_work" title="No pending properties" subtitle="All property submissions have been reviewed." />
+  <app-empty-state icon="home_work" title="No properties found" subtitle="Try adjusting your filters." />
 } @else {
   <div class="admin-table-wrap">
     <table class="admin-table">
@@ -18,7 +49,7 @@
           <th>Location</th>
           <th>Owner</th>
           <th>Rent/mo</th>
-          <th>Beds / Baths</th>
+          <th>Status</th>
           <th>Submitted</th>
           <th class="!text-right">Action</th>
         </tr>
@@ -37,7 +68,7 @@
                 }
                 <div>
                   <div class="user-name">{{ item.title }}</div>
-                  <div class="es-text-hint mt-px">{{ item.propertyType }}</div>
+                  <div class="es-text-hint mt-px">{{ item.propertyType }} · {{ item.bedrooms }}bd / {{ item.bathrooms }}ba</div>
                 </div>
               </div>
             </td>
@@ -56,13 +87,20 @@
               }
             </td>
             <td class="font-semibold text-es-text">{{ formatCurrency(item.monthlyRent) }}</td>
-            <td class="es-text-sm">{{ item.bedrooms }} bd / {{ item.bathrooms }} ba</td>
+            <td><app-status-badge [status]="item.status ?? ''" /></td>
             <td class="es-text-sm">{{ item.createdAt | slice:0:10 }}</td>
             <td class="text-right">
-              <button mat-stroked-button color="primary" class="!rounded-full !text-xs !h-8" (click)="openReview(item)">
-                <mat-icon class="!text-[14px] !w-[14px] !h-[14px] mr-0.5">visibility</mat-icon>
-                Review
-              </button>
+              @if (item.status === 'PendingApproval') {
+                <button mat-flat-button color="primary" class="!rounded-full !text-xs !h-8" (click)="openReview(item)">
+                  <mat-icon class="!text-[14px] !w-[14px] !h-[14px] mr-0.5">rate_review</mat-icon>
+                  Review
+                </button>
+              } @else {
+                <button mat-stroked-button class="!rounded-full !text-xs !h-8" (click)="openReview(item)">
+                  <mat-icon class="!text-[14px] !w-[14px] !h-[14px] mr-0.5">visibility</mat-icon>
+                  View
+                </button>
+              }
             </td>
           </tr>
         }
@@ -72,8 +110,12 @@
   <div class="pagination">
     <span class="es-text-sm">Page {{ page() }} of {{ totalPages() }} · {{ totalCount() }} total</span>
     <div class="flex gap-2">
-      <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="page() === 1" (click)="prevPage()"><mat-icon>chevron_left</mat-icon></button>
-      <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="page() >= totalPages()" (click)="nextPage()"><mat-icon>chevron_right</mat-icon></button>
+      <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="page() === 1" (click)="prevPage()">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <button mat-stroked-button class="!rounded-full !text-xs !h-8" [disabled]="page() >= totalPages()" (click)="nextPage()">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
     </div>
   </div>
 }

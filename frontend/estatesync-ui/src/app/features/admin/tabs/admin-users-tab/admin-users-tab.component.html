@@ -1,0 +1,182 @@
+<div class="p-6 max-w-7xl mx-auto">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-xl font-bold text-es-text">All Users</h2>
+      @if (!loading()) {
+        <p class="text-xs text-es-muted mt-0.5">{{ total() }} user{{ total() === 1 ? '' : 's' }} found</p>
+      }
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap items-center gap-3 mb-6 p-4 bg-gray-50 border border-gray-100 rounded-xl">
+
+    <!-- Search -->
+    <mat-form-field appearance="outline" class="flex-1 min-w-[200px] !text-xs" subscriptSizing="dynamic">
+      <mat-label>Search by name or email</mat-label>
+      <mat-icon matPrefix class="!text-[16px] !w-[16px] !h-[16px]">search</mat-icon>
+      <input matInput [ngModel]="search()" (ngModelChange)="search.set($event); onSearchInput()"
+             [ngModelOptions]="{standalone: true}" placeholder="Name or email..." />
+    </mat-form-field>
+
+    <!-- Role filter -->
+    <mat-form-field appearance="outline" class="w-[160px] !text-xs" subscriptSizing="dynamic">
+      <mat-label>Role</mat-label>
+      <mat-icon matPrefix class="!text-[16px] !w-[16px] !h-[16px]">badge</mat-icon>
+      <mat-select [ngModel]="roleFilter()" (ngModelChange)="roleFilter.set($event); onFilterChange()"
+                  [ngModelOptions]="{standalone: true}">
+        @for (opt of roleOptions; track opt.value) {
+          <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Active filter -->
+    <mat-form-field appearance="outline" class="w-[150px] !text-xs" subscriptSizing="dynamic">
+      <mat-label>Status</mat-label>
+      <mat-icon matPrefix class="!text-[16px] !w-[16px] !h-[16px]">toggle_on</mat-icon>
+      <mat-select [ngModel]="activeFilter()" (ngModelChange)="activeFilter.set($event); onFilterChange()"
+                  [ngModelOptions]="{standalone: true}">
+        @for (opt of activeOptions; track opt.value) {
+          <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (hasFilters()) {
+      <button mat-button (click)="clearFilters()" class="!text-xs !rounded-full shrink-0">
+        <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">close</mat-icon>
+        Clear
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <app-skeleton-loader [rows]="8" />
+  } @else if (users().length === 0) {
+    <app-empty-state icon="people" title="No users found" subtitle="Try adjusting your filters." />
+  } @else {
+
+    <!-- Table -->
+    <div class="overflow-x-auto rounded-xl border border-gray-100">
+      <table class="admin-table w-full">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Verifications</th>
+            <th>Joined</th>
+            <th>Last Login</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.userId) {
+            <tr>
+              <!-- User info -->
+              <td>
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                       style="background: var(--mat-sys-primary)">
+                    {{ user.fullName.charAt(0).toUpperCase() }}
+                  </div>
+                  <div>
+                    <div class="font-semibold text-es-text text-sm">{{ user.fullName }}</div>
+                    <div class="text-xs text-es-muted">{{ user.email }}</div>
+                    @if (user.phoneNumber) {
+                      <div class="text-xs text-es-muted">{{ user.phoneNumber }}</div>
+                    }
+                  </div>
+                </div>
+              </td>
+
+              <!-- Role -->
+              <td>
+                <span class="es-badge--{{ primaryRole(user) === 'Admin' ? 'approved' : primaryRole(user) === 'Owner' ? 'partial' : primaryRole(user) === 'Verifier' ? 'pending' : 'draft' }}"
+                      style="font-size:11px; font-weight:600; border-radius:20px; padding:2px 10px;">
+                  {{ primaryRole(user) }}
+                </span>
+              </td>
+
+              <!-- Verifications -->
+              <td>
+                <div class="flex flex-col gap-1">
+                  <div class="flex items-center gap-1 text-xs"
+                       [class.text-green-600]="user.isEmailVerified"
+                       [class.text-gray-400]="!user.isEmailVerified">
+                    <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">{{ user.isEmailVerified ? 'check_circle' : 'cancel' }}</mat-icon>
+                    Email
+                  </div>
+                  <div class="flex items-center gap-1 text-xs"
+                       [class.text-green-600]="user.isKycVerified"
+                       [class.text-gray-400]="!user.isKycVerified">
+                    <mat-icon class="!text-[13px] !w-[13px] !h-[13px]">{{ user.isKycVerified ? 'check_circle' : 'cancel' }}</mat-icon>
+                    KYC
+                  </div>
+                </div>
+              </td>
+
+              <!-- Joined -->
+              <td class="text-xs text-es-muted whitespace-nowrap">
+                {{ user.createdAt | date:'dd MMM yyyy' }}
+              </td>
+
+              <!-- Last Login -->
+              <td class="text-xs text-es-muted whitespace-nowrap">
+                {{ user.lastLogin ? (user.lastLogin | date:'dd MMM yyyy') : '—' }}
+              </td>
+
+              <!-- Status -->
+              <td>
+                <span class="es-badge--{{ user.isActive ? 'approved' : 'rejected' }}"
+                      style="font-size:11px; font-weight:600; border-radius:20px; padding:2px 10px;">
+                  {{ user.isActive ? 'Active' : 'Disabled' }}
+                </span>
+              </td>
+
+              <!-- Actions -->
+              <td>
+                @if (actionId() === user.userId) {
+                  <mat-spinner diameter="18" />
+                } @else if (!user.roles.includes('Admin')) {
+                  <button mat-stroked-button
+                          [matTooltip]="user.isActive ? 'Disable this account' : 'Enable this account'"
+                          (click)="toggleActive(user)"
+                          class="!text-xs !rounded-lg !h-8"
+                          [class.!text-red-600]="user.isActive"
+                          [class.!border-red-200]="user.isActive"
+                          [class.!text-green-700]="!user.isActive"
+                          [class.!border-green-200]="!user.isActive">
+                    <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">{{ user.isActive ? 'block' : 'check_circle' }}</mat-icon>
+                    {{ user.isActive ? 'Disable' : 'Enable' }}
+                  </button>
+                } @else {
+                  <span class="text-xs text-es-muted">—</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <div class="flex items-center justify-between mt-4 text-xs text-es-muted">
+        <span>Page {{ page() }} of {{ totalPages() }}</span>
+        <div class="flex gap-2">
+          <button mat-stroked-button class="!text-xs !rounded-lg !h-8" [disabled]="page() === 1" (click)="prevPage()">
+            <mat-icon class="!text-[14px]">chevron_left</mat-icon> Prev
+          </button>
+          <button mat-stroked-button class="!text-xs !rounded-lg !h-8" [disabled]="page() === totalPages()" (click)="nextPage()">
+            Next <mat-icon class="!text-[14px]">chevron_right</mat-icon>
+          </button>
+        </div>
+      </div>
+    }
+  }
+
+</div>

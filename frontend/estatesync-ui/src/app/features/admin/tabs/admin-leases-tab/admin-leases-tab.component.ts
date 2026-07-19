@@ -2,9 +2,12 @@ import {
   Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, output, DestroyRef
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { LeaseService } from '@core/services/leasing/lease.service';
@@ -23,7 +26,11 @@ type FilterTab = 'all' | 'PendingAdminApproval' | 'Active' | 'Voided';
 @Component({
   selector: 'app-admin-leases-tab',
   standalone: true,
-  imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, StatusBadgeComponent, EmptyStateComponent],
+  imports: [
+    FormsModule, RouterLink,
+    MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule,
+    StatusBadgeComponent, EmptyStateComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-leases-tab.component.html',
   styleUrl: './admin-leases-tab.component.css',
@@ -40,6 +47,7 @@ export class AdminLeasesTabComponent implements OnInit {
   readonly loading      = signal(true);
   readonly reviewingId  = signal<string | null>(null);
   readonly filter       = signal<FilterTab>('PendingAdminApproval');
+  readonly search       = signal('');
 
   readonly formatDate     = formatDate;
   readonly formatCurrency = formatCurrency;
@@ -50,7 +58,14 @@ export class AdminLeasesTabComponent implements OnInit {
 
   readonly filtered = computed(() => {
     const f = this.filter();
-    return f === 'all' ? this.all() : this.all().filter(l => l.status === f);
+    const q = this.search().toLowerCase().trim();
+    let result = f === 'all' ? this.all() : this.all().filter(l => l.status === f);
+    if (q) result = result.filter(l =>
+      l.propertyTitle?.toLowerCase().includes(q) ||
+      l.tenantName?.toLowerCase().includes(q) ||
+      l.ownerName?.toLowerCase().includes(q)
+    );
+    return result;
   });
 
   readonly filterTabs: { id: FilterTab; label: string }[] = [

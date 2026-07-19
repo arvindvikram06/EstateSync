@@ -20,6 +20,9 @@
   @if (activeTab() === 'leases') {
     <app-admin-leases-tab (pendingCountChange)="updateLeaseBadge($event)" />
   }
+  @if (activeTab() === 'users') {
+    <app-admin-users-tab />
+  }
   @if (activeTab() === 'verifiers') {
     <app-admin-verifiers-tab />
   }
