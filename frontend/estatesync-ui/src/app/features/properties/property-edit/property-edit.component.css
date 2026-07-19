@@ -77,6 +77,11 @@
   min-height: 0;
   margin: 0;
   padding: 28px 0;
+  border-bottom: 1px solid var(--es-border-light);
+}
+
+.edit-section:last-of-type {
+  border-bottom: 0;
 }
 
 .section-title {

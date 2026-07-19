@@ -473,7 +473,7 @@
 
   <form [formGroup]="form" class="edit-body" (ngSubmit)="save()">
 
-    <section class="edit-section">
+    <div class="edit-section">
       <h2 class="section-title">Basic information</h2>
       <div class="field-col">
         <mat-form-field appearance="outline" class="w-full">
@@ -500,11 +500,9 @@
           </mat-select>
         </mat-form-field>
       </div>
-    </section>
+    </div>
 
-    <div class="section-divider"></div>
-
-    <section class="edit-section">
+    <div class="edit-section">
       <h2 class="section-title">Location</h2>
       <div class="field-grid-2">
 
@@ -568,11 +566,9 @@
           }
         </mat-form-field>
       </div>
-    </section>
+    </div>
 
-    <div class="section-divider"></div>
-
-    <section class="edit-section">
+    <div class="edit-section">
       <h2 class="section-title">Specifications</h2>
       <div class="field-grid-4">
         <mat-form-field appearance="outline" class="w-full">
@@ -596,11 +592,9 @@
           <input matInput type="number" formControlName="buildupArea" min="0" />
         </mat-form-field>
       </div>
-    </section>
+    </div>
 
-    <div class="section-divider"></div>
-
-    <section class="edit-section">
+    <div class="edit-section">
       <h2 class="section-title">Pricing</h2>
       <div class="field-grid-2">
         <mat-form-field appearance="outline" class="w-full">
@@ -618,11 +612,9 @@
         </mat-form-field>
       </div>
 
-    </section>
+    </div>
 
-    <div class="section-divider"></div>
-
-    <section class="edit-section">
+    <div class="edit-section">
       <h2 class="section-title">Amenities</h2>
       <div class="amenity-grid">
         @for (a of amenityList; track a) {
@@ -637,11 +629,9 @@
         </button>
         }
       </div>
-    </section>
+    </div>
 
-    <div class="section-divider"></div>
-
-    <section class="edit-section">
+    <div class="edit-section">
       <h2 class="section-title">Location on map</h2>
       <p class="es-text-sm mb-4">
         Click the map to update your property's exact location.
@@ -666,11 +656,9 @@
         Pinned at {{ lat() | number:'1.6-6' }}, {{ lng() | number:'1.6-6' }}
       </p>
       }
-    </section>
+    </div>
 
-    <div class="section-divider"></div>
-
-    <section class="edit-section">
+    <div class="edit-section">
       <div class="flex items-center justify-between mb-2">
         <h2 class="section-title !m-0">Property Images</h2>
         <span class="text-[13px] text-es-muted font-semibold">{{ images().length }} / 10</span>
@@ -721,11 +709,9 @@
         At least 1 image is required before submitting
       </p>
       }
-    </section>
+    </div>
 
-    <div class="section-divider"></div>
-
-    <section class="edit-section">
+    <div class="edit-section">
       <h2 class="section-title">Ownership Proof</h2>
       <p class="es-text-sm mb-4">
         Required before submitting for review. Accepted: PDF, JPG, PNG (max 10 MB).
@@ -766,7 +752,7 @@
         Ownership proof document is required before submitting
       </p>
       }
-    </section>
+    </div>
 
     <div class="edit-footer">
       <a mat-stroked-button class="!rounded-full !h-11 !px-8" routerLink="/owner/dashboard"

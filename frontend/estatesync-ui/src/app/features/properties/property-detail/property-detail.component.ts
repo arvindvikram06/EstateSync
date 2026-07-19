@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { EMPTY, catchError, distinctUntilChanged, filter, map, switchMap, tap } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -91,12 +92,33 @@ export class PropertyDetailComponent implements OnInit {
   ngOnInit(): void {
     if (this.authService.isLoggedIn()) this.savedPropService.ensureIdsLoaded();
 
-    const id = this.route.snapshot.paramMap.get('id')!;
-    this.propService.getProperty(id)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: res => { this.property.set(res.data); this.loading.set(false); },
-        error: () => { this.error.set('Property not found.'); this.loading.set(false); }
+    this.route.paramMap.pipe(
+      map(params => params.get('id')),
+      filter((id): id is string => !!id),
+      distinctUntilChanged(),
+      tap(() => {
+        this.map?.remove();
+        this.map = undefined;
+        this.property.set(null);
+        this.error.set(null);
+        this.loading.set(true);
+      }),
+      switchMap(id => this.propService.getProperty(id).pipe(
+        catchError(() => {
+          this.error.set('Property not found.');
+          this.loading.set(false);
+          return EMPTY;
+        }),
+      )),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(res => {
+        const property = res.data;
+        this.property.set(property ? {
+          ...property,
+          amenities: property.amenities ?? [],
+          images: property.images ?? [],
+        } : null);
+        this.loading.set(false);
       });
   }
 
