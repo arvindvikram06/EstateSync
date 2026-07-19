@@ -6,6 +6,7 @@ param deployerObjectId string
 
 @secure()
 param postgresConnectionString string
+param frontendUrl string
 @secure()
 param blobConnectionString string
 @secure()
@@ -74,6 +75,12 @@ resource secretStripe 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name: 'Stripe--SecretKey'
   properties: { value: stripeSecretKey }
+}
+
+resource secretFrontendUrl 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'App--FrontendUrl'
+  properties: { value: frontendUrl }
 }
 
 output keyVaultName string = keyVault.name

@@ -49,6 +49,7 @@ module keyVault 'modules/keyvault.bicep' = {
     aksIdentityPrincipalId: aks.outputs.aksIdentityPrincipalId
     deployerObjectId: deployerObjectId
     postgresConnectionString: 'Host=${postgres.outputs.postgresHost};Database=${postgres.outputs.postgresDbName};Username=${postgresAdminUser};Password=${postgresAdminPassword};SslMode=Require;'
+    frontendUrl: staticWebApp.outputs.staticWebAppUrl
     blobConnectionString: storage.outputs.storageConnectionString
     signalRConnectionString: signalR.outputs.signalRConnectionString
     jwtSecretKey: jwtSecretKey

@@ -107,8 +107,11 @@ public class TenantPaymentService : ITenantPaymentService
             { "TenantId",    tenantId.ToString() }
         };
 
-        var baseSuccessUrl = _config["Stripe:CheckoutSuccessUrl"]
-            ?? throw new InvalidOperationException("Stripe:CheckoutSuccessUrl is not configured.");
+        var frontendUrl = _config["App:FrontendUrl"]?.TrimEnd('/')
+            ?? throw new InvalidOperationException("App:FrontendUrl is not configured.");
+        if (!Uri.TryCreate(frontendUrl, UriKind.Absolute, out var frontendUri) ||
+            (frontendUri.Scheme != Uri.UriSchemeHttps && frontendUri.Scheme != Uri.UriSchemeHttp))
+            throw new InvalidOperationException("App:FrontendUrl must be an absolute HTTP(S) URL.");
 
         var options = new SessionCreateOptions
         {
@@ -142,9 +145,8 @@ public class TenantPaymentService : ITenantPaymentService
             },
             Metadata   = correlationMetadata,
             // Append billId so the success page can poll for the specific bill flipping to Paid.
-            SuccessUrl = $"{baseSuccessUrl}&billId={bill.LeaseBillId}",
-            CancelUrl  = _config["Stripe:CheckoutCancelUrl"]
-                ?? throw new InvalidOperationException("Stripe:CheckoutCancelUrl is not configured."),
+            SuccessUrl = $"{frontendUrl}/payments/success?type=rent&billId={bill.LeaseBillId}",
+            CancelUrl  = $"{frontendUrl}/payments/cancel",
         };
 
         var session = await new SessionService().CreateAsync(options, cancellationToken: ct);

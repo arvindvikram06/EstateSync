@@ -106,14 +106,22 @@ public class StripeConnectedAccountService : IStripeConnectedAccountService
         var linkOptions = new AccountLinkCreateOptions
         {
             Account = stripeAccountId,
-            RefreshUrl = _config["Stripe:OnboardingRefreshUrl"]
-                ?? throw new InvalidOperationException("Stripe:OnboardingRefreshUrl is not configured."),
-            ReturnUrl = _config["Stripe:OnboardingReturnUrl"]
-                ?? throw new InvalidOperationException("Stripe:OnboardingReturnUrl is not configured."),
+            RefreshUrl = BuildFrontendUrl("/payments/success?type=onboarding"),
+            ReturnUrl = BuildFrontendUrl("/payments/success?type=onboarding"),
             Type = "account_onboarding",
         };
         var accountLink = await new AccountLinkService().CreateAsync(linkOptions, cancellationToken: ct);
         return accountLink.Url;
+    }
+
+    private string BuildFrontendUrl(string path)
+    {
+        var frontendUrl = _config["App:FrontendUrl"]?.TrimEnd('/')
+            ?? throw new InvalidOperationException("App:FrontendUrl is not configured.");
+        if (!Uri.TryCreate(frontendUrl, UriKind.Absolute, out var uri) ||
+            (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
+            throw new InvalidOperationException("App:FrontendUrl must be an absolute HTTP(S) URL.");
+        return frontendUrl + path;
     }
 
     public async Task<string> CreateStripeLoginLinkAsync(Guid ownerId, CancellationToken ct = default)
