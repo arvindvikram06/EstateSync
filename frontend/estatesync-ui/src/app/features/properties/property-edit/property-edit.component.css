@@ -1,3 +1,5 @@
+/* stylelint-disable media-feature-range-notation -- Support older mobile browsers. */
+
 .edit-page {
   max-width: 840px;
   margin: 0 auto;
@@ -92,9 +94,9 @@
   gap: 12px;
 }
 
-@media (width <= 640px) {
+@media (max-width: 640px) {
   .field-grid-2 { grid-template-columns: 1fr; }
-  .field-grid-4 { grid-template-columns: 1fr 1fr; }
+  .field-grid-4 { grid-template-columns: 1fr; }
 }
 
 /* Amenities */
@@ -104,8 +106,12 @@
   gap: 10px;
 }
 
-@media (width <= 640px) {
+@media (max-width: 640px) {
   .amenity-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 380px) {
+  .amenity-grid { grid-template-columns: 1fr; }
 }
 
 .amenity-chip {
@@ -405,3 +411,50 @@ mat-icon.step-check-icon {
   gap: 12px;
   flex-wrap: wrap;
 }
+
+/* Mobile overrides stay last so they win over the desktop defaults above. */
+@media (max-width: 640px) {
+  .edit-page,
+  .create-page {
+    padding: 24px 16px 56px;
+  }
+
+  .step-card {
+    padding: 20px 16px;
+  }
+
+  .doc-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 12px;
+  }
+
+  .doc-card app-status-badge {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+
+  .doc-card > a[mat-icon-button] {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .step-footer,
+  .edit-footer {
+    align-items: stretch;
+  }
+
+  .review-row {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .review-value {
+    min-width: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* stylelint-enable media-feature-range-notation */
