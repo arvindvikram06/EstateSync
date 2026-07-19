@@ -1,8 +1,6 @@
 name: Deploy Backend API
 
 on:
-  Automatic deploys are disabled until the ACR/kubeconfig secrets are configured.
-  Re-enable by uncommenting the push trigger below.
   push:
     branches: [main]
     paths:
@@ -11,9 +9,11 @@ on:
       - 'infra/k8s/service.yaml'
       - '.github/workflows/deploy-backend.yml'
   workflow_dispatch:
+
 concurrency:
   group: production-backend
   cancel-in-progress: false
+
 jobs:
   deploy:
     environment: production
