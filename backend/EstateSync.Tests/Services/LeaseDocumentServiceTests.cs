@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -17,10 +16,8 @@ namespace EstateSync.Tests.Services;
 public class LeaseDocumentServiceTests
 {
     private Mock<IFileStorageService> _storageMock;
-    private Mock<IWebHostEnvironment> _envMock;
     private Mock<ILogger<LeaseDocumentService>> _loggerMock;
     private LeaseDocumentService _service;
-    private string _tempPath;
 
     [SetUp]
     public void Setup()
@@ -28,29 +25,15 @@ public class LeaseDocumentServiceTests
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         
         _storageMock = new Mock<IFileStorageService>();
-        _envMock = new Mock<IWebHostEnvironment>();
         _loggerMock = new Mock<ILogger<LeaseDocumentService>>();
 
-        _tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        Directory.CreateDirectory(_tempPath);
-        _envMock.Setup(x => x.ContentRootPath).Returns(_tempPath);
-
-        _service = new LeaseDocumentService(_storageMock.Object, _envMock.Object, _loggerMock.Object);
-    }
-
-    [TearDown]
-    public void TearDown()
-    {
-        if (Directory.Exists(_tempPath))
-        {
-            Directory.Delete(_tempPath, true);
-        }
+        _service = new LeaseDocumentService(_storageMock.Object, _loggerMock.Object);
     }
 
     [Test]
     public void Constructor_ShouldThrowArgumentNullException_WhenStorageIsNull()
     {
-        Action act = () => new LeaseDocumentService(null!, _envMock.Object, _loggerMock.Object);
+        Action act = () => new LeaseDocumentService(null!, _loggerMock.Object);
         act.Should().Throw<ArgumentNullException>();
     }
 
@@ -81,11 +64,8 @@ public class LeaseDocumentServiceTests
     [Test]
     public async Task GenerateSignedAgreementPdfAsync_ShouldGenerateAndSavePdf_WithSignatures()
     {
-        // Mock signatures to exist on disk
-        var tenantSigPath = Path.Combine(_tempPath, "tenant-sig.png");
-        var ownerSigPath = Path.Combine(_tempPath, "owner-sig.png");
-        await File.WriteAllBytesAsync(tenantSigPath, new byte[] { 1, 2, 3 });
-        await File.WriteAllBytesAsync(ownerSigPath, new byte[] { 1, 2, 3 });
+        var signaturePng = Convert.FromBase64String(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=");
 
         var lease = new Lease
         {
@@ -95,8 +75,8 @@ public class LeaseDocumentServiceTests
             MonthlyRent = 1500,
             SecurityDeposit = 3000,
             PaymentFrequency = LeasePaymentFrequency.Monthly,
-            TenantSignatureImageUrl = "/tenant-sig.png",
-            OwnerSignatureImageUrl = "/owner-sig.png",
+            TenantSignatureImageUrl = "estatesync-private/leases/test/tenant-sig.png",
+            OwnerSignatureImageUrl = "estatesync-private/leases/test/owner-sig.png",
             TenantSignedAt = DateTime.UtcNow,
             OwnerSignedAt = DateTime.UtcNow,
             Property = new Property { Title = "Test Prop" },
@@ -105,6 +85,8 @@ public class LeaseDocumentServiceTests
 
         _storageMock.Setup(x => x.SaveBytesAsync(It.IsAny<byte[]>(), It.IsAny<string>(), "signed-agreement.pdf", It.IsAny<CancellationToken>()))
             .ReturnsAsync("/uploads/leases/signed-agreement.pdf");
+        _storageMock.Setup(x => x.ReadBytesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(signaturePng);
 
         var url = await _service.GenerateSignedAgreementPdfAsync(lease, CancellationToken.None);
 

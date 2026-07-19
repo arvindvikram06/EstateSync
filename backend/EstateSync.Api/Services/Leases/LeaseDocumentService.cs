@@ -17,7 +17,6 @@ namespace EstateSync.Api.Services.Leases;
 public class LeaseDocumentService : ILeaseDocumentService
 {
     private readonly IFileStorageService _fileStorage;
-    private readonly IWebHostEnvironment _env;
     private readonly ILogger<LeaseDocumentService> _logger;
 
     // ── Design tokens ────────────────────────────────────────────────────────
@@ -39,11 +38,9 @@ public class LeaseDocumentService : ILeaseDocumentService
 
     public LeaseDocumentService(
         IFileStorageService fileStorage,
-        IWebHostEnvironment env,
         ILogger<LeaseDocumentService> logger)
     {
         _fileStorage = fileStorage ?? throw new ArgumentNullException(nameof(fileStorage));
-        _env         = env         ?? throw new ArgumentNullException(nameof(env));
         _logger      = logger      ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -69,8 +66,8 @@ public class LeaseDocumentService : ILeaseDocumentService
 
     public async Task<string> GenerateSignedAgreementPdfAsync(Lease lease, CancellationToken ct = default)
     {
-        var tenantSig = LoadSignatureImage(lease.TenantSignatureImageUrl);
-        var ownerSig  = LoadSignatureImage(lease.OwnerSignatureImageUrl);
+        var tenantSig = await LoadSignatureImageAsync(lease.TenantSignatureImageUrl, "tenant", ct);
+        var ownerSig  = await LoadSignatureImageAsync(lease.OwnerSignatureImageUrl, "owner", ct);
 
         var pdfBytes = QuestPDF.Fluent.Document.Create(doc =>
         {
@@ -490,22 +487,22 @@ public class LeaseDocumentService : ILeaseDocumentService
             .Text(title).Bold().FontSize(10).FontColor(Navy);
     }
 
-    private byte[]? LoadSignatureImage(string? imageUrl)
+    private async Task<byte[]> LoadSignatureImageAsync(string? storedPath, string party, CancellationToken ct)
     {
-        if (string.IsNullOrEmpty(imageUrl)) return null;
+        if (string.IsNullOrWhiteSpace(storedPath))
+            throw new InvalidOperationException($"The {party} signature image path is missing.");
+
         try
         {
-            // imageUrl is like "/uploads/leases/{id}/tenant-sig.png"
-            // Resolve to physical path using content root
-            var relative = imageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-            var physical = Path.Combine(_env.ContentRootPath, relative);
-            if (File.Exists(physical))
-                return File.ReadAllBytes(physical);
+            var bytes = await _fileStorage.ReadBytesAsync(storedPath, ct);
+            if (bytes.Length == 0)
+                throw new InvalidOperationException($"The {party} signature image is empty.");
+            return bytes;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not load signature image from {Url}", imageUrl);
+            _logger.LogError(ex, "Could not load {Party} signature image from {StoredPath}", party, storedPath);
+            throw new InvalidOperationException($"Could not load the {party} signature image.", ex);
         }
-        return null;
     }
 }

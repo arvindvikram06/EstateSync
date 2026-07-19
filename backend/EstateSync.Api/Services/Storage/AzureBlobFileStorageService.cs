@@ -56,6 +56,22 @@ public class AzureBlobFileStorageService : IFileStorageService
         return await UploadAsync(stream, blobName, contentType, subFolder, ct);
     }
 
+    public async Task<byte[]> ReadBytesAsync(string storedPath, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(storedPath))
+            throw new ArgumentException("Stored file path is required.", nameof(storedPath));
+
+        var slash = storedPath.IndexOf('/');
+        if (slash <= 0 || slash == storedPath.Length - 1)
+            throw new InvalidOperationException("Stored Azure file path is invalid.");
+
+        var containerName = storedPath[..slash];
+        var blobName = storedPath[(slash + 1)..];
+        var blob = _blobServiceClient.GetBlobContainerClient(containerName).GetBlobClient(blobName);
+        var download = await blob.DownloadContentAsync(ct);
+        return download.Value.Content.ToArray();
+    }
+
     public async Task DeleteFileAsync(string blobPath)
     {
         if (string.IsNullOrEmpty(blobPath)) return;

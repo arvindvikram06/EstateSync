@@ -66,6 +66,20 @@ public class LocalFileStorageService : IFileStorageService
         return $"/uploads/{normalizedSubFolder}/{fileName}";
     }
 
+    public async Task<byte[]> ReadBytesAsync(string storedPath, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(storedPath) || !storedPath.StartsWith("/uploads/", StringComparison.Ordinal))
+            throw new InvalidOperationException("Stored local file path is invalid.");
+
+        var relativePath = storedPath["/uploads/".Length..].Replace('/', Path.DirectorySeparatorChar);
+        var fullPath = Path.GetFullPath(Path.Combine(_uploadRootPath, relativePath));
+        var uploadRoot = Path.GetFullPath(_uploadRootPath) + Path.DirectorySeparatorChar;
+        if (!fullPath.StartsWith(uploadRoot, StringComparison.Ordinal))
+            throw new InvalidOperationException("Stored local file path escapes the upload directory.");
+
+        return await File.ReadAllBytesAsync(fullPath, ct);
+    }
+
     public Task DeleteFileAsync(string blobPath)
     {
         if (string.IsNullOrEmpty(blobPath)) return Task.CompletedTask;

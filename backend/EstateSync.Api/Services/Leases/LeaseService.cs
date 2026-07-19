@@ -285,6 +285,10 @@ public class LeaseService : ILeaseService
 
         if (approve)
         {
+            // Rebuild from the persisted signature blobs immediately before activation.
+            // This both validates that both signatures are readable and prevents an
+            // unsigned/stale agreement from being approved.
+            lease.SignedAgreementUrl = await _leaseDocumentService.GenerateSignedAgreementPdfAsync(lease, ct);
             lease.Status = LeaseStatus.Active;
             lease.ActivatedAt = DateTime.UtcNow;
             property.Status = PropertyStatus.Leased;

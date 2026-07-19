@@ -9,6 +9,7 @@ public interface IFileStorageService
     // Returns a blob path (e.g. "estatesync-private/kyc/guid.jpg") — store this in the DB.
     Task<string> SaveFileAsync(IFormFile file, string subFolder, CancellationToken ct);
     Task<string> SaveBytesAsync(byte[] bytes, string subFolder, string fileName, CancellationToken ct = default);
+    Task<byte[]> ReadBytesAsync(string storedPath, CancellationToken ct = default);
     Task DeleteFileAsync(string blobPath);
 
     // Converts a stored blob path into a viewable URL.
