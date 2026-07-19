@@ -41,6 +41,8 @@ using EstateSync.Api.Interfaces.Services.Users;
 using EstateSync.Api.Services.Users;
 using EstateSync.Api.Interfaces.Services.Admin;
 using EstateSync.Api.Services.Admin;
+using EstateSync.Api.Interfaces.Services.Locations;
+using EstateSync.Api.Services.Locations;
 using EstateSync.Api.Services.Background;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -221,6 +223,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IAdminFinancialService, AdminFinancialService>();
+builder.Services.AddSingleton<ILocationService, LocationService>();
 builder.Services.AddScoped<IStatisticsRepository, StatisticsRepository>();
 builder.Services.AddScoped<INotificationSender, NotificationSender>();
 

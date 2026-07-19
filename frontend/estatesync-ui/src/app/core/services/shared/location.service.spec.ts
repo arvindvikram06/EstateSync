@@ -1,39 +1,53 @@
-import { vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { describe, it, expect, beforeEach } from 'vitest';
-
-// Mock the heavy country-state-city library so tests run fast with no I/O.
-vi.mock('country-state-city', () => ({
-  Country: { getAllCountries: vi.fn(() => [{ isoCode: 'IN', name: 'India' }]) },
-  State:   { getStatesOfCountry: vi.fn(() => [{ isoCode: 'KA', name: 'Karnataka' }]) },
-  City:    { getCitiesOfState: vi.fn(() => [{ name: 'Bengaluru' }]) },
-}));
-
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { environment } from '../../../../environments/environment';
 import { LocationService } from './location.service';
 
 describe('LocationService', () => {
   let service: LocationService;
+  let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [LocationService] });
+    TestBed.configureTestingModule({
+      providers: [LocationService, provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(LocationService);
+    http = TestBed.inject(HttpTestingController);
   });
 
-  it('returns all countries from the library', () => {
-    const countries = service.getCountries();
-    expect(countries).toHaveLength(1);
-    expect(countries[0].name).toBe('India');
+  afterEach(() => http.verify());
+
+  it('loads and caches Indian states', () => {
+    let firstName = '';
+    let secondName = '';
+
+    service.getStates().subscribe(response => firstName = response.data?.[0].name ?? '');
+    const request = http.expectOne(`${environment.apiUrl}/api/v1/locations/states`);
+    request.flush({ success: true, data: [{ code: 'KA', name: 'Karnataka' }] });
+
+    service.getStates().subscribe(response => secondName = response.data?.[0].name ?? '');
+    http.expectNone(`${environment.apiUrl}/api/v1/locations/states`);
+
+    expect(firstName).toBe('Karnataka');
+    expect(secondName).toBe('Karnataka');
   });
 
-  it('returns states for a given country code', () => {
-    const states = service.getStates('IN');
-    expect(states).toHaveLength(1);
-    expect(states[0].name).toBe('Karnataka');
+  it('encodes the state code and sends trimmed city search parameters', () => {
+    service.searchCities('TN', '  chen  ', 20).subscribe();
+
+    const request = http.expectOne(req =>
+      req.url === `${environment.apiUrl}/api/v1/locations/states/TN/cities` &&
+      req.params.get('search') === 'chen' &&
+      req.params.get('limit') === '20');
+    expect(request.request.method).toBe('GET');
+    request.flush({ success: true, data: [{ name: 'Chennai' }] });
   });
 
-  it('returns cities for a given country and state code', () => {
-    const cities = service.getCities('IN', 'KA');
-    expect(cities).toHaveLength(1);
-    expect(cities[0].name).toBe('Bengaluru');
+  it('clamps the requested result limit', () => {
+    service.searchCities('KA', 'be', 500).subscribe();
+    const request = http.expectOne(req => req.params.get('limit') === '50');
+    request.flush({ success: true, data: [] });
   });
 });

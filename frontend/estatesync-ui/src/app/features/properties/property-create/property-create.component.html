@@ -84,8 +84,8 @@
               (input)="onStateInput($any($event.target).value)"
               (blur)="onStateBlur()"
               placeholder="Type to search…" />
-            <mat-autocomplete #stateAuto (optionSelected)="onStateSelected($event.option.value)">
-              @for (s of filteredStates(); track s.isoCode) {
+            <mat-autocomplete #stateAuto [displayWith]="displayState" (optionSelected)="onStateSelected($event.option.value)">
+              @for (s of filteredStates(); track s.code) {
                 <mat-option [value]="s">{{ s.name }}</mat-option>
               }
             </mat-autocomplete>
@@ -100,16 +100,19 @@
             <input matInput
               [errorStateMatcher]="cityErrorMatcher"
               [matAutocomplete]="cityAuto"
+              #cityTrigger="matAutocompleteTrigger"
               [value]="cityDisplay()"
               [disabled]="!stateCode()"
-              (input)="onCityInput($any($event.target).value)"
+              (input)="onCityInput($any($event.target).value, cityTrigger)"
               (blur)="onCityBlur()"
               [placeholder]="stateCode() ? 'Type to search…' : 'Select a state first'" />
-            <mat-autocomplete #cityAuto (optionSelected)="onCitySelected($event.option.value)">
+            <mat-autocomplete #cityAuto [displayWith]="displayCity" (optionSelected)="onCitySelected($event.option.value)">
               @for (c of filteredCities(); track c.name) {
-                <mat-option [value]="c.name">{{ c.name }}</mat-option>
+                <mat-option [value]="c">{{ c.name }}</mat-option>
               }
             </mat-autocomplete>
+            @if (locationsLoading()) { <mat-hint>Searching cities…</mat-hint> }
+            @else if (locationError()) { <mat-hint class="text-es-danger">{{ locationError() }}</mat-hint> }
             @if (locationForm.controls.city.invalid && locationForm.controls.city.touched) {
               <mat-error>{{ cityDisplay() ? 'Choose an option from the list' : 'City is required' }}</mat-error>
             }

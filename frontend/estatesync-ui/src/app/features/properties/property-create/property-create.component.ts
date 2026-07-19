@@ -5,8 +5,8 @@ import {
 import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { Subject } from 'rxjs';
-import { debounceTime, map, startWith } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,9 +17,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { DecimalPipe, DatePipe } from '@angular/common';
-import { IState, ICity } from 'country-state-city';
 import { PropertyService } from '@core/services/property/property.service';
-import { LocationService } from '@core/services/shared/location.service';
+import { LocationCity, LocationService, LocationState } from '@core/services/shared/location.service';
 import { GeocodingService } from '@core/services/shared/geocoding.service';
 import {
   PropertyDetailResponse, DocumentResponse, PatchPropertyDraftRequest,
@@ -79,11 +78,18 @@ export class PropertyCreateComponent implements OnInit {
   readonly propertyType = signal<'IndependentHouse' | 'Villa' | null>(null);
 
   // ── Step 2: Location ─────────────────────────────────────────────
-  readonly states       = signal<IState[]>([]);
-  readonly cities       = signal<ICity[]>([]);
+  readonly states       = signal<LocationState[]>([]);
+  readonly cities       = signal<LocationCity[]>([]);
   readonly stateCode    = signal('');
   readonly stateDisplay = signal('');
   readonly cityDisplay  = signal('');
+  readonly locationsLoading = signal(false);
+  readonly locationError = signal('');
+  private readonly citySearch$ = new Subject<{
+    search: string;
+    stateCode: string;
+    trigger?: MatAutocompleteTrigger;
+  }>();
 
   readonly stateErrorMatcher: ErrorStateMatcher = {
     isErrorState: () => this.locationForm.controls.state.invalid && this.locationForm.controls.state.touched,
@@ -107,10 +113,7 @@ export class PropertyCreateComponent implements OnInit {
     const q = this.stateDisplay().toLowerCase();
     return !q ? this.states() : this.states().filter(s => s.name.toLowerCase().includes(q));
   });
-  readonly filteredCities = computed(() => {
-    const q = this.cityDisplay().toLowerCase();
-    return !q ? this.cities() : this.cities().filter(c => c.name.toLowerCase().includes(q));
-  });
+  readonly filteredCities = computed(() => this.cities());
 
   // ── Step 3: Map pin ───────────────────────────────────────────────
   readonly lat             = signal<number | null>(null);
@@ -209,10 +212,35 @@ export class PropertyCreateComponent implements OnInit {
       debounceTime(600),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(pos => this.doReverseGeocode(pos.lat, pos.lng));
+
+    this.citySearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged((previous, current) =>
+        previous.search === current.search && previous.stateCode === current.stateCode),
+      switchMap(request => {
+        if (!request.stateCode || request.search.length < 2) {
+          return of({ cities: [] as LocationCity[], trigger: request.trigger });
+        }
+        this.locationsLoading.set(true);
+        this.locationError.set('');
+        return this.locSvc.searchCities(request.stateCode, request.search).pipe(
+          map(response => ({ cities: response.data ?? [], trigger: request.trigger })),
+          catchError(() => {
+            this.locationError.set('City search is unavailable. Please try again.');
+            return of({ cities: [] as LocationCity[], trigger: request.trigger });
+          }),
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(result => {
+      this.cities.set(result.cities);
+      this.locationsLoading.set(false);
+      if (result.cities.length > 0) queueMicrotask(() => result.trigger?.openPanel());
+    });
   }
 
   ngOnInit(): void {
-    this.states.set(this.locSvc.getStates('IN'));
+    this.loadStates();
 
     const savedId = localStorage.getItem(STORAGE_PROPERTY_ID);
     if (savedId) {
@@ -245,6 +273,31 @@ export class PropertyCreateComponent implements OnInit {
           },
         });
     }
+  }
+
+  private loadStates(): void {
+    this.locationsLoading.set(true);
+    this.locationError.set('');
+    this.locSvc.getStates()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: response => {
+          this.states.set(response.data ?? []);
+          this.resolveExistingState();
+          this.locationsLoading.set(false);
+        },
+        error: () => {
+          this.locationError.set('Locations are unavailable. Reload the page to try again.');
+          this.locationsLoading.set(false);
+        },
+      });
+  }
+
+  private resolveExistingState(): void {
+    const stateName = this.locationForm.controls.state.value;
+    if (!stateName) return;
+    const state = this.states().find(item => item.name.toLowerCase() === stateName.toLowerCase());
+    if (state) this.stateCode.set(state.code);
   }
 
   private loadDraftById(id: string, savedStep: number | null): void {
@@ -473,11 +526,7 @@ export class PropertyCreateComponent implements OnInit {
     if (p.state) {
       this.stateDisplay.set(p.state);
       this.locationForm.controls.state.setValue(p.state);
-      const stateObj = this.locSvc.getStates('IN').find(s => s.name === p.state);
-      if (stateObj) {
-        this.stateCode.set(stateObj.isoCode);
-        this.cities.set(this.locSvc.getCities('IN', stateObj.isoCode));
-      }
+      this.resolveExistingState();
     }
     if (p.city) {
       this.cityDisplay.set(p.city);
@@ -548,28 +597,42 @@ export class PropertyCreateComponent implements OnInit {
       this.stateCode.set('');
       this.cities.set([]);
       this.cityDisplay.set('');
+      this.citySearch$.next({ search: '', stateCode: '' });
     }
   }
 
-  onStateSelected(state: IState): void {
-    this.stateCode.set(state.isoCode);
+  displayState(state: LocationState | string | null): string {
+    return typeof state === 'string' ? state : state?.name ?? '';
+  }
+
+  onStateSelected(state: LocationState): void {
+    this.stateCode.set(state.code);
     this.stateDisplay.set(state.name);
     this.locationForm.controls.state.setValue(state.name);
     this.locationForm.controls.city.setValue('');
     this.cityDisplay.set('');
-    this.cities.set(this.locSvc.getCities('IN', state.isoCode));
+    this.cities.set([]);
+    this.citySearch$.next({ search: '', stateCode: state.code });
   }
 
-  onCityInput(value: string): void {
+  onCityInput(value: string, trigger?: MatAutocompleteTrigger): void {
     this.cityDisplay.set(value);
     if (value !== this.locationForm.controls.city.value) {
       this.locationForm.controls.city.setValue('');
     }
+    const search = value.trim();
+    if (search.length < 2) this.cities.set([]);
+    this.citySearch$.next({ search, stateCode: this.stateCode(), trigger });
   }
 
-  onCitySelected(cityName: string): void {
-    this.cityDisplay.set(cityName);
-    this.locationForm.controls.city.setValue(cityName);
+  displayCity(city: LocationCity | string | null): string {
+    return typeof city === 'string' ? city : city?.name ?? '';
+  }
+
+  onCitySelected(city: LocationCity): void {
+    if (!city) return;
+    this.cityDisplay.set(city.name);
+    this.locationForm.controls.city.setValue(city.name);
   }
 
   onStateBlur(): void {

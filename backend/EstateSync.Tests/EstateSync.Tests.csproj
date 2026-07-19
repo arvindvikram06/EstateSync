@@ -31,6 +31,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EstateSync.Api\EstateSync.Api.csproj" />
+    <Content Include="..\EstateSync.Api\Data\Locations\india-locations.json"
+             Link="Data\Locations\india-locations.json"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- TEMP-QUARANTINE: stale tests from the in-progress entity/service refactor. REMOVE THIS BLOCK. -->

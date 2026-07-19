@@ -5,7 +5,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { switchMap, forkJoin, timeout } from 'rxjs';
+import { Subject, catchError, debounceTime, distinctUntilChanged, forkJoin, of, switchMap, timeout } from 'rxjs';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,9 +17,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatAutocomplete, MatAutocompleteTrigger } from '@angular/material/autocomplete';
-import { IState, ICity } from 'country-state-city';
 import { PropertyService } from '@core/services/property/property.service';
-import { LocationService } from '@core/services/shared/location.service';
+import { LocationCity, LocationService, LocationState } from '@core/services/shared/location.service';
 import { PropertyDetailResponse, PropertyImageResponse, DocumentResponse } from '../../../core/models/property.model';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import * as L from 'leaflet';
@@ -80,21 +79,24 @@ export class PropertyEditComponent implements OnInit {
   );
 
   // Location cascades — synchronous
-  readonly countries    = this.locSvc.getCountries();
-  readonly states       = signal<IState[]>([]);
-  readonly cities       = signal<ICity[]>([]);
+  readonly states       = signal<LocationState[]>([]);
+  readonly cities       = signal<LocationCity[]>([]);
   readonly stateCode    = signal('');
   readonly stateDisplay = signal('');
   readonly cityDisplay  = signal('');
+  readonly locationsLoading = signal(false);
+  readonly locationError = signal('');
+  private readonly citySearch$ = new Subject<{
+    search: string;
+    stateCode: string;
+    trigger?: MatAutocompleteTrigger;
+  }>();
 
   readonly filteredStates = computed(() => {
     const q = this.stateDisplay().toLowerCase();
     return !q ? this.states() : this.states().filter(s => s.name.toLowerCase().includes(q));
   });
-  readonly filteredCities = computed(() => {
-    const q = this.cityDisplay().toLowerCase();
-    return !q ? this.cities() : this.cities().filter(c => c.name.toLowerCase().includes(q));
-  });
+  readonly filteredCities = computed(() => this.cities());
 
   readonly amenityList       = AMENITY_LIST;
   readonly selectedAmenities = signal<Set<string>>(new Set());
@@ -159,11 +161,61 @@ export class PropertyEditComponent implements OnInit {
         }
       }
     });
+
+    this.citySearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged((previous, current) =>
+        previous.search === current.search && previous.stateCode === current.stateCode),
+      switchMap(request => {
+        if (!request.stateCode || request.search.length < 2) {
+          return of({ cities: [] as LocationCity[], trigger: request.trigger });
+        }
+        this.locationsLoading.set(true);
+        this.locationError.set('');
+        return this.locSvc.searchCities(request.stateCode, request.search).pipe(
+          switchMap(response => of({ cities: response.data ?? [], trigger: request.trigger })),
+          catchError(() => {
+            this.locationError.set('City search is unavailable. Please try again.');
+            return of({ cities: [] as LocationCity[], trigger: request.trigger });
+          }),
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(result => {
+      this.cities.set(result.cities);
+      this.locationsLoading.set(false);
+      if (result.cities.length > 0) queueMicrotask(() => result.trigger?.openPanel());
+    });
   }
 
   ngOnInit(): void {
-    this.states.set(this.locSvc.getStates('IN'));
+    this.loadStates();
     this.loadPage();
+  }
+
+  private loadStates(): void {
+    this.locationsLoading.set(true);
+    this.locationError.set('');
+    this.locSvc.getStates()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: response => {
+          this.states.set(response.data ?? []);
+          this.resolveExistingState();
+          this.locationsLoading.set(false);
+        },
+        error: () => {
+          this.locationError.set('Locations are unavailable. Reload the page to try again.');
+          this.locationsLoading.set(false);
+        },
+      });
+  }
+
+  private resolveExistingState(): void {
+    const stateName = this.form.controls.state.value;
+    if (!stateName) return;
+    const state = this.states().find(item => item.name.toLowerCase() === stateName.toLowerCase());
+    if (state) this.stateCode.set(state.code);
   }
 
   loadPage(): void {
@@ -210,13 +262,6 @@ export class PropertyEditComponent implements OnInit {
         }
         this.property.set(p);
 
-        const allStates    = this.locSvc.getStates('IN');
-        const matchedState = allStates.find(s => s.name === p.state);
-        const sc           = matchedState?.isoCode ?? '';
-        if (sc) {
-          this.stateCode.set(sc);
-          this.cities.set(this.locSvc.getCities('IN', sc));
-        }
         this.stateDisplay.set(p.state);
         this.cityDisplay.set(p.city);
 
@@ -238,6 +283,7 @@ export class PropertyEditComponent implements OnInit {
           latInput:        p.latitude,
           lngInput:               p.longitude,
         });
+        this.resolveExistingState();
 
         const loadedKeys = new Set((p.amenities ?? []).map(a => normalize(a)));
         this.selectedAmenities.set(
@@ -372,15 +418,6 @@ export class PropertyEditComponent implements OnInit {
 
   // ── Location handlers ────────────────────────────────────────────────────
 
-  onCountryChange(countryCode: string): void {
-    this.states.set(this.locSvc.getStates(countryCode));
-    this.cities.set([]);
-    this.stateCode.set('');
-    this.stateDisplay.set('');
-    this.cityDisplay.set('');
-    this.form.patchValue({ state: '', city: '' });
-  }
-
   onStateInput(value: string): void {
     this.stateDisplay.set(value);
     if (value !== this.form.controls.state.value) {
@@ -388,30 +425,43 @@ export class PropertyEditComponent implements OnInit {
       this.stateCode.set('');
       this.cities.set([]);
       this.cityDisplay.set('');
+      this.citySearch$.next({ search: '', stateCode: '' });
     }
   }
 
-  onStateSelected(stateName: string): void {
-    const state = this.states().find(s => s.name === stateName);
+  displayState(state: LocationState | string | null): string {
+    return typeof state === 'string' ? state : state?.name ?? '';
+  }
+
+  onStateSelected(state: LocationState): void {
     if (!state) return;
-  
-    this.stateCode.set(state.isoCode);
+
+    this.stateCode.set(state.code);
     this.stateDisplay.set(state.name);
     this.form.patchValue({ state: state.name, city: '' });
     this.cityDisplay.set('');
-    this.cities.set(this.locSvc.getCities(this.form.controls.countryCode.value, state.isoCode));
+    this.cities.set([]);
+    this.citySearch$.next({ search: '', stateCode: state.code });
   }
 
-  onCityInput(value: string): void {
+  onCityInput(value: string, trigger?: MatAutocompleteTrigger): void {
     this.cityDisplay.set(value);
     if (value !== this.form.controls.city.value) {
       this.form.patchValue({ city: '' });
     }
+    const search = value.trim();
+    if (search.length < 2) this.cities.set([]);
+    this.citySearch$.next({ search, stateCode: this.stateCode(), trigger });
   }
 
-  onCitySelected(cityName: string): void {
-    this.cityDisplay.set(cityName);
-    this.form.patchValue({ city: cityName });
+  displayCity(city: LocationCity | string | null): string {
+    return typeof city === 'string' ? city : city?.name ?? '';
+  }
+
+  onCitySelected(city: LocationCity): void {
+    if (!city) return;
+    this.cityDisplay.set(city.name);
+    this.form.patchValue({ city: city.name });
   }
 
   // ── Amenities ────────────────────────────────────────────────────────────

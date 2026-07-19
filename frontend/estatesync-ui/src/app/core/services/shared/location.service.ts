@@ -1,17 +1,38 @@
-import { Injectable } from '@angular/core';
-import { Country, State, City, ICountry, IState, ICity } from 'country-state-city';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, shareReplay } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { ApiResponse } from '../../models/api-response.model';
+
+export interface LocationState {
+  code: string;
+  name: string;
+}
+
+export interface LocationCity {
+  name: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class LocationService {
-  getCountries(): ICountry[] {
-    return Country.getAllCountries();
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiUrl}/api/v1/locations`;
+  private readonly states$ = this.http
+    .get<ApiResponse<LocationState[]>>(`${this.baseUrl}/states`)
+    .pipe(shareReplay({ bufferSize: 1, refCount: false }));
+
+  getStates(): Observable<ApiResponse<LocationState[]>> {
+    return this.states$;
   }
 
-  getStates(countryCode: string): IState[] {
-    return State.getStatesOfCountry(countryCode);
-  }
+  searchCities(stateCode: string, search: string, limit = 20): Observable<ApiResponse<LocationCity[]>> {
+    const params = new HttpParams()
+      .set('search', search.trim())
+      .set('limit', Math.min(Math.max(limit, 1), 50).toString());
 
-  getCities(countryCode: string, stateCode: string): ICity[] {
-    return City.getCitiesOfState(countryCode, stateCode);
+    return this.http.get<ApiResponse<LocationCity[]>>(
+      `${this.baseUrl}/states/${encodeURIComponent(stateCode)}/cities`,
+      { params },
+    );
   }
 }

@@ -96,10 +96,8 @@
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Country</mat-label>
           <mat-icon matPrefix>public</mat-icon>
-          <mat-select formControlName="countryCode" (selectionChange)="onCountryChange($event.value)">
-            @for (c of countries; track c.isoCode) {
-            <mat-option [value]="c.isoCode">{{ c.name }}</mat-option>
-            }
+          <mat-select formControlName="countryCode">
+            <mat-option value="IN">India</mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -109,8 +107,8 @@
           <input matInput [matAutocomplete]="stateAuto" [value]="stateDisplay()"
             [disabled]="!form.controls.countryCode.value" (input)="onStateInput($any($event.target).value)"
             placeholder="Type to search state…" />
-          <mat-autocomplete #stateAuto (optionSelected)="onStateSelected($event.option.value)">
-            @for (s of filteredStates(); track s.isoCode) {
+          <mat-autocomplete #stateAuto [displayWith]="displayState" (optionSelected)="onStateSelected($event.option.value)">
+            @for (s of filteredStates(); track s.code) {
             <mat-option [value]="s">{{ s.name }}</mat-option>
             }
           </mat-autocomplete>
@@ -123,12 +121,15 @@
           <mat-label>City</mat-label>
           <mat-icon matPrefix>location_city</mat-icon>
           <input matInput [matAutocomplete]="cityAuto" [value]="cityDisplay()" [disabled]="!stateCode()"
-            (input)="onCityInput($any($event.target).value)" placeholder="Type to search city…" />
-          <mat-autocomplete #cityAuto (optionSelected)="onCitySelected($event.option.value)">
+            #cityTrigger="matAutocompleteTrigger"
+            (input)="onCityInput($any($event.target).value, cityTrigger)" placeholder="Type to search city…" />
+          <mat-autocomplete #cityAuto [displayWith]="displayCity" (optionSelected)="onCitySelected($event.option.value)">
             @for (c of filteredCities(); track c.name) {
             <mat-option [value]="c">{{ c.name }}</mat-option>
             }
           </mat-autocomplete>
+          @if (locationsLoading()) { <mat-hint>Searching cities…</mat-hint> }
+          @else if (locationError()) { <mat-hint class="text-es-danger">{{ locationError() }}</mat-hint> }
           @if (form.controls.city.invalid && form.controls.city.touched) {
           <mat-error>City is required</mat-error>
           }
@@ -510,10 +511,8 @@
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Country</mat-label>
           <mat-icon matPrefix>public</mat-icon>
-          <mat-select formControlName="countryCode" (selectionChange)="onCountryChange($event.value)">
-            @for (c of countries; track c.isoCode) {
-            <mat-option [value]="c.isoCode">{{ c.name }}</mat-option>
-            }
+          <mat-select formControlName="countryCode">
+            <mat-option value="IN">India</mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -523,8 +522,8 @@
           <input matInput [matAutocomplete]="stateAutoLF" [value]="stateDisplay()"
             [disabled]="!form.controls.countryCode.value" (input)="onStateInput($any($event.target).value)"
             placeholder="Type to search state…" />
-          <mat-autocomplete #stateAutoLF (optionSelected)="onStateSelected($event.option.value)">
-            @for (s of filteredStates(); track s.isoCode) {
+          <mat-autocomplete #stateAutoLF [displayWith]="displayState" (optionSelected)="onStateSelected($event.option.value)">
+            @for (s of filteredStates(); track s.code) {
             <mat-option [value]="s">{{ s.name }}</mat-option>
             }
           </mat-autocomplete>
@@ -537,12 +536,15 @@
           <mat-label>City</mat-label>
           <mat-icon matPrefix>location_city</mat-icon>
           <input matInput [matAutocomplete]="cityAutoLF" [value]="cityDisplay()" [disabled]="!stateCode()"
-            (input)="onCityInput($any($event.target).value)" placeholder="Type to search city…" />
-          <mat-autocomplete #cityAutoLF (optionSelected)="onCitySelected($event.option.value)">
+            #cityTriggerLF="matAutocompleteTrigger"
+            (input)="onCityInput($any($event.target).value, cityTriggerLF)" placeholder="Type to search city…" />
+          <mat-autocomplete #cityAutoLF [displayWith]="displayCity" (optionSelected)="onCitySelected($event.option.value)">
             @for (c of filteredCities(); track c.name) {
             <mat-option [value]="c">{{ c.name }}</mat-option>
             }
           </mat-autocomplete>
+          @if (locationsLoading()) { <mat-hint>Searching cities…</mat-hint> }
+          @else if (locationError()) { <mat-hint class="text-es-danger">{{ locationError() }}</mat-hint> }
           @if (form.controls.city.invalid && form.controls.city.touched) {
           <mat-error>City is required</mat-error>
           }
