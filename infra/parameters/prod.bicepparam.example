@@ -1,0 +1,11 @@
+using '../main.bicep'
+
+param postgresAdminUser = 'esadmin'
+
+param postgresAdminPassword = '<POSTGRES_ADMIN_PASSWORD>'
+
+param deployerObjectId = '<YOUR_AAD_OBJECT_ID>'
+
+param jwtSecretKey = '<JWT_SECRET_KEY>'
+
+param stripeSecretKey = '<STRIPE_SECRET_KEY>'

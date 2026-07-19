@@ -12,6 +12,9 @@ docs/PASSWORD_RESET_WITH_REDIS.md
 *.coverage
 **/coveragereport/
 
+**/docs
+
+**/artifacts
 
 **/CLAUDE.md
 
@@ -34,8 +37,11 @@ coverage.cobertura.xml
 **/appsettings.Development.json
 **/appsettings.*.local.json
 
-# Azure deployment infra (contains secrets)
-infra/
+# Azure production parameters contain real credentials
+infra/parameters/*.bicepparam
+
+# Keep the safe placeholder template in Git
+!infra/parameters/prod.bicepparam.example
 
 # macOS
 .DS_Store

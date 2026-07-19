@@ -1,0 +1,72 @@
+name: Deploy Backend API
+
+on:
+  # Automatic deploys are disabled until the ACR/kubeconfig secrets are configured.
+  # Re-enable by uncommenting the push trigger below.
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'backend/**'
+  #     - 'infra/k8s/deployment.yaml'
+  #     - 'infra/k8s/service.yaml'
+  #     - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+      ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+      ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+      AKS_DEPLOY_KUBECONFIG: ${{ secrets.AKS_DEPLOY_KUBECONFIG }}
+      IMAGE_TAG: ${{ github.sha }}
+    steps:
+      - name: Verify deployment configuration
+        run: |
+          missing=()
+          for setting in ACR_LOGIN_SERVER ACR_USERNAME ACR_PASSWORD AKS_DEPLOY_KUBECONFIG; do
+            if [ -z "${!setting}" ]; then
+              missing+=("$setting")
+            fi
+          done
+          if [ "${#missing[@]}" -ne 0 ]; then
+            echo "Missing required GitHub repository secrets: ${missing[*]}" >&2
+            exit 1
+          fi
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3
+        with:
+          registry: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push API
+        run: |
+          docker build \
+            -t "$ACR_LOGIN_SERVER/estatesync-api:$IMAGE_TAG" \
+            -t "$ACR_LOGIN_SERVER/estatesync-api:latest" \
+            backend/EstateSync.Api
+          docker push "$ACR_LOGIN_SERVER/estatesync-api:$IMAGE_TAG"
+          docker push "$ACR_LOGIN_SERVER/estatesync-api:latest"
+
+      - uses: azure/setup-kubectl@776406bce94f63e41d621b960d78ee25c8b76ede # v4
+
+      - name: Configure scoped Kubernetes access
+        run: |
+          mkdir -p "$HOME/.kube"
+          printf '%s' "$AKS_DEPLOY_KUBECONFIG" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Apply workloads
+        run: |
+          kubectl apply -f infra/k8s/deployment.yaml
+          kubectl apply -f infra/k8s/service.yaml
+          kubectl set image deployment/estatesync-api \
+            api="$ACR_LOGIN_SERVER/estatesync-api:$IMAGE_TAG" \
+            -n estatesync
+          kubectl rollout status deployment/estatesync-api -n estatesync --timeout=5m
