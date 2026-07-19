@@ -20,6 +20,10 @@ def load():
     _embeddings = np.array([c["embedding"] for c in data], dtype=np.float32)
 
 
+def count() -> int:
+    return len(_chunks)
+
+
 def search(query_embedding: list[float], top_k: int = 5) -> list[dict]:
     if _embeddings is None or len(_chunks) == 0:
         return []

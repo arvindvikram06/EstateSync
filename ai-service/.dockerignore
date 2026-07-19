@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.example
+embeddings.json
+.content.hash
+.fastembed_cache/
+Dockerfile
+.dockerignore

@@ -18,6 +18,14 @@ Go to the login page and enter your email and password to log in. Your email mus
 
 Click Forgot Password on the login page and enter your registered email address. A password reset link is sent to your email. Open the link and enter your new password. The reset link expires after one hour, so use it promptly. If the email does not arrive, check your spam folder or request a new link.
 
+## Why Am I Logged Out Unexpectedly
+
+Your login session is kept alive automatically while you use the platform, but it can end if you have been inactive for a long time or if you clear your browser data. If you are suddenly signed out, simply log in again with your email and password. If this happens repeatedly on the same device, try logging in again from a fresh browser tab. This is different from an account being disabled — a normal session expiry only ever asks you to log in again, it never blocks your account.
+
+## Why Is My Account Disabled
+
+Accounts can be deactivated by the EstateSync team, usually due to a policy violation or a support request. If you try to log in and are told your account is inactive, you will not be able to sign in until it is reactivated. Contact support for details on why your account was disabled and what is needed to restore access. This is different from an expired session, which only requires logging in again.
+
 ## Managing Your Profile
 
 Click your avatar in the navigation bar and select Profile to view your account details. Update your name and phone number from the profile page and save the changes. To change your password while logged in, open Profile and click Change Password, then enter your current password followed by your new password.
@@ -42,9 +50,13 @@ Upload four documents on the KYC page — Aadhaar card front, Aadhaar card back,
 
 After submitting, your KYC enters a review state and a team member checks your documents. When approved, your account is marked verified and you receive a notification. When rejected, you receive a notification with a reason explaining what to correct. Fix the issue and resubmit your documents. There is no limit on how many times you can resubmit.
 
+## Who Reviews My Documents
+
+Identity documents, property ownership documents, and lease approvals are reviewed by the EstateSync team — either an Admin or a Verifier staff member. Verifiers are dedicated staff accounts that specialize in reviewing identity verification submissions. You do not choose who reviews your documents; a reviewer picks it up from the review queue and you are notified as soon as a decision is made. Reviews are typically completed quickly, and you can always see the current status — Pending, Approved, or Rejected — on the relevant page of your dashboard.
+
 ## Tenant Dashboard Overview
 
-Your Tenant dashboard is where you manage your rental activity. It has sections for your rental applications, your leases, your saved properties, your bills and payments, and your complaints. Use the sidebar to move between sections. Each section shows the current status of your items so you always know where things stand.
+Your Tenant dashboard is where you manage your rental activity. It has sections for your rental applications, your site visits, your leases, your saved properties, your bills and payments, and your complaints. Use the sidebar to move between sections. Each section shows the current status of your items so you always know where things stand.
 
 ## Searching and Browsing Properties
 
@@ -54,37 +66,61 @@ Go to the Properties page from the main navigation bar to see all available prop
 
 Use the filter bar on the Properties page to narrow your search. Filter by city or state using the search bar, by property type, by number of bedrooms, and by rent range using a minimum and maximum amount. The bedroom filter shows properties with that number of bedrooms or more. Filters work together and results update automatically as you apply them.
 
+## Property Types Explained
+
+EstateSync currently lists two kinds of properties — Independent House and Villa. Both are standalone residential properties rather than shared or apartment-style units. Use the property type filter on the Properties page to narrow your search to the kind of property you are looking for.
+
 ## Saving a Property
 
 Click the Save button on a property card or detail page to save a property for later. View all saved properties from the Saved Properties section on your dashboard. Click Unsave to remove one. Saving does not notify the owner and does not reserve the property.
 
 ## Requesting a Property Visit
 
-Open the property detail page and click Request a Visit to ask the owner for a viewing. The request is sent to the property owner, who approves or rejects it. You receive a notification once the owner responds. After approval, coordinate the visit timing with the owner.
+Open the property detail page and click Request a Visit to ask the owner for a viewing. Choose a specific date and time you would like to visit, then submit the request. The request is sent to the property owner, who approves or declines it, optionally with a note. You receive a notification once the owner responds. You can only have one active visit request per property at a time — submit a new one only after the previous request is cancelled, declined, or completed.
+
+## Cancelling a Site Visit Request
+
+Open the Site Visits section on your Tenant dashboard and select the visit you want to cancel. You can cancel a visit while it is Pending or already Approved, as long as it has not been declined or already cancelled. The property owner is notified when you cancel. Cancelling frees you up to request a new visit for the same property later if you want to.
+
+## Site Visit Statuses Explained
+
+A site visit request moves through a few statuses. Pending means it is waiting for the owner to respond. Approved means the owner confirmed the date and time you requested. Declined means the owner turned down the request, usually with a note explaining why. Cancelled means you called it off yourself. Completed means the visit took place. You can see the current status of each request in the Site Visits section of your dashboard.
+
+## Responding to a Site Visit Request as an Owner
+
+When a tenant requests a visit to your property, you receive a notification. Open the Site Visits section of your Owner dashboard to see the requested date and time, then choose Approve or Decline. If you decline, you can add a short note explaining why. Only visits that are still Pending can be approved or declined. The tenant is notified of your decision either way.
 
 ## Applying for a Rental Property
 
-Open the property listing and click Apply. A verified KYC is required to apply. Once submitted, your application is sent to the owner for review, and you receive a notification when the owner decides. Track all your applications from the Applications section on your dashboard, where each shows its status as Pending, Approved, or Rejected.
+Open the property listing and click Apply. A verified KYC is required to apply. Once submitted, your application is sent to the owner for review, and you receive a notification when the owner decides. Track all your applications from the Applications section on your dashboard, where each shows its status as Pending, Approved, or Rejected. You can apply to more than one property at the same time — there is no limit on how many active applications you can have.
 
 ## Withdrawing an Application
 
-Open the application from the Applications section on your dashboard and click Withdraw, as long as it has not yet been approved. Once withdrawn, the application is cancelled and does not move to the lease stage.
+Open the application from the Applications section on your dashboard and click Withdraw, as long as it has not yet been approved. Once withdrawn, the application is cancelled and does not move to the lease stage. An application that has already been approved cannot be withdrawn from your side — at that point a lease is expected to follow, so speak with the owner directly if your plans change.
 
 ## Application Statuses Explained
 
 Your rental application moves through several statuses. Pending means it has been submitted and is waiting for the owner to review it. Approved means the owner accepted it and a lease can be created. Rejected means the owner did not accept it. Withdrawn means you cancelled it yourself before a decision. Completed means the application ran its full course — a lease was created from it and that lease has since ended, either by expiring or by you moving out. You can see the status of each application in the Applications section of your dashboard.
 
+## What Happens to My Other Applications Once a Lease Is Created
+
+A property can only have one active lease at a time. When an owner creates a lease from one of your approved applications, EstateSync automatically rejects any other pending or approved applications you or other tenants have on that same property. Each affected applicant is notified. Your applications on other, different properties are not affected and continue as normal.
+
 ## Becoming a Property Owner
 
-To list properties, upgrade your account to Owner. Your KYC must be approved first. Open your Profile from the navigation bar and click Become an Owner. Your account is upgraded and you gain access to the Owner dashboard with property listing and management features.
+To list properties, upgrade your account to Owner. Your KYC must be approved first. Open your Profile from the navigation bar and click Become an Owner. Choose whether you are listing as an Individual or on behalf of a Company — if you choose Company, you also provide the company name, company type, and, where applicable, its CIN and GSTIN. Your account is upgraded and you gain access to the Owner dashboard with property listing and management features.
+
+## Individual vs Company Owner Accounts
+
+When you become an owner, EstateSync asks whether you are an Individual owner or a Company owner. Individual owners list and manage properties under their personal name. Company owners provide additional business details — company name, company type such as Private Limited, LLP, Proprietorship, or Partnership, and identifiers like CIN and GSTIN where relevant. Either type follows the same listing, leasing, and payment process afterward; the distinction is only about whose name the properties and payouts are associated with.
 
 ## Connecting Your Payment Account as an Owner
 
-After becoming an owner, connect a payment account to receive rent from tenants. From your Owner dashboard, click Connect Payment Account and follow the secure bank account linking steps. Once connected and verified, you can list properties and receive payments. This step is required before your listings can go live.
+After becoming an owner, connect a payment account to receive rent from tenants. From your Owner dashboard, click Connect Payment Account and follow the secure bank account linking steps. Once connected and verified, you can list properties and receive payments. This step is required before your listings can go live — you cannot create a property draft until your payment account is verified.
 
 ## Owner Dashboard Overview
 
-Your Owner dashboard gives a full view of your rental business. It has sections for your properties, rental applications, leases, payouts, and complaints against your properties. The overview shows a summary of active properties, pending applications, and upcoming payments. Use the sidebar to move between sections and manage everything in one place.
+Your Owner dashboard gives a full view of your rental business. It has sections for your properties, rental applications, site visits, leases, payouts, and complaints against your properties. The overview shows a summary of active properties, pending applications, and upcoming payments. Use the sidebar to move between sections and manage everything in one place.
 
 ## Property Statuses Explained
 
@@ -96,27 +132,35 @@ A property moves through a full lifecycle. It starts as a Draft while you prepar
 
 ## Listing a New Property
 
-Go to your Owner dashboard and click Add Property to open the step-by-step listing wizard. Complete each step in order — steps cannot be skipped. Progress is saved as a draft at every step, so you can leave and return to continue. Once all steps are done, the listing is ready to submit.
+Go to your Owner dashboard and click Add Property to open the step-by-step listing wizard. You must be a verified owner with a connected payment account to start. Complete each step in order — steps cannot be skipped, and there is no clickable step list to jump ahead with. Progress is saved as a draft after every step, so you can leave and return at any time to continue where you left off. Once all steps are done, the listing is ready to submit for approval.
 
-## Filling in Property Details
+## Property Listing Wizard Steps in Order
 
-In the first wizard step, enter the property title, type, address, city, state, number of bedrooms, monthly rent, deposit amount, and a description. The rent and deposit amounts are used later in the lease, so enter them accurately. Click Next once all required fields are filled.
+The listing wizard walks through the property details in stages: first the property type, then the location — state, city, pincode, and address — then an optional step to drop a map pin for the exact location, then the number of bedrooms and bathrooms, then the land area and built-up area, then the listing title, then a description, then the monthly rent and security deposit, and finally the amenities. Photos and ownership documents are uploaded separately after these details are filled in. Each step saves automatically so you never lose progress.
+
+## Setting a Map Pin for Your Property
+
+While listing a property, you can optionally drop a pin on a map to mark its exact location. This step can be skipped — if you do not set a pin, the property is still listed and shown using its address, state, and city. Adding a precise pin makes it easier for tenants to judge the exact location before requesting a visit.
+
+## Entering Property Size and Room Details
+
+When listing a property, specify the number of bedrooms and bathrooms, along with the land area and built-up area. These figures are shown on the property detail page to help tenants judge the size of the property, and the bedroom count is also used by the bedroom filter on the search page.
 
 ## Uploading Property Photos
 
-In the images step, upload clear photos showing different rooms and areas of the property. Good photos make the listing more attractive and improve your chances of applications. Remove any photo by clicking its delete icon. At least one photo is recommended before submitting.
+After the listing details are filled in, upload clear photos showing different rooms and areas of the property from the Properties section of your Owner dashboard. Good photos make the listing more attractive and improve your chances of applications. Remove any photo by clicking its delete icon. At least one photo is recommended before submitting.
 
 ## Adding Property Amenities
 
-In the amenities step, select all amenities available at the property, such as parking, water supply, and power backup. Tenants use amenities to filter and compare properties. Amenities can be updated later from the property detail page on your dashboard.
+As one of the wizard steps, select all amenities available at the property, such as parking, water supply, and power backup. Tenants use amenities to filter and compare properties. Amenities can be updated later from the property detail page on your dashboard.
 
 ## Uploading Property Ownership Documents
 
-Upload ownership documents to verify you are the legal owner of the property. These documents are reviewed privately and are never shown to tenants. Upload the required documents, such as the property deed or ownership certificate, in the documents step. They are kept securely and accessed only during approval.
+Upload ownership documents to verify you are the legal owner of the property. These documents are reviewed privately and are never shown to tenants. An ownership certificate is required before you can submit the listing for approval — you can also add supporting documents such as the property deed or a property tax receipt. They are kept securely and accessed only during approval.
 
 ## Submitting a Property for Approval
 
-Once all wizard steps are complete, click Submit for Approval. After the listing is approved, it becomes visible to tenants on the public properties page. If rejected, you receive a notification with the reason. Make the corrections and resubmit for approval.
+Once all wizard steps are complete and an ownership document has been uploaded, click Submit for Approval. If any required detail is missing — for example rent, deposit, bedrooms, bathrooms, area, or the ownership document — submission is blocked until it is filled in. After the listing is approved, it becomes visible to tenants on the public properties page. If rejected, you receive a notification with the reason. Make the corrections and resubmit for approval.
 
 ## Editing a Property
 
@@ -157,6 +201,10 @@ You can download the lease agreement document from the lease page. Before signin
 ## Voiding or Terminating a Lease
 
 Before both parties have signed, the owner can cancel the lease by opening it and clicking Void. After a lease becomes active, the owner can end it early by clicking Terminate on the lease page. Both actions notify the tenant and cannot be undone.
+
+## Why You Cannot Edit a Signed Lease
+
+Lease terms can only be changed while the lease is waiting for signatures and before either party has signed. Once the tenant or owner has signed, the terms are locked to protect both parties from mismatched expectations. If you need to change a signed lease, the owner can void it before it becomes active and create a new one with the correct terms. Once a lease is Active, terms cannot be edited at all — use a renewal to extend the end date instead.
 
 ## Requesting a Lease Renewal as a Tenant
 
@@ -210,9 +258,17 @@ When your lease is approved and becomes active, a security deposit bill is gener
 
 When a rent bill is not paid by its due date, a late payment penalty may be added automatically, and you receive a notification. The penalty appears in the Bills section alongside the overdue rent. Pay rent bills before the due date shown on each bill to avoid penalties.
 
+## What Happens If a Payment Fails
+
+If a rent or deposit payment does not go through, the bill stays unpaid and you can try again. Open the lease, go to the Bills section, and click Pay on the same bill to retry the payment. Make sure your card details are correct. Once a payment succeeds, the bill updates to Paid automatically.
+
 ## Platform Fee
 
 EstateSync charges a small platform fee on each rent payment. The fee is deducted automatically when the tenant pays, and the remaining amount is transferred to the owner's connected payment account. The fee is handled in the background with no action needed from either party.
+
+## Why Are My Payouts Shown in a Different Currency
+
+Rent, deposits, and bills on EstateSync are shown in Indian Rupees, since that is the currency tenants pay in. Owner payouts are processed through the payment provider's payout system, which settles to your connected bank account in US Dollars. This is expected — the rupee amount you were paid and the dollar amount you receive as a payout are simply shown in the currency relevant to each step of the process, and both are accurate for that step.
 
 ## Requesting a Standard Payout as an Owner
 
@@ -240,7 +296,7 @@ Complaints raised by tenants on your properties appear in the Complaints section
 
 ## Notifications
 
-EstateSync sends notifications for important events — when your KYC is reviewed, when a lease is created or signed, when a rent bill is generated, when a payment is received, and when a complaint is updated. Click the bell icon in the top navigation bar to view all notifications. Mark them as read one by one or all at once.
+EstateSync sends notifications for important events — when your KYC is reviewed, when a site visit is requested or confirmed, when a lease is created or signed, when a rent bill is generated, when a payment is received, and when a complaint is updated. Click the bell icon in the top navigation bar to view all notifications. Mark them as read one by one or all at once.
 
 ## Why You Cannot Apply for a Property
 
@@ -254,17 +310,13 @@ To list a property, two things must be done first. Your account must be upgraded
 
 To create a lease, the tenant's rental application must be approved first, and the tenant must have an approved KYC. Open the approved application on your Owner dashboard to start creating the lease. If the option is unavailable, confirm that you have approved the application and that the tenant is verified.
 
-## Why You Cannot Edit a Lease
+## Why You Cannot Submit a Property for Approval
 
-Lease terms can only be changed while the lease is waiting for signatures and before either party has signed. Once the tenant or owner has signed, the terms are locked and cannot be edited. If you need to change a signed lease, the owner can void it before it becomes active and create a new one.
+A property listing can only be submitted once every required field has been filled in through the wizard — title, description, address details, rent, deposit, bedrooms, bathrooms, land area, and built-up area — and at least an ownership certificate document has been uploaded. If Submit for Approval is blocked, revisit each wizard step and the documents step to find what is still missing.
 
 ## Did Not Receive the Verification or Reset Email
 
 If a verification or password reset email did not arrive, first check your spam or junk folder. For verification, use the Resend Verification option on the login page to get a new email. For password reset, request a new link from the Forgot Password page. Reset links expire after one hour, so always use the most recent one.
-
-## What Happens If a Payment Fails
-
-If a rent or deposit payment does not go through, the bill stays unpaid and you can try again. Open the lease, go to the Bills section, and click Pay on the same bill to retry the payment. Make sure your card details are correct. Once a payment succeeds, the bill updates to Paid automatically.
 
 ## What Happens If My KYC Is Rejected
 
@@ -285,3 +337,15 @@ KYC verification, property approval, and lease approval are each reviewed by the
 ## Can I Get My Security Deposit Back
 
 Your security deposit is held as a guarantee during the lease. At the end of the lease it may be used to cover any unpaid dues, penalties, or damages, based on your lease terms. If you end the lease before the notice period, part or all of the deposit may be forfeited. Any remaining deposit is handled according to the terms agreed in your lease.
+
+## Can I Own and Rent Properties at the Same Time
+
+Yes. Becoming an owner adds the Owner role to your account on top of your existing Tenant role — it does not replace it. You can list and manage your own properties from the Owner dashboard while still browsing, applying for, and renting other properties as a tenant from the same account. Switch between the two views using the navigation in your dashboard.
+
+## Can I List More Than One Property as an Owner
+
+Yes, there is no limit on the number of properties you can list. Each property goes through its own listing wizard, its own approval, and has its own applications, leases, and complaints tracked separately in your Owner dashboard.
+
+## Difference Between Requesting a Visit and Applying
+
+Requesting a site visit only books a viewing appointment with the owner at a specific date and time — it does not submit a rental application and does not require the owner's approval to proceed with a full application later. Applying is a separate step where you formally request to rent the property, which requires an approved KYC and is reviewed by the owner for approval. You can request a visit, apply, or do both, in any order, and they are tracked separately on your dashboard.

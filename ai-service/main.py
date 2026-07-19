@@ -12,3 +12,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="EstateSync AI Service", lifespan=lifespan)
 app.include_router(router)
+
+
+@app.get("/health")
+def health():
+    # Readiness depends on the embedding store being loaded, not just the process being up.
+    return {"status": "ok", "chunks": store.count()}

@@ -1,11 +1,12 @@
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 
-_model = SentenceTransformer("all-MiniLM-L6-v2")
+_model = TextEmbedding("BAAI/bge-small-en-v1.5")
 
 
 def embed_text(text: str) -> list[float]:
-    return _model.encode(text, normalize_embeddings=True).tolist()
+    vec = next(iter(_model.embed([text])))
+    return vec.tolist()
 
 
 def embed_batch(texts: list[str]) -> list[list[float]]:
-    return _model.encode(texts, normalize_embeddings=True).tolist()
+    return [vec.tolist() for vec in _model.embed(texts)]

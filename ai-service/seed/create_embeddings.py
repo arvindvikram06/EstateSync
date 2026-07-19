@@ -7,6 +7,7 @@ import sys
 import os
 import json
 import re
+import hashlib
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -15,6 +16,7 @@ from embedder import embed_batch
 
 CONTENT_FILE = Path(__file__).parent / "content.md"
 OUTPUT = Path(__file__).parent.parent / "embeddings.json"
+HASH_FILE = Path(__file__).parent.parent / ".content.hash"
 
 
 def parse_chunks(markdown: str) -> list[dict]:
@@ -37,7 +39,16 @@ def parse_chunks(markdown: str) -> list[dict]:
 
 
 def main():
+    force = "--force" in sys.argv
     markdown = CONTENT_FILE.read_text()
+    content_hash = hashlib.sha256(markdown.encode("utf-8")).hexdigest()
+
+    # Embedding is expensive — skip it when content.md is unchanged since the last run.
+    if not force and OUTPUT.exists() and HASH_FILE.exists() \
+            and HASH_FILE.read_text().strip() == content_hash:
+        print(f"{CONTENT_FILE.name} unchanged — embeddings are up to date. Use --force to re-embed.")
+        return
+
     chunks = parse_chunks(markdown)
     print(f"Parsed {len(chunks)} chunks from {CONTENT_FILE.name}.")
 
@@ -55,6 +66,7 @@ def main():
         })
 
     OUTPUT.write_text(json.dumps(data, indent=2))
+    HASH_FILE.write_text(content_hash)
     print(f"Done. Saved {len(data)} chunks to {OUTPUT}")
 
 
