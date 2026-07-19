@@ -2,6 +2,16 @@
 <div class="flex items-center justify-center min-h-[60vh]">
   <mat-spinner diameter="48" />
 </div>
+} @else if (loadError()) {
+<div class="load-error" role="alert">
+  <mat-icon>cloud_off</mat-icon>
+  <h1>Unable to load property</h1>
+  <p>{{ loadError() }}</p>
+  <div class="load-error__actions">
+    <button type="button" mat-flat-button (click)="loadPage()">Try again</button>
+    <a mat-stroked-button routerLink="/owner/dashboard" [queryParams]="{tab:'properties'}">Back to properties</a>
+  </div>
+</div>
 } @else if (property(); as p) {
 
 <!-- ══════════════════════════════════════════════════════════════════

@@ -5,7 +5,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { switchMap, forkJoin } from 'rxjs';
+import { switchMap, forkJoin, timeout } from 'rxjs';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -61,6 +61,7 @@ export class PropertyEditComponent implements OnInit {
   readonly property        = signal<PropertyDetailResponse | null>(null);
   readonly images          = signal<PropertyImageResponse[]>([]);
   readonly loading         = signal(true);
+  readonly loadError       = signal('');
   readonly saving          = signal(false);
   readonly submitting      = signal(false);
   readonly ownershipDoc    = signal<DocumentResponse | null>(null);
@@ -161,18 +162,52 @@ export class PropertyEditComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id')!;
     this.states.set(this.locSvc.getStates('IN'));
+    this.loadPage();
+  }
 
-    // Load property and documents in parallel so initial step can be determined atomically
-    forkJoin({
-      propRes: this.propSvc.getProperty(id),
-      docsRes: this.propSvc.getDocuments(id),
-    })
-    .pipe(takeUntilDestroyed(this.destroyRef))
+  loadPage(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (!id) {
+      this.loadError.set('Invalid property link.');
+      this.loading.set(false);
+      return;
+    }
+
+    this.loading.set(true);
+    this.loadError.set('');
+
+    // Documents are loaded independently: a slow private-blob request must not
+    // prevent the property form itself from rendering.
+    this.propSvc.getDocuments(id)
+      .pipe(timeout(15000), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: docsRes => {
+          const doc = (docsRes.data ?? []).find(d => d.documentType === 'OwnershipCertificate') ?? null;
+          this.ownershipDoc.set(doc);
+
+          const p = this.property();
+          if (p?.status === 'Draft' && (p.images ?? []).length > 0 && doc) {
+            this.step.set(3);
+          }
+        },
+        error: () => {
+          // The form remains usable. The user can retry the whole page if they
+          // need to view or replace the ownership document.
+          this.ownershipDoc.set(null);
+        },
+      });
+
+    this.propSvc.getProperty(id)
+    .pipe(timeout(20000), takeUntilDestroyed(this.destroyRef))
     .subscribe({
-      next: ({ propRes, docsRes }) => {
+      next: propRes => {
         const p = propRes.data!;
+        if (!p) {
+          this.loadError.set('Property details could not be loaded.');
+          this.loading.set(false);
+          return;
+        }
         this.property.set(p);
 
         const allStates    = this.locSvc.getStates('IN');
@@ -213,22 +248,18 @@ export class PropertyEditComponent implements OnInit {
 
         this.images.set(p.images ?? []);
 
-        const doc = (docsRes.data ?? []).find(d => d.documentType === 'OwnershipCertificate') ?? null;
-        this.ownershipDoc.set(doc);
-
-        // Determine starting step for draft BEFORE setting loading=false
-        // (so the map effect fires with the correct step already applied)
         if (p.status === 'Draft') {
           const hasImages = (p.images ?? []).length > 0;
-          const hasDoc    = !!doc;
+          const hasDoc    = !!this.ownershipDoc();
           this.step.set(hasImages && hasDoc ? 3 : 2);
         }
 
         this.loading.set(false);
       },
       error: () => {
+        this.property.set(null);
+        this.loadError.set('Property details could not be loaded. Check your connection and try again.');
         this.loading.set(false);
-        this.router.navigate(['/owner/dashboard'], { queryParams: { tab: 'properties' } });
       },
     });
   }
