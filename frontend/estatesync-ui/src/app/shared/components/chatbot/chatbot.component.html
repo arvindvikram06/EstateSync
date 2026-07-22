@@ -43,7 +43,19 @@
               <mat-icon>support_agent</mat-icon>
             </div>
           }
-          <div class="chatbot-msg__bubble">{{ msg.text }}</div>
+          <div class="chatbot-msg__content">
+            <div class="chatbot-msg__bubble" [class.chatbot-msg__bubble--streaming]="msg.isStreaming">{{ msg.text }}</div>
+            @if (msg.role === 'assistant' && !msg.isStreaming && msg.actions?.length) {
+              <div class="chatbot-msg__actions" aria-label="Suggested destinations">
+                @for (action of msg.actions; track action.route) {
+                  <button type="button" class="chatbot-msg__action" (click)="openAction(action)">
+                    {{ action.label }}
+                    <mat-icon>arrow_forward</mat-icon>
+                  </button>
+                }
+              </div>
+            }
+          </div>
         </div>
       }
 
@@ -67,12 +79,12 @@
         placeholder="Type your question..."
         [(ngModel)]="inputText"
         (keydown.enter)="sendMessage()"
-        [disabled]="chatbotService.isLoading()"
+        [disabled]="isBusy()"
       />
       <button
         class="chatbot-input__send"
         (click)="sendMessage()"
-        [disabled]="chatbotService.isLoading() || !inputText.trim()"
+        [disabled]="isBusy() || !inputText.trim()"
         aria-label="Send"
       >
         <mat-icon>send</mat-icon>

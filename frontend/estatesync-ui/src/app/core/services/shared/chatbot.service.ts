@@ -4,6 +4,28 @@ import { Observable, tap, finalize } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../models/api-response.model';
 
+export interface AiChatSource {
+  title: string;
+  chunkId: string;
+  documentVersion: string;
+}
+
+export interface AiNavigationAction {
+  label: string;
+  route: string;
+}
+
+export interface AiChatResponse {
+  reply: string;
+  sources: AiChatSource[];
+  actions: AiNavigationAction[];
+}
+
+export interface AiChatHistoryTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ChatbotService {
   private readonly http = inject(HttpClient);
@@ -11,9 +33,15 @@ export class ChatbotService {
 
   readonly isLoading = signal(false);
 
-  chat(message: string): Observable<ApiResponse<string>> {
+  chat(
+    message: string,
+    history: AiChatHistoryTurn[] = [],
+  ): Observable<ApiResponse<AiChatResponse>> {
     this.isLoading.set(true);
-    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/chat`, { message }).pipe(
+    return this.http.post<ApiResponse<AiChatResponse>>(
+      `${this.apiUrl}/chat`,
+      { message, history: history.slice(-10) },
+    ).pipe(
       finalize(() => this.isLoading.set(false))
     );
   }

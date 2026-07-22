@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     ANTHROPIC_API_KEY: str
     BASE_URL: str
+    ANSWER_MODEL: str = "claude-sonnet-4-6"
 
 
 def _load_from_key_vault(vault_uri: str) -> dict:

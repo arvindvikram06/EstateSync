@@ -14,6 +14,10 @@ docs/PASSWORD_RESET_WITH_REDIS.md
 
 **/docs
 
+# AI-service product documentation is the RAG knowledge base and must be committed.
+!ai-service/docs/
+!ai-service/docs/**
+
 **/artifacts
 
 .DS_Store
@@ -49,4 +53,3 @@ infra/parameters/*.bicepparam
 # macOS
 .DS_Store
 **/.DS_Store
-

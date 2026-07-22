@@ -1,0 +1,11 @@
+---
+title: Document title shown to maintainers
+version: 1.0
+roles: [Tenant, Owner]
+category: example-category
+action_id: optional-allowlisted-action
+---
+
+Write verified, user-facing EstateSync behavior here. Keep one product topic per
+file. The ingestion parser validates the metadata and divides long documents into
+overlapping chunks before the embedding stage.

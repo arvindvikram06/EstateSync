@@ -4,6 +4,7 @@ __pycache__/
 .env
 .env.example
 embeddings.json
+knowledge_index.json
 .content.hash
 .fastembed_cache/
 Dockerfile

@@ -1,0 +1,1 @@
+"""EstateSync AI service application."""
