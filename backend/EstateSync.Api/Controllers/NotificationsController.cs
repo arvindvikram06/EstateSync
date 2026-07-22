@@ -41,7 +41,10 @@ public class NotificationsController : ControllerBase
             EntityId = n.EntityId,
             EntityType = n.EntityType,
             IsRead = n.IsRead,
-            CreatedAt = n.CreatedAt
+            // PostgreSQL "timestamp without time zone" values are materialized with
+            // DateTimeKind.Unspecified. Mark the stored UTC value explicitly so JSON
+            // includes the trailing "Z" and browsers do not treat it as local time.
+            CreatedAt = DateTime.SpecifyKind(n.CreatedAt, DateTimeKind.Utc)
         });
 
         return Ok(new ApiResponse<object> { Data = response });

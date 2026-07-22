@@ -41,7 +41,11 @@ function iconForType(type: NotificationType): string {
 }
 
 function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+  // Older API responses may contain a UTC database timestamp without a timezone
+  // suffix. Treat those values as UTC instead of letting the browser assume local time.
+  const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(dateStr);
+  const timestamp = new Date(hasTimezone ? dateStr : `${dateStr}Z`).getTime();
+  const diff = Date.now() - timestamp;
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'just now';
   if (mins < 60) return `${mins}m ago`;

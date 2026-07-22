@@ -71,7 +71,7 @@ public class NotificationSender : INotificationSender
             EntityId = notification.EntityId,
             EntityType = notification.EntityType,
             IsRead = notification.IsRead,
-            CreatedAt = notification.CreatedAt
+            CreatedAt = DateTime.SpecifyKind(notification.CreatedAt, DateTimeKind.Utc)
         };
 
         await _hubContext.Clients
