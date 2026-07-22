@@ -51,8 +51,12 @@ export interface TerminateLeaseDialogData {
           <mat-icon matPrefix>comment</mat-icon>
           <textarea matInput formControlName="reason" rows="3"
             placeholder="Explain why the lease is being terminated…"></textarea>
-          @if (form.controls.reason.invalid && form.controls.reason.touched) {
+          @if (form.controls.reason.hasError('required') && form.controls.reason.touched) {
             <mat-error>Please provide a reason</mat-error>
+          } @else if (form.controls.reason.hasError('minlength') && form.controls.reason.touched) {
+            <mat-error>Reason must be at least 10 characters</mat-error>
+          } @else if (form.controls.reason.hasError('maxlength') && form.controls.reason.touched) {
+            <mat-error>Reason must not exceed 1000 characters</mat-error>
           }
         </mat-form-field>
 
@@ -93,15 +97,24 @@ export class TerminateLeaseDialogComponent {
   readonly error      = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
-    reason: ['', Validators.required],
+    reason: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
     forfeitDeposit: [true],
   });
 
   submit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    const request = this.form.getRawValue();
+    request.reason = request.reason.trim();
+    if (request.reason.length < 10) {
+      this.form.controls.reason.setErrors({
+        minlength: { requiredLength: 10, actualLength: request.reason.length }
+      });
+      this.form.controls.reason.markAsTouched();
+      return;
+    }
     this.submitting.set(true);
     this.error.set(null);
-    this.leaseSvc.terminateLease(this.data.leaseId, this.form.getRawValue())
+    this.leaseSvc.terminateLease(this.data.leaseId, request)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => { this.submitting.set(false); this.dialogRef.close(true); },
       error: err => {

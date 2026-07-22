@@ -133,14 +133,14 @@
                  both the UI and, authoritatively, by the backend delete service. -->
             <span class="inline-flex"
               [matTooltip]="hasActiveLease(prop) ? 'Cannot delete a property with an active lease' : 'Delete property'">
-              <button mat-icon-button class="!text-red-600 !w-8 !h-8"
+              <button mat-icon-button class="!text-red-600 !w-8 !h-8 !p-0 inline-flex items-center justify-center"
                 [disabled]="deletingId() === prop.propertyId || hasActiveLease(prop)"
                 (click)="deleteProperty(prop)"
                 aria-label="Delete property">
                 @if (deletingId() === prop.propertyId) {
                   <mat-spinner diameter="14" />
                 } @else {
-                  <mat-icon class="!text-[18px]">delete_outline</mat-icon>
+                  <mat-icon class="!text-[18px] !w-[18px] !h-[18px] !m-0">delete_outline</mat-icon>
                 }
               </button>
             </span>
