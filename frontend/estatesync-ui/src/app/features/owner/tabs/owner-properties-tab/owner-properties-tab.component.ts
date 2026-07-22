@@ -63,6 +63,10 @@ export class OwnerPropertiesTabComponent implements OnInit {
 
   readonly formatCurrency = formatCurrency;
 
+  hasActiveLease(property: PropertySummaryResponse): boolean {
+    return property.status === 'Leased' || property.status === 'AvailableSoon';
+  }
+
   ngOnInit(): void {
     this.loadProperties();
     this.dataRefresh.on('properties').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -114,7 +118,7 @@ export class OwnerPropertiesTabComponent implements OnInit {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'Delete Property',
-        message: `Delete "${property.title}"? This cannot be undone.`,
+        message: `Delete "${property.title || 'this property'}"? This cannot be undone. Properties with an active lease cannot be deleted.`,
         confirmLabel: 'Delete',
         destructive: true,
       },

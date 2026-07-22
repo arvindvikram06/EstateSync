@@ -123,21 +123,27 @@
                   Submit for review
                 }
               </button>
+            }
+
+            @if (prop.status === 'PendingApproval') {
+              <span class="es-badge es-badge--pending">Under review</span>
+            }
+
+            <!-- Available for every owner property; active leases are protected in
+                 both the UI and, authoritatively, by the backend delete service. -->
+            <span class="inline-flex"
+              [matTooltip]="hasActiveLease(prop) ? 'Cannot delete a property with an active lease' : 'Delete property'">
               <button mat-icon-button class="!text-red-600 !w-8 !h-8"
-                [disabled]="deletingId() === prop.propertyId"
+                [disabled]="deletingId() === prop.propertyId || hasActiveLease(prop)"
                 (click)="deleteProperty(prop)"
-                matTooltip="Delete">
+                aria-label="Delete property">
                 @if (deletingId() === prop.propertyId) {
                   <mat-spinner diameter="14" />
                 } @else {
                   <mat-icon class="!text-[18px]">delete_outline</mat-icon>
                 }
               </button>
-            }
-
-            @if (prop.status === 'PendingApproval') {
-              <span class="es-badge es-badge--pending">Under review</span>
-            }
+            </span>
           </div>
         </div>
       </div>
