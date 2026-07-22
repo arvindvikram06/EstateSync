@@ -5,6 +5,7 @@ export interface RentalApplicationResponse {
   propertyPrimaryImage: string | null;
   tenantId: string;
   tenantName: string | null;
+  tenantPhoneNumber: string | null;
   status: 'Pending' | 'Approved' | 'Rejected' | 'Withdrawn';
   message: string;
   expectedMoveInDate: string;
@@ -31,6 +32,7 @@ export interface OwnerApplicationResponse {
   tenantId: string;
   tenantName: string;
   tenantEmail: string;
+  tenantPhoneNumber: string | null;
   status: 'Pending' | 'Approved' | 'Rejected' | 'Withdrawn';
   leaseId: string | null;
   leaseStatus: string | null;

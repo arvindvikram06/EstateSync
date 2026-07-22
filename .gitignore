@@ -18,6 +18,11 @@ docs/PASSWORD_RESET_WITH_REDIS.md
 !ai-service/docs/
 !ai-service/docs/**
 
+# Keep the AI service learning notes available for project review.
+!docs/
+docs/*
+!docs/AI_SERVICE_LEARNING_NOTES.md
+
 **/artifacts
 
 .DS_Store

@@ -26,6 +26,9 @@
         <div class="flex-1 min-w-0">
           <div class="es-detail-value">{{ app.tenantName }}</div>
           <div class="es-text-xs mt-px">{{ app.tenantEmail }}</div>
+          @if (app.tenantPhoneNumber) {
+            <div class="es-text-xs mt-px">Contact number: {{ app.tenantPhoneNumber }}</div>
+          }
           <div class="es-text-xs mt-1 truncate">
             <span class="font-medium text-es-soft">{{ app.propertyTitle }}</span>
             · Applied {{ formatDate(app.appliedAt) }}

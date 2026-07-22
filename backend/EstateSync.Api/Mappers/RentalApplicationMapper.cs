@@ -17,6 +17,7 @@ public class RentalApplicationMapper
             PropertyTitle = app.Property != null ? app.Property.Title : string.Empty,
             TenantId = app.TenantId,
             TenantName = app.Tenant != null ? app.Tenant.FullName : string.Empty,
+            TenantPhoneNumber = app.Tenant?.PhoneNumber,
             Message = app.Message,
             ExpectedMoveInDate = app.ExpectedMoveInDate,
             DurationMonths = app.DurationMonths,

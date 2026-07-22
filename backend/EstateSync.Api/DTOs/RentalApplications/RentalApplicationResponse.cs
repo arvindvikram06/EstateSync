@@ -9,6 +9,7 @@ public record RentalApplicationResponse
     public string? PropertyTitle { get; init; }
     public Guid TenantId { get; init; }
     public string? TenantName { get; init; }
+    public string? TenantPhoneNumber { get; init; }
     public string Message { get; init; } = string.Empty;
     public DateOnly ExpectedMoveInDate { get; init; }
     public int DurationMonths { get; init; }
