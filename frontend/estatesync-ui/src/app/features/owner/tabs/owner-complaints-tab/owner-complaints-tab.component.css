@@ -1,6 +1,6 @@
 /* .filter-pill styles come from the global styles.css definition */
-.complaint-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:22px 24px;border-radius:16px;color:#fff;background:linear-gradient(125deg,#8b0018,#c9183a 58%,var(--mat-sys-primary))}
-.complaint-heading>div>span{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.72}.complaint-heading h2{margin:3px 0;font-size:23px;color:#fff}.complaint-heading p{margin:0;font-size:11px;opacity:.8}.attention-count{display:flex;min-width:105px;padding:11px 14px;border:1px solid rgb(255 255 255 / .2);border-radius:12px;background:rgb(255 255 255 / .12);align-items:center;flex-direction:column}.attention-count strong{font-size:20px}.attention-count span{font-size:9px}.filter-pill b{display:inline-grid;min-width:18px;height:18px;margin-left:5px;border-radius:9px;background:rgb(0 0 0 / .07);font-size:8px;place-items:center}
+.complaint-heading{margin-bottom:20px}
+.complaint-heading h2{margin:0}.complaint-heading p{margin:5px 0 0;color:var(--es-text-muted);font-size:13px}.filter-pill b{display:inline-grid;min-width:18px;height:18px;margin-left:5px;border-radius:9px;background:rgb(0 0 0 / .07);font-size:8px;place-items:center}
 
 .complaint-card {
   background: white;

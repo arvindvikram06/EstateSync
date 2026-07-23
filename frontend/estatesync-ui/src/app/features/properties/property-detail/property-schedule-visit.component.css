@@ -6,6 +6,23 @@
   transition: all 0.2s ease-in-out;
 }
 
+.available-date-chip {
+  padding: 6px 12px;
+  border: 1px solid var(--mat-sys-primary);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--mat-sys-primary);
+  font-size: 11px;
+  font-weight: 600;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.available-date-chip:hover,
+.available-date-chip--selected {
+  background: var(--mat-sys-primary);
+  color: #fff;
+}
+
 input[type="time"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   filter: invert(48%) sepia(13%) saturate(3207%) hue-rotate(185deg) brightness(95%) contrast(80%);

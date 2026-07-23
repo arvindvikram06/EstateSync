@@ -117,10 +117,8 @@
             <div class="flex flex-wrap gap-2">
               @for (date of availableDates(); track date) {
                 <button type="button" (click)="chooseAvailableDate(date)"
-                        class="rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors"
-                        [class.border-es-primary]="selectedDate() && (selectedDate() | date:'yyyy-MM-dd') === date"
-                        [class.bg-es-primary]="selectedDate() && (selectedDate() | date:'yyyy-MM-dd') === date"
-                        [class.text-white]="selectedDate() && (selectedDate() | date:'yyyy-MM-dd') === date">
+                        class="available-date-chip"
+                        [class.available-date-chip--selected]="selectedDate() && (selectedDate() | date:'yyyy-MM-dd') === date">
                   {{ date | date:'EEE, MMM d' }}
                 </button>
               }

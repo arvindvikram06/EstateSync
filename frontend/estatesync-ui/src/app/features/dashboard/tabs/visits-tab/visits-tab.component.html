@@ -1,10 +1,6 @@
 <section class="visits-workspace">
   <header class="visits-hero">
-    <div>
-      <span class="eyebrow">{{ isOwnerView() ? 'Property viewings' : 'My property search' }}</span>
-      <h2>{{ isOwnerView() ? 'Visits workspace' : 'My site visits' }}</h2>
-      <p>{{ isOwnerView() ? 'Manage available hours and keep every property viewing moving.' : 'Track requests, confirmed viewings and schedule changes.' }}</p>
-    </div>
+    <h2 class="es-title">{{ isOwnerView() ? 'Visits' : 'My site visits' }}</h2>
     @if (isOwnerView()) {
       <button class="hours-toggle" (click)="hoursOpen.set(!hoursOpen())">
         <mat-icon>{{ hoursOpen() ? 'close' : 'schedule' }}</mat-icon>
