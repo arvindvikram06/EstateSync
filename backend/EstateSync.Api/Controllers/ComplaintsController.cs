@@ -92,4 +92,12 @@ public class ComplaintsController : ControllerBase
         var result = await _complaintService.UploadComplaintImageAsync(tenantId, id, file, ct);
         return Ok(new ApiResponse<ComplaintResponse> { Data = result });
     }
+
+    [HttpPost("{id:guid}/owner-viewed")]
+    [Authorize(Roles = Roles.Owner)]
+    public async Task<ActionResult<ApiResponse<object>>> MarkOwnerViewed(Guid id, CancellationToken ct)
+    {
+        await _complaintService.MarkOwnerViewedAsync(User.GetUserId(), id, ct);
+        return Ok(new ApiResponse<object> { Message = "Complaint acknowledged by owner." });
+    }
 }

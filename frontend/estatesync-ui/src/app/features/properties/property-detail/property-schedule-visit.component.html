@@ -31,16 +31,16 @@
       </div>
     }
 
-    <!-- Case 1: Active Visit (Pending or Approved) -->
+    <!-- Case 1: Active Visit -->
     @if (activeVisit(); as visit) {
-      <div class="active-visit-box rounded-xl p-4 text-center border" 
-           [class.bg-blue-50/50]="visit.status === 'Pending'" 
-           [class.border-blue-100]="visit.status === 'Pending'"
+      <div class="active-visit-box rounded-xl p-4 text-center border"
+           [class.bg-blue-50/50]="visit.status !== 'Approved'"
+           [class.border-blue-100]="visit.status !== 'Approved'"
            [class.bg-emerald-50/50]="visit.status === 'Approved'"
            [class.border-emerald-100]="visit.status === 'Approved'">
         
         <mat-icon class="!text-[36px] !w-[36px] !h-[36px] mb-2" 
-                  [class.text-blue-500]="visit.status === 'Pending'"
+                  [class.text-blue-500]="visit.status !== 'Approved'"
                   [class.text-emerald-500]="visit.status === 'Approved'">
           {{ visit.status === 'Approved' ? 'event_available' : 'schedule' }}
         </mat-icon>
@@ -51,8 +51,10 @@
 
         <p class="text-xs text-es-muted mb-4 leading-normal">
           Scheduled for: <strong>{{ visit.visitDate | date:'yyyy-MM-dd' }}</strong> at <strong>{{ visit.visitTime }}</strong>
-          @if (visit.status === 'Pending') {
+          @if (visit.status === 'PendingOwnerApproval') {
             <span class="block mt-1 text-[11px] text-blue-600 font-medium">Awaiting owner confirmation</span>
+          } @else if (visit.status === 'PendingTenantApproval') {
+            <span class="block mt-1 text-[11px] text-blue-600 font-medium">A new time is waiting for your approval in My Visits</span>
           } @else {
             <span class="block mt-1 text-[11px] text-emerald-600 font-medium">Owner approved ✓</span>
           }
@@ -88,8 +90,8 @@
           </div>
         }
 
-        <button mat-flat-button color="primary" (click)="reschedule()" class="w-full !rounded-xl !text-xs bg-es-primary text-white">
-          Reschedule Visit
+        <button mat-flat-button color="primary" (click)="bookAnother()" class="w-full !rounded-xl !text-xs bg-es-primary text-white">
+          Choose Another Time
         </button>
       </div>
     }
@@ -97,29 +99,69 @@
     <!-- Case 3: Empty Form (No pending or declined requests showing) -->
     @else {
       <form (ngSubmit)="submitRequest()" class="flex flex-col gap-3">
+        @if (slotsLoading()) {
+          <div class="flex items-center justify-center gap-2 rounded-xl bg-gray-50 py-4 text-xs text-es-muted">
+            <mat-spinner diameter="18" /> Loading owner availability…
+          </div>
+        } @else if (allAvailableSlots().length === 0) {
+          <div class="rounded-xl border border-amber-100 bg-amber-50 p-4 text-center">
+            <mat-icon class="text-amber-600">event_busy</mat-icon>
+            <p class="mt-1 mb-0 text-xs font-semibold text-amber-900">No visit hours published yet</p>
+            <p class="mt-1 mb-0 text-[11px] leading-relaxed text-amber-700">
+              The owner has not opened any times for this property in the next 60 days.
+            </p>
+          </div>
+        } @else {
+          <div>
+            <span class="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-es-faint">Next available dates</span>
+            <div class="flex flex-wrap gap-2">
+              @for (date of availableDates(); track date) {
+                <button type="button" (click)="chooseAvailableDate(date)"
+                        class="rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors"
+                        [class.border-es-primary]="selectedDate() && (selectedDate() | date:'yyyy-MM-dd') === date"
+                        [class.bg-es-primary]="selectedDate() && (selectedDate() | date:'yyyy-MM-dd') === date"
+                        [class.text-white]="selectedDate() && (selectedDate() | date:'yyyy-MM-dd') === date">
+                  {{ date | date:'EEE, MMM d' }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
         <!-- Date Selector -->
         <mat-form-field appearance="outline" class="w-full !text-xs">
           <mat-label>Choose Date</mat-label>
           <input matInput [matDatepicker]="picker" [min]="minDate" [max]="maxDate" 
-                 [value]="selectedDate()" (dateChange)="selectedDate.set($event.value)" readonly>
+                 [value]="selectedDate()" (dateChange)="onDateChange($event.value)" readonly>
           <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
           <mat-datepicker #picker></mat-datepicker>
         </mat-form-field>
 
         <!-- Time Selector -->
         <mat-form-field appearance="outline" class="w-full !text-xs">
-          <mat-label>Visit Time</mat-label>
+          <mat-label>Available one-hour slot</mat-label>
           <mat-icon matPrefix class="!text-[16px] !w-[16px] !h-[16px]">schedule</mat-icon>
-          <mat-select [value]="selectedTime()" (valueChange)="selectedTime.set($event)">
-            @for (slot of timeSlots; track slot.value) {
-              <mat-option [value]="slot.value">{{ slot.label }}</mat-option>
+          <mat-select [value]="selectedSlotId()" (valueChange)="selectedSlotId.set($event)"
+                      [disabled]="!selectedDate() || slotsLoading()">
+            @for (slot of availableSlots(); track slot.slotId) {
+              <mat-option [value]="slot.slotId">{{ slot.startTime }} – {{ slot.endTime }}</mat-option>
             }
           </mat-select>
+          @if (selectedDate() && !slotsLoading() && availableSlots().length === 0) {
+            <mat-hint>No times published for this date</mat-hint>
+          }
         </mat-form-field>
 
+        @if (selectedDate() && !slotsLoading() && allAvailableSlots().length > 0 && availableSlots().length === 0) {
+          <div class="-mt-2 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[11px] text-amber-800">
+            <mat-icon class="!h-4 !w-4 !text-base">info</mat-icon>
+            No open times on this date. Choose one of the available dates above.
+          </div>
+        }
+
         <!-- Submit Button -->
-        <button type="submit" mat-flat-button color="primary" 
-                [disabled]="submitting() || !selectedDate() || !selectedTime()" 
+        <button type="submit" mat-flat-button color="primary"
+                [disabled]="submitting() || !selectedDate() || !selectedSlotId()"
                 class="w-full !h-11 !text-xs !font-semibold !rounded-xl !mt-2 bg-es-primary text-white hover:bg-es-primary/95 shadow-sm">
           @if (submitting()) {
             Submitting...

@@ -199,6 +199,26 @@ public class AdminController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("complaints/unattended")]
+    [Authorize(Roles = Roles.Admin)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyCollection<ComplaintEscalationResponse>>>> GetUnattendedComplaints(
+        CancellationToken ct)
+    {
+        var data = await _complaintService.GetUnattendedForAdminAsync(ct);
+        return Ok(new ApiResponse<IReadOnlyCollection<ComplaintEscalationResponse>> { Data = data });
+    }
+
+    [HttpPost("complaints/{id:guid}/contacts")]
+    [Authorize(Roles = Roles.Admin)]
+    public async Task<ActionResult<ApiResponse<object>>> RecordComplaintContact(
+        Guid id,
+        RecordComplaintContactRequest request,
+        CancellationToken ct)
+    {
+        await _complaintService.RecordAdminContactAsync(User.GetUserId(), id, request, ct);
+        return Ok(new ApiResponse<object> { Message = "Owner contact reason recorded." });
+    }
+
     // ── Financial Dashboard ───────────────────────────────────────────────────
 
     [HttpGet("financial/summary")]

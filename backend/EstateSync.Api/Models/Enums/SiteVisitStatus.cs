@@ -2,7 +2,8 @@ namespace EstateSync.Api.Models;
 
 public enum SiteVisitStatus
 {
-    Pending,
+    PendingOwnerApproval,
+    PendingTenantApproval,
     Approved,
     Declined,
     Cancelled,

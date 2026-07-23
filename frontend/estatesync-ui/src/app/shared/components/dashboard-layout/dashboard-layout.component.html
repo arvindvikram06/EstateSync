@@ -14,23 +14,25 @@
     [style.top.px]="topOffset"
     [style.height]="'calc(100vh - ' + topOffset + 'px)'">
 
-    <div class="px-5 border-b border-es-border-light flex items-center"
-         [style.height.px]="topOffset === 0 ? 56 : null"
-         [class.py-5]="topOffset !== 0">
-      @if (topOffset === 0) {
-        <!-- Staff dashboards: logo — same 56px height as sticky top bar -->
-        <a href="/" class="flex items-center gap-2 no-underline font-bold text-[18px] tracking-tight">
-          <mat-icon class="text-brand !text-[22px] !w-[22px] !h-[22px]">home_work</mat-icon>
-          <span class="text-brand">EstateSync</span>
-        </a>
-      } @else {
-        <!-- User/owner dashboards: show dashboard title (logo is in top navbar) -->
-        <div class="text-[15px] font-bold text-es-text leading-snug truncate">{{ title() }}</div>
-        @if (subtitle()) {
-          <div class="text-xs text-es-muted mt-0.5 truncate">{{ subtitle() }}</div>
+    @if (topOffset === 0 || showSidebarTitle()) {
+      <div class="px-5 border-b border-es-border-light flex items-center"
+           [style.height.px]="topOffset === 0 ? 56 : null"
+           [class.py-5]="topOffset !== 0">
+        @if (topOffset === 0) {
+          <!-- Staff dashboards: logo — same 56px height as sticky top bar -->
+          <a href="/" class="flex items-center gap-2 no-underline font-bold text-[18px] tracking-tight">
+            <mat-icon class="text-brand !text-[22px] !w-[22px] !h-[22px]">home_work</mat-icon>
+            <span class="text-brand">EstateSync</span>
+          </a>
+        } @else {
+          <!-- User dashboards can optionally show a sidebar title. -->
+          <div class="text-[15px] font-bold text-es-text leading-snug truncate">{{ title() }}</div>
+          @if (subtitle()) {
+            <div class="text-xs text-es-muted mt-0.5 truncate">{{ subtitle() }}</div>
+          }
         }
-      }
-    </div>
+      </div>
+    }
 
     <nav class="py-2.5 flex-1 overflow-y-auto">
       @for (item of navItems(); track item.id) {

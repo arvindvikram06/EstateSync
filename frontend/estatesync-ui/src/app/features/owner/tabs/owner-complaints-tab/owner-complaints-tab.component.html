@@ -1,4 +1,7 @@
-<h2 class="es-title mb-5">Tenant Complaints</h2>
+<div class="complaint-heading">
+  <div><span>Property support</span><h2>Tenant complaints</h2><p>Resolve reported issues with a clear, accountable workflow.</p></div>
+  <div class="attention-count"><strong>{{ counts().NeedsAction }}</strong><span>Need attention</span></div>
+</div>
 
 <!-- Filter pills -->
 <div class="flex flex-wrap gap-2 mb-5">
@@ -7,7 +10,8 @@
       class="filter-pill"
       [class.filter-pill--active]="activeFilter() === f"
       (click)="activeFilter.set(f)">
-      {{ f === 'InProgress' ? 'In Progress' : f }}
+      {{ f === 'NeedsAction' ? 'Needs Action' : f === 'Waiting' ? 'Waiting for Tenant' : f }}
+      <b>{{ counts()[f] }}</b>
     </button>
   }
 </div>
@@ -37,7 +41,7 @@
             <span class="priority-chip" [class]="'priority-chip priority-chip--' + c.priority.toLowerCase()">
               {{ c.priority }}
             </span>
-            <app-status-badge [status]="c.status" />
+            <app-status-badge [status]="statusLabel(c.status)" />
           </div>
         </div>
 
@@ -50,17 +54,7 @@
             <span class="type-chip">{{ c.complaintType }}</span>
             <span class="es-text-hint">{{ formatDate(c.createdAt) }}</span>
           </div>
-          @if (c.nextStatus) {
-            <button mat-stroked-button class="!rounded-full !h-8 !text-xs !px-3"
-              [disabled]="updatingId() === c.complaintId"
-              (click)="updateStatus(c); $event.stopPropagation()">
-              @if (updatingId() === c.complaintId) {
-                <mat-spinner diameter="14" class="inline-block" />
-              } @else {
-                {{ c.nextLabel }}
-              }
-            </button>
-          }
+          <button mat-stroked-button class="!rounded-full !h-8 !text-xs !px-3">View & respond</button>
         </div>
 
       </div>

@@ -164,6 +164,7 @@ builder.Services.AddScoped<IComplaintRepository, ComplaintRepository>();
 builder.Services.AddScoped<ILeaseVacateNoticeRepository, LeaseVacateNoticeRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISiteVisitRepository, SiteVisitRepository>();
+builder.Services.AddScoped<IPropertyVisitSlotRepository, PropertyVisitSlotRepository>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IKycVerificationRepository, KycVerificationRepository>();
@@ -212,6 +213,7 @@ builder.Services.AddScoped<IDocumentUploadService, DocumentUploadService>();
 builder.Services.AddScoped<IRentalApplicationService, RentalApplicationService>();
 builder.Services.AddScoped<ILeaseService, LeaseService>();
 builder.Services.AddScoped<ISiteVisitService, SiteVisitService>();
+builder.Services.AddScoped<IPropertyVisitSlotService, PropertyVisitSlotService>();
 builder.Services.AddScoped<ILeaseDocumentService, LeaseDocumentService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IStripeConnectedAccountService, StripeConnectedAccountService>();
@@ -288,6 +290,7 @@ builder.Services.AddScoped<PenaltyJob>();
 builder.Services.AddScoped<PropertyStatusUpdateJob>();
 builder.Services.AddScoped<RefreshTokenCleanupJob>();
 builder.Services.AddScoped<VacateNoticeJob>();
+builder.Services.AddScoped<ComplaintEscalationJob>();
 builder.Services.AddScoped<EstateSync.Api.Services.Email.EmailSenderJob>();
 
 // ── Email (SMTP via Hangfire — durable, survives pod restarts) ──
@@ -321,6 +324,7 @@ recurringJobs.AddOrUpdate<PenaltyJob>("penalty", j => j.RunAsync(), Cron.Daily(2
 recurringJobs.AddOrUpdate<PropertyStatusUpdateJob>("prop-status", j => j.RunAsync(), Cron.Daily);
 recurringJobs.AddOrUpdate<RefreshTokenCleanupJob>("token-cleanup", j => j.RunAsync(), "30 0 * * *");
 recurringJobs.AddOrUpdate<VacateNoticeJob>("vacate-notice", j => j.RunAsync(), Cron.Daily);
+recurringJobs.AddOrUpdate<ComplaintEscalationJob>("complaint-escalation", j => j.RunAsync(), Cron.Hourly);
 
 // Configure Stripe Global API Key
 Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];

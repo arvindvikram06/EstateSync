@@ -18,3 +18,4 @@
   font-size: 11px;
   color: var(--es-text-soft);
 }
+.tenant-complaint-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:22px 24px;border-radius:16px;color:#fff;background:linear-gradient(125deg,#8b0018,#c9183a 58%,var(--mat-sys-primary))}.tenant-complaint-heading span{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.72}.tenant-complaint-heading h2{margin:3px 0;font-size:23px}.tenant-complaint-heading p{margin:0;font-size:11px;opacity:.82}.tenant-complaint-heading button{color:var(--mat-sys-primary)!important;background:#fff!important}.filter-pill b{display:inline-grid;min-width:18px;height:18px;margin-left:5px;border-radius:9px;background:rgb(0 0 0 / .07);font-size:8px;place-items:center}

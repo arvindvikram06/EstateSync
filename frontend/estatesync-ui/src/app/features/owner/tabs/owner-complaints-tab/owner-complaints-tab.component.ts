@@ -14,21 +14,7 @@ import { StatusBadgeComponent } from '../../../../shared/components/status-badge
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { formatDate } from '../../../../core/utils/format.utils';
 
-type ComplaintFilter = 'All' | 'Open' | 'InProgress' | 'Resolved' | 'Closed';
-
-function nextStatus(current: ComplaintResponse['status']): string | null {
-  if (current === 'Open')       return 'InProgress';
-  if (current === 'InProgress') return 'Resolved';
-  if (current === 'Resolved')   return 'Closed';
-  return null;
-}
-
-function nextLabel(current: ComplaintResponse['status']): string {
-  if (current === 'Open')       return 'Mark In Progress';
-  if (current === 'InProgress') return 'Mark Resolved';
-  if (current === 'Resolved')   return 'Close complaint';
-  return '';
-}
+type ComplaintFilter = 'NeedsAction' | 'Active' | 'Waiting' | 'History';
 
 
 @Component({
@@ -47,24 +33,35 @@ export class OwnerComplaintsTabComponent implements OnInit {
 
   readonly complaints   = signal<ComplaintResponse[]>([]);
   readonly loading      = signal(true);
-  readonly activeFilter = signal<ComplaintFilter>('All');
-  readonly updatingId   = signal<string | null>(null);
+  readonly activeFilter = signal<ComplaintFilter>('NeedsAction');
 
-  readonly filters: ComplaintFilter[] = ['All', 'Open', 'InProgress', 'Resolved', 'Closed'];
+  readonly filters: ComplaintFilter[] = ['NeedsAction', 'Active', 'Waiting', 'History'];
 
   // Precomputed per-complaint next-transition data — memoized instead of
   // method calls re-running in the @for loop on every change detection.
   readonly filtered = computed(() => {
     const f = this.activeFilter();
-    const list = f === 'All' ? this.complaints() : this.complaints().filter(c => c.status === f);
-    return list.map(c => ({
-      ...c,
-      nextStatus: nextStatus(c.status),
-      nextLabel: nextLabel(c.status),
-    }));
+    return this.complaints().filter(c => {
+      if (f === 'NeedsAction') return c.status === 'Open' || c.status === 'Reopened';
+      if (f === 'Active') return c.status === 'InProgress';
+      if (f === 'Waiting') return c.status === 'ResolutionProposed';
+      return c.status === 'Resolved' || c.status === 'Closed';
+    });
   });
 
+  readonly counts = computed(() => ({
+    NeedsAction: this.complaints().filter(c => c.status === 'Open' || c.status === 'Reopened').length,
+    Active: this.complaints().filter(c => c.status === 'InProgress').length,
+    Waiting: this.complaints().filter(c => c.status === 'ResolutionProposed').length,
+    History: this.complaints().filter(c => c.status === 'Resolved' || c.status === 'Closed').length
+  }));
+
   readonly formatDate = formatDate;
+
+  statusLabel(status: ComplaintResponse['status']): string {
+    return status === 'InProgress' ? 'In Progress' :
+      status === 'ResolutionProposed' ? 'Waiting for Tenant' : status;
+  }
 
   ngOnInit(): void {
     this.load();
@@ -81,29 +78,18 @@ export class OwnerComplaintsTabComponent implements OnInit {
     });
   }
 
-  updateStatus(complaint: ComplaintResponse): void {
-    const next = nextStatus(complaint.status);
-    if (!next) return;
-    this.updatingId.set(complaint.complaintId);
-    this.svc.updateComplaintStatus(complaint.complaintId, { status: next })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: res => {
-          this.updatingId.set(null);
-          this.complaints.update(list =>
-            list.map(c => c.complaintId === complaint.complaintId ? res.data : c)
-          );
-        },
-        error: () => this.updatingId.set(null),
-      });
-  }
-
   openDetail(c: ComplaintResponse): void {
-    this.dialog.open(ComplaintDetailDialogComponent, {
-      data: { complaint: c },
-      maxWidth: '560px',
+    this.svc.markOwnerViewed(c.complaintId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+    const ref = this.dialog.open(ComplaintDetailDialogComponent, {
+      data: { complaint: c, viewer: 'owner' },
+      maxWidth: '860px',
       width: '100%',
       panelClass: 'rounded-dialog',
+    });
+    ref.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((updated?: ComplaintResponse) => {
+      if (updated) this.complaints.update(list => list.map(item => item.complaintId === updated.complaintId ? updated : item));
     });
   }
 }

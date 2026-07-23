@@ -13,7 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SiteVisitService } from '@core/services/property/site-visit.service';
 import { AuthService } from '@core/services/auth/auth.service';
-import { SiteVisitResponse } from '@core/models/site-visit.model';
+import { PropertyVisitSlot, SiteVisitResponse } from '@core/models/site-visit.model';
 
 @Component({
   selector: 'app-property-schedule-visit',
@@ -53,27 +53,25 @@ export class PropertyScheduleVisitComponent implements OnInit {
   readonly successMessage = signal<string | null>(null);
 
   readonly selectedDate = signal<Date | null>(null);
-  readonly selectedTime = signal<string>(''); // "HH:mm"
-
-  readonly timeSlots = [
-    { value: '09:00', label: '9:00 AM' },
-    { value: '10:00', label: '10:00 AM' },
-    { value: '11:00', label: '11:00 AM' },
-    { value: '12:00', label: '12:00 PM' },
-    { value: '13:00', label: '1:00 PM' },
-    { value: '14:00', label: '2:00 PM' },
-    { value: '15:00', label: '3:00 PM' },
-    { value: '16:00', label: '4:00 PM' },
-    { value: '17:00', label: '5:00 PM' },
-    { value: '18:00', label: '6:00 PM' },
-  ];
+  readonly selectedSlotId = signal('');
+  readonly availableSlots = signal<PropertyVisitSlot[]>([]);
+  readonly allAvailableSlots = signal<PropertyVisitSlot[]>([]);
+  readonly slotsLoading = signal(false);
 
   readonly minDate = new Date();
   readonly maxDate = new Date(new Date().getTime() + 60 * 24 * 60 * 60 * 1000); // 60 days out
 
   readonly activeVisit = computed(() => 
-    this.visits().find(v => v.status === 'Pending' || v.status === 'Approved')
+    this.visits().find(v =>
+      v.status === 'PendingOwnerApproval' ||
+      v.status === 'PendingTenantApproval' ||
+      v.status === 'Approved')
   );
+
+  readonly availableDates = computed(() => {
+    const unique = [...new Set(this.allAvailableSlots().map(slot => slot.date.slice(0, 10)))];
+    return unique.slice(0, 6);
+  });
 
   readonly declinedVisit = computed(() => {
     const declined = this.visits().filter(v => v.status === 'Declined');
@@ -83,6 +81,7 @@ export class PropertyScheduleVisitComponent implements OnInit {
   ngOnInit(): void {
     if (this.isLoggedIn()) {
       this.loadVisits();
+      this.loadAvailability();
     }
   }
 
@@ -103,16 +102,49 @@ export class PropertyScheduleVisitComponent implements OnInit {
       });
   }
 
+  onDateChange(date: Date | null): void {
+    this.selectedDate.set(date);
+    this.selectedSlotId.set('');
+    const day = date ? this.toLocalDate(date) : '';
+    this.availableSlots.set(
+      this.allAvailableSlots().filter(slot => slot.date.slice(0, 10) === day)
+    );
+  }
+
+  chooseAvailableDate(date: string): void {
+    const [year, month, day] = date.split('-').map(Number);
+    this.onDateChange(new Date(year, month - 1, day));
+  }
+
+  loadAvailability(): void {
+    const from = this.toLocalDate(this.minDate);
+    const to = this.toLocalDate(this.maxDate);
+    this.slotsLoading.set(true);
+    this.siteVisitService.getAvailableSlots(this.propertyId(), from, to)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.allAvailableSlots.set(res.data ?? []);
+          this.onDateChange(this.selectedDate());
+          this.slotsLoading.set(false);
+        },
+        error: () => {
+          this.errorMessage.set('Unable to load the owner’s available visit times.');
+          this.slotsLoading.set(false);
+        }
+      });
+  }
+
   submitRequest(): void {
     const date = this.selectedDate();
-    const time = this.selectedTime();
+    const slotId = this.selectedSlotId();
 
     if (!date) {
       this.errorMessage.set('Please select a date.');
       return;
     }
-    if (!time) {
-      this.errorMessage.set('Please select a time.');
+    if (!slotId) {
+      this.errorMessage.set('Please select an available time.');
       return;
     }
 
@@ -120,15 +152,9 @@ export class PropertyScheduleVisitComponent implements OnInit {
     this.successMessage.set(null);
     this.submitting.set(true);
 
-    // Format date as local date but represented in ISO format
-    const offset = date.getTimezoneOffset();
-    const localDate = new Date(date.getTime() - (offset * 60 * 1000));
-    const isoDateStr = localDate.toISOString().split('T')[0] + 'T00:00:00Z';
-
     this.siteVisitService.requestVisit({
       propertyId: this.propertyId(),
-      visitDate: isoDateStr,
-      visitTime: time
+      slotId
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -137,8 +163,10 @@ export class PropertyScheduleVisitComponent implements OnInit {
           if (res.success) {
             this.successMessage.set('Visit request submitted successfully!');
             this.selectedDate.set(null);
-            this.selectedTime.set('');
+            this.selectedSlotId.set('');
+            this.availableSlots.set([]);
             this.loadVisits();
+            this.loadAvailability();
           } else {
             this.errorMessage.set(res.message || 'Failed to submit request.');
           }
@@ -179,11 +207,13 @@ export class PropertyScheduleVisitComponent implements OnInit {
       });
   }
 
-  reschedule(): void {
-    // Clear display state of declined visit so form displays again
+  bookAnother(): void {
     this.errorMessage.set(null);
     this.successMessage.set(null);
-    // Remove the declined visit from the list locally so the UI switches to booking form
     this.visits.update(list => list.filter(v => v.status !== 'Declined'));
+  }
+
+  private toLocalDate(date: Date): string {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
 }

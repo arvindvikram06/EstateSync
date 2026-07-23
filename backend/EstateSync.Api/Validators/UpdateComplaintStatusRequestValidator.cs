@@ -1,5 +1,6 @@
 using FluentValidation;
 using EstateSync.Api.DTOs.Complaints;
+using EstateSync.Api.Models;
 
 namespace EstateSync.Api.Validators;
 
@@ -12,5 +13,10 @@ public class UpdateComplaintStatusRequestValidator : AbstractValidator<UpdateCom
 
         RuleFor(x => x.ReviewRemarks)
             .MaximumLength(1000).WithMessage("Remarks must not exceed 1000 characters.");
+
+        RuleFor(x => x.ReviewRemarks)
+            .NotEmpty()
+            .When(x => x.Status is ComplaintStatus.ResolutionProposed or ComplaintStatus.Reopened)
+            .WithMessage("A resolution summary or reopen reason is required.");
     }
 }

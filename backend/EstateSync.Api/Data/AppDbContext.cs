@@ -40,12 +40,15 @@ public partial class AppDbContext : DbContext
     public DbSet<LeaseVacateNotice> LeaseVacateNotices => Set<LeaseVacateNotice>();
     public DbSet<Complaint> Complaints => Set<Complaint>();
     public DbSet<ComplaintImage> ComplaintImages => Set<ComplaintImage>();
+    public DbSet<ComplaintActivity> ComplaintActivities => Set<ComplaintActivity>();
+    public DbSet<ComplaintEscalationContact> ComplaintEscalationContacts => Set<ComplaintEscalationContact>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<StripeConnectedAccount> StripeConnectedAccounts => Set<StripeConnectedAccount>();
     public DbSet<StripeCustomerProfile> StripeCustomerProfiles => Set<StripeCustomerProfile>();
     public DbSet<OwnerSettlement> OwnerSettlements => Set<OwnerSettlement>();
     public DbSet<OwnerProfile> OwnerProfiles => Set<OwnerProfile>();
     public DbSet<SiteVisit> SiteVisits => Set<SiteVisit>();
+    public DbSet<PropertyVisitSlot> PropertyVisitSlots => Set<PropertyVisitSlot>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,6 +66,8 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<RentalApplication>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<Lease>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<Complaint>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<ComplaintActivity>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<ComplaintEscalationContact>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<Payment>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<StripeConnectedAccount>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<StripeCustomerProfile>().HasQueryFilter(x => x.DeletedAt == null);
@@ -72,6 +77,7 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<LeaseVacateNotice>().HasQueryFilter(x => x.DeletedAt == null && (x.Lease == null || x.Lease.DeletedAt == null));
         modelBuilder.Entity<Notification>().HasQueryFilter(x => x.DeletedAt == null);
         modelBuilder.Entity<SiteVisit>().HasQueryFilter(x => x.DeletedAt == null);
+        modelBuilder.Entity<PropertyVisitSlot>().HasQueryFilter(x => x.DeletedAt == null);
 
         modelBuilder.Entity<PropertyImage>().HasQueryFilter(x => x.Property != null && x.Property.DeletedAt == null);
         modelBuilder.Entity<SavedProperty>().HasQueryFilter(x => x.Property != null && x.Property.DeletedAt == null);

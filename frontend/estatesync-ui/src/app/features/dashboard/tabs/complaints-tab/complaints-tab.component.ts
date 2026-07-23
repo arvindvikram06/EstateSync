@@ -34,20 +34,33 @@ export class ComplaintsTabComponent implements OnInit {
 
   readonly complaints    = signal<ComplaintResponse[]>([]);
   readonly loading       = signal(true);
-  readonly statusFilter  = signal<'All' | ComplaintResponse['status']>('All');
+  readonly statusFilter  = signal<'NeedsAction' | 'Active' | 'History'>('Active');
 
-  readonly statusOptions = ['All', 'Open', 'InProgress', 'Resolved', 'Closed'] as const;
+  readonly statusOptions = ['NeedsAction', 'Active', 'History'] as const;
 
   readonly filtered = computed(() => {
     const f = this.statusFilter();
-    const list = this.complaints();
-    return f === 'All' ? list : list.filter(c => c.status === f);
+    return this.complaints().filter(c => {
+      if (f === 'NeedsAction') return c.status === 'ResolutionProposed';
+      if (f === 'Active') return ['Open', 'InProgress', 'Reopened'].includes(c.status);
+      return c.status === 'Resolved' || c.status === 'Closed';
+    });
   });
+  readonly counts = computed(() => ({
+    NeedsAction: this.complaints().filter(c => c.status === 'ResolutionProposed').length,
+    Active: this.complaints().filter(c => ['Open', 'InProgress', 'Reopened'].includes(c.status)).length,
+    History: this.complaints().filter(c => c.status === 'Resolved' || c.status === 'Closed').length
+  }));
   readonly activeLeaseId      = signal<string | null>(null);
   readonly activePropertyId   = signal<string | null>(null);
   readonly activePropertyTitle= signal<string | null>(null);
 
   readonly formatDate = formatDate;
+
+  statusLabel(status: ComplaintResponse['status']): string {
+    return status === 'InProgress' ? 'In Progress' :
+      status === 'ResolutionProposed' ? 'Your Confirmation Needed' : status;
+  }
 
   ngOnInit(): void {
     this.load();
@@ -97,11 +110,14 @@ export class ComplaintsTabComponent implements OnInit {
   }
 
   openDetail(c: ComplaintResponse): void {
-    this.dialog.open(ComplaintDetailDialogComponent, {
-      data: { complaint: c },
-      maxWidth: '560px',
+    const ref = this.dialog.open(ComplaintDetailDialogComponent, {
+      data: { complaint: c, viewer: 'tenant' },
+      maxWidth: '860px',
       width: '100%',
       panelClass: 'rounded-dialog',
+    });
+    ref.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((updated?: ComplaintResponse) => {
+      if (updated) this.complaints.update(list => list.map(item => item.complaintId === updated.complaintId ? updated : item));
     });
   }
 }

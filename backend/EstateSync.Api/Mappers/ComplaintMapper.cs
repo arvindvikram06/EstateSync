@@ -19,11 +19,30 @@ public class ComplaintMapper
             Priority = complaint.Priority.ToString(),
             Status = complaint.Status.ToString(),
             ReviewRemarks = complaint.ReviewRemarks,
+            ResolutionSummary = complaint.ResolutionSummary,
+            ResolutionProposedAt = complaint.ResolutionProposedAt,
+            ResolvedAt = complaint.ResolvedAt,
+            ReopenCount = complaint.ReopenCount,
+            LastReopenedAt = complaint.LastReopenedAt,
+            ReopenReason = complaint.ReopenReason,
             CreatedAt = complaint.CreatedAt,
             UpdatedAt = complaint.UpdatedAt,
             Images = complaint.ComplaintImages
                 .Select(MapToImageResponse)
-                .ToList()
+                .ToList(),
+            Activities = complaint.Activities
+                .OrderByDescending(x => x.CreatedAt)
+                .Select(x => new ComplaintActivityResponse
+                {
+                    ActivityId = x.ComplaintActivityId,
+                    ActorName = x.ActorName,
+                    ActorRole = x.ActorRole,
+                    ActivityType = x.ActivityType,
+                    PreviousStatus = x.PreviousStatus?.ToString(),
+                    NewStatus = x.NewStatus?.ToString(),
+                    Summary = x.Summary,
+                    CreatedAt = x.CreatedAt
+                }).ToList()
         };
     }
 

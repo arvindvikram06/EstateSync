@@ -92,16 +92,45 @@ namespace EstateSync.Api.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<DateTime?>("EscalatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("EscalationResolvedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("LastReopenedAt")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<Guid?>("LeaseBillId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("LeaseId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("OwnerViewedAt")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("Priority")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("ReopenCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ReopenReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("ResolutionProposedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("ResolutionSummary")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ReviewRemarks")
                         .HasMaxLength(1000)
@@ -130,6 +159,108 @@ namespace EstateSync.Api.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("Complaints", (string)null);
+                });
+
+            modelBuilder.Entity("EstateSync.Api.Models.ComplaintActivity", b =>
+                {
+                    b.Property<Guid>("ComplaintActivityId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActivityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActorName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("ActorRole")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("ComplaintId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("NewStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PreviousStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("ComplaintActivityId")
+                        .HasName("PK_ComplaintActivityId");
+
+                    b.HasIndex("ComplaintId", "CreatedAt");
+
+                    b.ToTable("ComplaintActivities", (string)null);
+                });
+
+            modelBuilder.Entity("EstateSync.Api.Models.ComplaintEscalationContact", b =>
+                {
+                    b.Property<Guid>("ComplaintEscalationContactId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AdminId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AdminName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<Guid>("ComplaintId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ContactedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("InternalNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("ComplaintEscalationContactId")
+                        .HasName("PK_ComplaintEscalationContactId");
+
+                    b.HasIndex("ComplaintId", "ContactedAt");
+
+                    b.ToTable("ComplaintEscalationContacts", (string)null);
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.ComplaintImage", b =>
@@ -966,6 +1097,54 @@ namespace EstateSync.Api.Migrations
                     b.ToTable("PropertyImages", (string)null);
                 });
 
+            modelBuilder.Entity("EstateSync.Api.Models.PropertyVisitSlot", b =>
+                {
+                    b.Property<Guid>("PropertyVisitSlotId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("DurationMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(60);
+
+                    b.Property<Guid>("PropertyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("SlotDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("PropertyVisitSlotId")
+                        .HasName("PK_PropertyVisitSlotId");
+
+                    b.HasIndex("PropertyId", "SlotDate", "StartTime")
+                        .IsUnique();
+
+                    b.HasIndex("PropertyId", "Status", "SlotDate");
+
+                    b.ToTable("PropertyVisitSlots", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PropertyVisitSlots_Duration", "\"DurationMinutes\" = 60");
+                        });
+                });
+
             modelBuilder.Entity("EstateSync.Api.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("RefreshTokenId")
@@ -1157,7 +1336,23 @@ namespace EstateSync.Api.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<Guid?>("PreviousPropertyVisitSlotId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("PropertyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PropertyVisitSlotId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RescheduleReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("RescheduledAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("RescheduledByUserId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Status")
@@ -1180,7 +1375,11 @@ namespace EstateSync.Api.Migrations
                     b.HasKey("SiteVisitId")
                         .HasName("PK_SiteVisitId");
 
+                    b.HasIndex("PreviousPropertyVisitSlotId");
+
                     b.HasIndex("PropertyId");
+
+                    b.HasIndex("PropertyVisitSlotId");
 
                     b.HasIndex("Status");
 
@@ -1409,6 +1608,28 @@ namespace EstateSync.Api.Migrations
                     b.Navigation("Lease");
 
                     b.Navigation("LeaseBill");
+                });
+
+            modelBuilder.Entity("EstateSync.Api.Models.ComplaintActivity", b =>
+                {
+                    b.HasOne("EstateSync.Api.Models.Complaint", "Complaint")
+                        .WithMany("Activities")
+                        .HasForeignKey("ComplaintId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Complaint");
+                });
+
+            modelBuilder.Entity("EstateSync.Api.Models.ComplaintEscalationContact", b =>
+                {
+                    b.HasOne("EstateSync.Api.Models.Complaint", "Complaint")
+                        .WithMany("EscalationContacts")
+                        .HasForeignKey("ComplaintId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Complaint");
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.ComplaintImage", b =>
@@ -1660,6 +1881,17 @@ namespace EstateSync.Api.Migrations
                     b.Navigation("Property");
                 });
 
+            modelBuilder.Entity("EstateSync.Api.Models.PropertyVisitSlot", b =>
+                {
+                    b.HasOne("EstateSync.Api.Models.Property", "Property")
+                        .WithMany()
+                        .HasForeignKey("PropertyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Property");
+                });
+
             modelBuilder.Entity("EstateSync.Api.Models.RefreshToken", b =>
                 {
                     b.HasOne("EstateSync.Api.Models.User", "User")
@@ -1711,11 +1943,21 @@ namespace EstateSync.Api.Migrations
 
             modelBuilder.Entity("EstateSync.Api.Models.SiteVisit", b =>
                 {
+                    b.HasOne("EstateSync.Api.Models.PropertyVisitSlot", "PreviousPropertyVisitSlot")
+                        .WithMany()
+                        .HasForeignKey("PreviousPropertyVisitSlotId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("EstateSync.Api.Models.Property", "Property")
                         .WithMany()
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("EstateSync.Api.Models.PropertyVisitSlot", "PropertyVisitSlot")
+                        .WithMany()
+                        .HasForeignKey("PropertyVisitSlotId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("EstateSync.Api.Models.User", "Tenant")
                         .WithMany()
@@ -1723,7 +1965,11 @@ namespace EstateSync.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("PreviousPropertyVisitSlot");
+
                     b.Navigation("Property");
+
+                    b.Navigation("PropertyVisitSlot");
 
                     b.Navigation("Tenant");
                 });
@@ -1795,7 +2041,11 @@ namespace EstateSync.Api.Migrations
 
             modelBuilder.Entity("EstateSync.Api.Models.Complaint", b =>
                 {
+                    b.Navigation("Activities");
+
                     b.Navigation("ComplaintImages");
+
+                    b.Navigation("EscalationContacts");
                 });
 
             modelBuilder.Entity("EstateSync.Api.Models.KycVerification", b =>

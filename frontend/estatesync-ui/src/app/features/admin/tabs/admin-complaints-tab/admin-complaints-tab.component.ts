@@ -1,7 +1,7 @@
 import {
   Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, DestroyRef
 } from '@angular/core';
-import { SlicePipe } from '@angular/common';
+import { DecimalPipe, SlicePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,15 +12,17 @@ import { MatDialog } from '@angular/material/dialog';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { AdminService } from '@core/services/admin/admin.service';
-import { AdminComplaintResponse } from '../../../../core/models/admin.model';
-import { AdminUpdateComplaintStatusDialogComponent } from '../../dialogs/admin-update-complaint-status-dialog.component';
+import { ComplaintService } from '@core/services/complaint/complaint.service';
+import { AdminComplaintResponse, ComplaintEscalationResponse } from '../../../../core/models/admin.model';
+import { ComplaintDetailDialogComponent } from '../../../../shared/components/complaint-detail-dialog/complaint-detail-dialog.component';
+import { AdminRecordComplaintContactDialogComponent } from '../../dialogs/admin-record-complaint-contact-dialog.component';
 import { Subject, EMPTY, merge, debounceTime, switchMap, catchError } from 'rxjs';
 
 @Component({
   selector: 'app-admin-complaints-tab',
   standalone: true,
   imports: [
-    SlicePipe, ReactiveFormsModule, MatButtonModule, MatIconModule,
+    DecimalPipe, SlicePipe, ReactiveFormsModule, MatButtonModule, MatIconModule,
     MatMenuModule, MatProgressSpinnerModule,
     StatusBadgeComponent, EmptyStateComponent,
   ],
@@ -30,12 +32,15 @@ import { Subject, EMPTY, merge, debounceTime, switchMap, catchError } from 'rxjs
 })
 export class AdminComplaintsTabComponent implements OnInit {
   private readonly adminService = inject(AdminService);
+  private readonly complaintService = inject(ComplaintService);
   private readonly dialog       = inject(MatDialog);
   private readonly destroyRef   = inject(DestroyRef);
 
   readonly loading = signal(true);
   readonly items   = signal<AdminComplaintResponse[]>([]);
   readonly total   = signal(0);
+  readonly unattended = signal<ComplaintEscalationResponse[]>([]);
+  readonly escalationLoading = signal(true);
   readonly page    = signal(1);
   readonly limit   = 20;
 
@@ -73,6 +78,7 @@ export class AdminComplaintsTabComponent implements OnInit {
       .subscribe(() => { this.page.set(1); this.load(); });
 
     this.load();
+    this.loadUnattended();
   }
 
   load(): void {
@@ -80,13 +86,53 @@ export class AdminComplaintsTabComponent implements OnInit {
     this.reload$.next();
   }
 
-  openUpdateStatus(complaint: AdminComplaintResponse): void {
-    const ref = this.dialog.open(AdminUpdateComplaintStatusDialogComponent, {
+  loadUnattended(): void {
+    this.escalationLoading.set(true);
+    this.adminService.getUnattendedComplaints()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.unattended.set(res.data ?? []);
+          this.escalationLoading.set(false);
+        },
+        error: () => this.escalationLoading.set(false)
+      });
+  }
+
+  contactOwner(item: ComplaintEscalationResponse): void {
+    this.dialog.open(AdminRecordComplaintContactDialogComponent, {
       width: '100%',
-      maxWidth: '420px',
-      data: { complaintId: complaint.complaintId, currentStatus: complaint.status },
-    });
-    ref.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(r => { if (r) this.load(); });
+      maxWidth: '520px',
+      data: {
+        complaintId: item.complaintId,
+        complaintTitle: item.title,
+        ownerName: item.ownerName,
+      },
+    }).afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((reason?: string) => {
+        if (!reason) return;
+        this.unattended.update(list => list.map(x => x.complaintId === item.complaintId
+          ? {
+              ...x,
+              contactCount: x.contactCount + 1,
+              lastContactedAt: new Date().toISOString(),
+              lastContactReason: reason,
+            }
+          : x));
+      });
+  }
+
+  openComplaint(complaint: AdminComplaintResponse): void {
+    this.complaintService.getComplaint(complaint.complaintId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(res => {
+        this.dialog.open(ComplaintDetailDialogComponent, {
+          width: '100%',
+          maxWidth: '860px',
+          data: { complaint: res.data, viewer: 'admin' }
+        });
+      });
   }
 
   prevPage(): void { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }

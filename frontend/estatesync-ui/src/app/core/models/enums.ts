@@ -122,6 +122,7 @@ export enum NotificationType {
   ComplaintRaised = 'ComplaintRaised',
   ComplaintUpdated = 'ComplaintUpdated',
   ComplaintResolved = 'ComplaintResolved',
+  ComplaintEscalated = 'ComplaintEscalated',
   VerificationApproved = 'VerificationApproved',
   VerificationRejected = 'VerificationRejected',
   PropertyApproved = 'PropertyApproved',
@@ -140,4 +141,5 @@ export enum NotificationType {
   SiteVisitApproved = 'SiteVisitApproved',
   SiteVisitDeclined = 'SiteVisitDeclined',
   SiteVisitCancelled = 'SiteVisitCancelled',
+  SiteVisitRescheduled = 'SiteVisitRescheduled',
 }

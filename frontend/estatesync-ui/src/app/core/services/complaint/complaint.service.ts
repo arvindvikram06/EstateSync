@@ -20,12 +20,20 @@ export class ComplaintService {
     return this.http.get<ApiResponse<ComplaintResponse[]>>(`${this.baseUrl}/owner`);
   }
 
+  getComplaint(id: string): Observable<ApiResponse<ComplaintResponse>> {
+    return this.http.get<ApiResponse<ComplaintResponse>>(`${this.baseUrl}/${id}`);
+  }
+
   createComplaint(body: CreateComplaintRequest): Observable<ApiResponse<ComplaintResponse>> {
     return this.http.post<ApiResponse<ComplaintResponse>>(this.baseUrl, body);
   }
 
-  updateComplaintStatus(id: string, body: { status: string }): Observable<ApiResponse<ComplaintResponse>> {
+  updateComplaintStatus(id: string, body: { status: string; reviewRemarks?: string | null }): Observable<ApiResponse<ComplaintResponse>> {
     return this.http.put<ApiResponse<ComplaintResponse>>(`${this.baseUrl}/${id}/status`, body);
+  }
+
+  markOwnerViewed(id: string): Observable<ApiResponse<object>> {
+    return this.http.post<ApiResponse<object>>(`${this.baseUrl}/${id}/owner-viewed`, {});
   }
 
   /** Backend accepts one file per call (`file` form field). */

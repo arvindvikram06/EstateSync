@@ -1,9 +1,98 @@
 <div class="tab-header">
   <div>
     <h2 class="tab-title">Complaints</h2>
-    <p class="tab-subtitle">Review and manage tenant complaints across all properties.</p>
+    <p class="tab-subtitle">Monitor unattended complaints and review the complete complaint history.</p>
   </div>
 </div>
+
+@if (escalationLoading()) {
+  <div class="flex items-center gap-2 mb-5 text-sm text-es-muted"><mat-spinner diameter="18" /> Checking unattended complaints…</div>
+} @else if (unattended().length > 0) {
+  <section class="mb-8 rounded-2xl border border-red-100 bg-red-50/50 p-5">
+    <div class="flex items-center justify-between gap-3 mb-4">
+      <div>
+        <span class="text-[10px] font-bold tracking-widest uppercase text-red-500">48-hour escalation</span>
+        <h3 class="m-0 mt-1 text-xl font-bold text-es-text">Unattended complaints</h3>
+        <p class="m-0 mt-1 text-xs text-es-muted">Contact the owner and record why the complaint was not opened.</p>
+      </div>
+      <span class="grid min-w-7 h-7 px-2 place-items-center rounded-full bg-red-500 text-white text-xs font-bold">{{ unattended().length }}</span>
+    </div>
+    <div class="admin-table-wrap !border-red-100">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Complaint</th>
+            <th>Property / Tenant</th>
+            <th>Owner</th>
+            <th>Priority</th>
+            <th>Unattended</th>
+            <th>Contact record</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of unattended(); track item.complaintId) {
+            <tr>
+              <td>
+                <div class="user-name">{{ item.title }}</div>
+                <div class="es-text-xs">Raised {{ item.createdAt | slice:0:10 }}</div>
+              </td>
+              <td>
+                <div class="es-text-sm">{{ item.propertyTitle }}</div>
+                <div class="es-text-xs">Tenant: {{ item.tenantName }}</div>
+              </td>
+              <td class="es-text-sm">{{ item.ownerName }}</td>
+              <td>
+                <span class="es-badge" [class]="priorityClass(item.priority)">{{ item.priority }}</span>
+              </td>
+              <td>
+                <span class="px-2 py-1 rounded-full bg-amber-50 text-amber-700 text-[11px] font-bold whitespace-nowrap">
+                  {{ item.hoursUnattended | number:'1.0-0' }} hours
+                </span>
+              </td>
+              <td class="max-w-[260px]">
+                @if (item.contactCount > 0) {
+                  <div class="text-[11px] font-semibold text-emerald-700">
+                    {{ item.contactCount }} entr{{ item.contactCount === 1 ? 'y' : 'ies' }}
+                  </div>
+                  <div class="mt-1 text-[11px] leading-4 text-es-muted line-clamp-2"
+                    [title]="item.lastContactReason || ''">
+                    {{ item.lastContactReason }}
+                  </div>
+                } @else {
+                  <span class="text-[11px] text-es-muted">Not contacted yet</span>
+                }
+              </td>
+              <td>
+                <button mat-flat-button color="primary" class="!rounded-full !text-xs whitespace-nowrap"
+                        (click)="contactOwner(item)">
+                  <mat-icon>support_agent</mat-icon>Contact
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+} @else {
+  <section class="mb-6 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+    <span class="grid w-10 h-10 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-700">
+      <mat-icon>task_alt</mat-icon>
+    </span>
+    <div>
+      <span class="text-[10px] font-bold tracking-widest uppercase text-emerald-600">48-hour escalation</span>
+      <h3 class="m-0 mt-0.5 text-sm font-bold text-es-text">No unattended complaints</h3>
+      <p class="m-0 mt-0.5 text-[11px] text-es-muted">Open complaints not viewed by their owner within 48 hours will appear here with owner contact details.</p>
+    </div>
+  </section>
+}
+
+<section class="mb-4 mt-2">
+  <span class="text-[10px] font-bold tracking-widest uppercase text-es-primary">Audit history</span>
+  <h3 class="m-0 mt-1 text-xl font-bold text-es-text">Complaint history</h3>
+  <p class="m-0 mt-1 text-xs text-es-muted">Read-only history of complaints and their workflow activity.</p>
+</section>
 
 <div class="filter-bar mb-5">
   <button class="filter-pill-btn" [class.filter-pill-btn--active]="!!statusFilter.value"
@@ -16,6 +105,8 @@
     <button mat-menu-item (click)="statusFilter.setValue('')">All statuses</button>
     <button mat-menu-item (click)="statusFilter.setValue('Open')">Open</button>
     <button mat-menu-item (click)="statusFilter.setValue('InProgress')">In Progress</button>
+    <button mat-menu-item (click)="statusFilter.setValue('ResolutionProposed')">Waiting for Tenant</button>
+    <button mat-menu-item (click)="statusFilter.setValue('Reopened')">Reopened</button>
     <button mat-menu-item (click)="statusFilter.setValue('Resolved')">Resolved</button>
     <button mat-menu-item (click)="statusFilter.setValue('Closed')">Closed</button>
   </mat-menu>
@@ -51,7 +142,7 @@
           <th>Priority</th>
           <th>Status</th>
           <th>Raised</th>
-          <th class="text">Action</th>
+          <th class="text">Details</th>
         </tr>
       </thead>
       <tbody>
@@ -69,9 +160,8 @@
             <td class="es-text-sm">{{ item.createdAt | slice:0:10 }}</td>
             <td class="text">
               <button mat-stroked-button class="!rounded-full !text-xs !h-8"
-                [disabled]="item.status === 'Closed'"
-                (click)="openUpdateStatus(item)">
-                Update Status
+                (click)="openComplaint(item)">
+                View Details
               </button>
             </td>
           </tr>

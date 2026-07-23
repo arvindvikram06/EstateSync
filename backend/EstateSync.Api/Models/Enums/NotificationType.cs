@@ -18,6 +18,7 @@ public enum NotificationType
     ComplaintRaised,
     ComplaintUpdated,
     ComplaintResolved,
+    ComplaintEscalated,
     VerificationApproved,
     VerificationRejected,
     DocumentUploaded,
@@ -34,5 +35,6 @@ public enum NotificationType
     SiteVisitRequested,
     SiteVisitApproved,
     SiteVisitDeclined,
-    SiteVisitCancelled
+    SiteVisitCancelled,
+    SiteVisitRescheduled
 }

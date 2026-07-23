@@ -24,6 +24,7 @@ export class DashboardLayoutComponent {
   readonly navItems   = input<NavItem[]>([]);
   readonly activeTab  = input<string>('');
   readonly showLogout = input<boolean>(false);
+  readonly showSidebarTitle = input<boolean>(true);
   readonly tabChange  = output<string>();
   readonly logout     = output<void>();
   @Input() topOffset  = 64;

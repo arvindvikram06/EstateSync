@@ -21,6 +21,7 @@ public class ComplaintRepository : BaseRepository<Complaint>, IComplaintReposito
         return await _dbSet
             .AsNoTracking()
             .Include(c => c.ComplaintImages)
+            .Include(c => c.Activities)
             .Where(c => c.LeaseId == leaseId)
             .ToListAsync();
     }
@@ -29,6 +30,7 @@ public class ComplaintRepository : BaseRepository<Complaint>, IComplaintReposito
     {
         return await _dbSet
             .Include(c => c.ComplaintImages)
+            .Include(c => c.Activities)
             .Include(c => c.Lease)
                 .ThenInclude(l => l!.Property)
             .FirstOrDefaultAsync(c => c.ComplaintId == id);
@@ -39,6 +41,7 @@ public class ComplaintRepository : BaseRepository<Complaint>, IComplaintReposito
         return await _dbSet
             .AsNoTracking()
             .Include(c => c.ComplaintImages)
+            .Include(c => c.Activities)
             .Include(c => c.Lease)
                 .ThenInclude(l => l!.Property)
             .Where(c => c.Lease != null && c.Lease.TenantId == tenantId)
@@ -51,6 +54,7 @@ public class ComplaintRepository : BaseRepository<Complaint>, IComplaintReposito
         return await _dbSet
             .AsNoTracking()
             .Include(c => c.ComplaintImages)
+            .Include(c => c.Activities)
             .Include(c => c.Lease)
                 .ThenInclude(l => l!.Property)
             .Where(c => c.Lease != null && c.Lease.Property != null && c.Lease.Property.OwnerId == ownerId)

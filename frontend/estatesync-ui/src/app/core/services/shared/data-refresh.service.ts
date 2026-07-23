@@ -19,6 +19,7 @@ const REFRESH_GROUPS: Partial<Record<NotificationType, RefreshDomain[]>> = {
   [NotificationType.SiteVisitApproved]: ['visits'],
   [NotificationType.SiteVisitDeclined]: ['visits'],
   [NotificationType.SiteVisitCancelled]: ['visits'],
+  [NotificationType.SiteVisitRescheduled]: ['visits'],
 
   [NotificationType.ApplicationReceived]: ['applications'],
   [NotificationType.ApplicationApproved]: ['applications'],
@@ -45,6 +46,7 @@ const REFRESH_GROUPS: Partial<Record<NotificationType, RefreshDomain[]>> = {
   [NotificationType.ComplaintRaised]: ['complaints'],
   [NotificationType.ComplaintUpdated]: ['complaints'],
   [NotificationType.ComplaintResolved]: ['complaints'],
+  [NotificationType.ComplaintEscalated]: ['complaints'],
 
   [NotificationType.RentDue]: ['bills'],
   [NotificationType.PaymentReceived]: ['bills'],

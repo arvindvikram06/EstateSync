@@ -45,6 +45,37 @@ public class SiteVisitsController : ControllerBase
         return Ok(new ApiResponse<SiteVisitResponse> { Data = result, Message = "Site visit status updated." });
     }
 
+    [HttpPut("{id:guid}/reschedule")]
+    public async Task<ActionResult<ApiResponse<SiteVisitResponse>>> Reschedule(
+        Guid id,
+        RescheduleSiteVisitRequest request,
+        CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        if (userId == Guid.Empty) throw new UnauthorizedAccessException();
+
+        var result = await _siteVisitService.RescheduleAsync(userId, id, request, ct);
+        return Ok(new ApiResponse<SiteVisitResponse>
+        {
+            Data = result,
+            Message = "Site visit rescheduled successfully."
+        });
+    }
+
+    [HttpPut("{id:guid}/confirm-reschedule")]
+    public async Task<ActionResult<ApiResponse<SiteVisitResponse>>> ConfirmReschedule(Guid id, CancellationToken ct)
+    {
+        var result = await _siteVisitService.ConfirmRescheduleAsync(User.GetUserId(), id, ct);
+        return Ok(new ApiResponse<SiteVisitResponse> { Data = result, Message = "New visit time confirmed." });
+    }
+
+    [HttpPut("{id:guid}/reject-reschedule")]
+    public async Task<ActionResult<ApiResponse<SiteVisitResponse>>> RejectReschedule(Guid id, CancellationToken ct)
+    {
+        var result = await _siteVisitService.RejectRescheduleAsync(User.GetUserId(), id, ct);
+        return Ok(new ApiResponse<SiteVisitResponse> { Data = result, Message = "Reschedule proposal rejected." });
+    }
+
     [HttpGet("tenant")]
     [Authorize(Roles = Roles.Tenant)]
     public async Task<ActionResult<ApiResponse<IEnumerable<SiteVisitResponse>>>> GetTenantVisits(CancellationToken ct)

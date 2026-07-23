@@ -174,10 +174,28 @@ export interface AdminComplaintResponse {
   description: string;
   complaintType: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  status: 'Open' | 'InProgress' | 'Resolved' | 'Closed';
+  status: 'Open' | 'InProgress' | 'ResolutionProposed' | 'Reopened' | 'Resolved' | 'Closed';
   reviewRemarks: string | null;
   propertyTitle?: string;
   createdAt: string;
+}
+
+export interface ComplaintEscalationResponse {
+  complaintId: string;
+  title: string;
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  status: string;
+  propertyTitle: string;
+  ownerName: string;
+  ownerEmail: string;
+  ownerPhone: string;
+  tenantName: string;
+  createdAt: string;
+  escalatedAt: string | null;
+  hoursUnattended: number;
+  lastContactedAt: string | null;
+  contactCount: number;
+  lastContactReason: string | null;
 }
 
 // Audit logs

@@ -20,6 +20,8 @@ public static class DbSeeder
         var env = services.GetRequiredService<IHostEnvironment>();
         var passwordService = services.GetRequiredService<IPasswordService>();
 
+        await SeedUnattendedComplaintsAsync(context);
+
         // Roles and a system admin already exist via EF Core HasData migration seed.
         // Guard on properties (not users) so we don't bail out prematurely.
         if (await context.Properties.AnyAsync()) return;
@@ -243,6 +245,76 @@ public static class DbSeeder
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private static async Task SeedUnattendedComplaintsAsync(AppDbContext context)
+    {
+        const string seedPrefix = "[Escalation demo]";
+        var leases = await context.Leases
+            .AsNoTracking()
+            .Where(l => l.Status == LeaseStatus.Active)
+            .OrderBy(l => l.CreatedAt)
+            .Take(3)
+            .ToListAsync();
+
+        if (leases.Count == 0)
+            return;
+
+        var samples = new[]
+        {
+            new { Title = $"{seedPrefix} Water leakage", Description = "Water has been leaking below the kitchen sink and needs urgent inspection.", Type = ComplaintType.Maintenance, Priority = ComplaintPriority.Critical, AgeHours = 76 },
+            new { Title = $"{seedPrefix} Electrical socket sparking", Description = "A bedroom electrical socket sparks intermittently when switched on.", Type = ComplaintType.Safety, Priority = ComplaintPriority.High, AgeHours = 61 },
+            new { Title = $"{seedPrefix} Incorrect utility charge", Description = "The latest utility bill includes a charge that does not match the meter reading.", Type = ComplaintType.Billing, Priority = ComplaintPriority.Medium, AgeHours = 52 }
+        };
+
+        var existingTitles = await context.Complaints
+            .Where(c => c.Title.StartsWith(seedPrefix))
+            .Select(c => c.Title)
+            .ToListAsync();
+        var inserted = 0;
+
+        for (var i = 0; i < samples.Length; i++)
+        {
+            if (existingTitles.Contains(samples[i].Title))
+                continue;
+
+            var lease = leases[i % leases.Count];
+            var raisedAt = DateTime.UtcNow.AddHours(-samples[i].AgeHours);
+            var complaint = new Complaint
+            {
+                ComplaintId = Guid.NewGuid(),
+                LeaseId = lease.LeaseId,
+                Title = samples[i].Title,
+                Description = samples[i].Description,
+                ComplaintType = samples[i].Type,
+                Priority = samples[i].Priority,
+                Status = ComplaintStatus.Open,
+                OwnerViewedAt = null,
+                EscalatedAt = raisedAt.AddHours(48),
+                CreatedAt = raisedAt
+            };
+
+            complaint.Activities.Add(new ComplaintActivity
+            {
+                ComplaintActivityId = Guid.NewGuid(),
+                ComplaintId = complaint.ComplaintId,
+                ActorId = lease.TenantId,
+                ActorName = "Tenant",
+                ActorRole = "Tenant",
+                ActivityType = "Created",
+                NewStatus = ComplaintStatus.Open,
+                Summary = "Complaint submitted",
+                CreatedAt = raisedAt
+            });
+            context.Complaints.Add(complaint);
+            inserted++;
+        }
+
+        if (inserted == 0)
+            return;
+
+        await context.SaveSeedDataAsync();
+        Console.WriteLine($"[DbSeeder] Seeded {inserted} unattended complaints for the admin escalation demo.");
+    }
 
     private static User MakeUser(string name, string email, string hash, DateTime now, string phone,
         bool isKyc = false, bool isOwner = false) => new()

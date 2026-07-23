@@ -16,6 +16,7 @@ import {
   ConnectedAccountResponse,
   AdminPaymentResponse,
   AdminComplaintResponse,
+  ComplaintEscalationResponse,
   AuditLogResponse,
   AdminLeaseApprovalRequest,
   AdminLeaseSummary,
@@ -147,8 +148,14 @@ export class AdminService {
     return this.http.get<PagedResponse<AdminComplaintResponse>>(`${this.base}/complaints`, { params });
   }
 
-  updateComplaintStatus(complaintId: string, status: string): Observable<ApiResponse<object>> {
-    return this.http.put<ApiResponse<object>>(`${environment.apiUrl}/api/v1/complaints/${complaintId}/status`, { status });
+  getUnattendedComplaints(): Observable<ApiResponse<ComplaintEscalationResponse[]>> {
+    return this.http.get<ApiResponse<ComplaintEscalationResponse[]>>(`${this.base}/complaints/unattended`);
+  }
+
+  recordComplaintContact(complaintId: string, reason: string): Observable<ApiResponse<object>> {
+    return this.http.post<ApiResponse<object>>(`${this.base}/complaints/${complaintId}/contacts`, {
+      reason
+    });
   }
 
   // ── Audit Logs ─────────────────────────────────────────────────────────────

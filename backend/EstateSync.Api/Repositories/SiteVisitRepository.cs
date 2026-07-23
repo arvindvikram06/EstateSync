@@ -1,56 +1,40 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using EstateSync.Api.Data;
 using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace EstateSync.Api.Repositories;
 
 public class SiteVisitRepository : BaseRepository<SiteVisit>, ISiteVisitRepository
 {
-    public SiteVisitRepository(AppDbContext context) : base(context)
-    {
-    }
+    public SiteVisitRepository(AppDbContext context) : base(context) { }
 
-    public async Task<IEnumerable<SiteVisit>> GetByTenantIdAsync(Guid tenantId)
-    {
-        return await _dbSet
-            .AsNoTracking()
-            .Include(v => v.Property)
+    private IQueryable<SiteVisit> Details() => _dbSet
+        .Include(v => v.Property)
+        .Include(v => v.Tenant)
+        .Include(v => v.PropertyVisitSlot)
+        .Include(v => v.PreviousPropertyVisitSlot);
+
+    public async Task<IEnumerable<SiteVisit>> GetByTenantIdAsync(Guid tenantId) =>
+        await Details().AsNoTracking()
             .Where(v => v.TenantId == tenantId)
-            .OrderBy(v => v.VisitDate)
-            .ThenBy(v => v.VisitTime)
+            .OrderBy(v => v.VisitDate).ThenBy(v => v.VisitTime)
             .ToListAsync();
-    }
 
-    public async Task<IEnumerable<SiteVisit>> GetByOwnerIdAsync(Guid ownerId)
-    {
-        return await _dbSet
-            .AsNoTracking()
-            .Include(v => v.Property)
-            .Include(v => v.Tenant)
+    public async Task<IEnumerable<SiteVisit>> GetByOwnerIdAsync(Guid ownerId) =>
+        await Details().AsNoTracking()
             .Where(v => v.Property != null && v.Property.OwnerId == ownerId)
-            .OrderBy(v => v.VisitDate)
-            .ThenBy(v => v.VisitTime)
+            .OrderBy(v => v.VisitDate).ThenBy(v => v.VisitTime)
             .ToListAsync();
-    }
 
-    public async Task<SiteVisit?> GetWithDetailsByIdAsync(Guid id)
-    {
-        return await _dbSet
-            .Include(v => v.Property)
-            .Include(v => v.Tenant)
-            .FirstOrDefaultAsync(v => v.SiteVisitId == id);
-    }
+    public Task<SiteVisit?> GetWithDetailsByIdAsync(Guid id) =>
+        Details().FirstOrDefaultAsync(v => v.SiteVisitId == id);
 
-    public async Task<bool> HasActiveRequestAsync(Guid tenantId, Guid propertyId)
-    {
-        return await _dbSet.AnyAsync(v =>
+    public Task<bool> HasActiveRequestAsync(Guid tenantId, Guid propertyId) =>
+        _dbSet.AnyAsync(v =>
             v.TenantId == tenantId &&
             v.PropertyId == propertyId &&
-            (v.Status == SiteVisitStatus.Pending || v.Status == SiteVisitStatus.Approved));
-    }
+            (v.Status == SiteVisitStatus.PendingOwnerApproval ||
+             v.Status == SiteVisitStatus.PendingTenantApproval ||
+             v.Status == SiteVisitStatus.Approved));
 }

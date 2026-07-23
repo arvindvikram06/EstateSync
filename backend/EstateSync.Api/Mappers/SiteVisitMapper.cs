@@ -14,10 +14,16 @@ public class SiteVisitMapper
             PropertyTitle = visit.Property?.Title,
             TenantId = visit.TenantId,
             TenantName = visit.Tenant?.FullName,
+            SlotId = visit.PropertyVisitSlotId,
+            PreviousSlotId = visit.PreviousPropertyVisitSlotId,
             VisitDate = visit.VisitDate,
             VisitTime = visit.VisitTime.ToString("HH:mm"),
             Status = visit.Status.ToString(),
             OwnerNotes = visit.OwnerNotes,
+            RescheduledByUserId = visit.RescheduledByUserId,
+            RescheduledAt = visit.RescheduledAt,
+            RescheduleReason = visit.RescheduleReason,
+            DurationMinutes = 60,
             CreatedAt = visit.CreatedAt,
             UpdatedAt = visit.UpdatedAt
         };

@@ -14,10 +14,20 @@ public class SiteVisitConfiguration : IEntityTypeConfiguration<SiteVisit>
         builder.Property(x => x.VisitTime).IsRequired();
         builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(50);
         builder.Property(x => x.OwnerNotes).HasMaxLength(500);
+        builder.Property(x => x.RescheduleReason).HasMaxLength(500);
 
         builder.HasIndex(x => x.PropertyId);
         builder.HasIndex(x => x.TenantId);
         builder.HasIndex(x => x.Status);
+        builder.HasIndex(x => x.PropertyVisitSlotId);
+        builder.HasOne(x => x.PropertyVisitSlot)
+            .WithMany()
+            .HasForeignKey(x => x.PropertyVisitSlotId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.PreviousPropertyVisitSlot)
+            .WithMany()
+            .HasForeignKey(x => x.PreviousPropertyVisitSlotId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.Property)
             .WithMany()

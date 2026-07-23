@@ -1,5 +1,5 @@
-<div class="flex justify-between items-center mb-5">
-  <h2 class="es-title">Complaints</h2>
+<div class="tenant-complaint-heading">
+  <div><span>Property support</span><h2>My complaints</h2><p>Report issues and confirm only when they are properly fixed.</p></div>
   <button mat-flat-button color="primary" class="!rounded-full !px-5 !py-[9px] !text-[13px]"
     [disabled]="!activePropertyId()"
     (click)="raiseComplaint()">
@@ -20,7 +20,7 @@
     @for (opt of statusOptions; track opt) {
       <button type="button" class="filter-pill"
         [class.filter-pill--active]="statusFilter() === opt"
-        (click)="statusFilter.set(opt)">{{ opt === 'InProgress' ? 'In Progress' : opt }}</button>
+        (click)="statusFilter.set(opt)">{{ opt === 'NeedsAction' ? 'Needs Action' : opt }} <b>{{ counts()[opt] }}</b></button>
     }
   </div>
 }
@@ -40,7 +40,7 @@
             <div class="es-text-xs mt-[3px] line-clamp-2">{{ c.description }}</div>
           </div>
           <div class="flex flex-col items-end gap-1.5 shrink-0">
-            <app-status-badge [status]="c.status" />
+            <app-status-badge [status]="statusLabel(c.status)" />
             <app-status-badge [status]="c.priority" />
           </div>
         </div>
