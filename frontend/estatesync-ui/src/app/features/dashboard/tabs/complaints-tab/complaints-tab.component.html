@@ -1,5 +1,8 @@
 <div class="tenant-complaint-heading">
-  <div><span>Property support</span><h2>My complaints</h2><p>Report issues and confirm only when they are properly fixed.</p></div>
+  <div>
+    <h2 class="es-title">My complaints</h2>
+    <p>Report issues and confirm only when they are properly fixed.</p>
+  </div>
   <button mat-flat-button color="primary" class="!rounded-full !px-5 !py-[9px] !text-[13px]"
     [disabled]="!activePropertyId()"
     (click)="raiseComplaint()">
