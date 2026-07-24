@@ -2,7 +2,7 @@ import {
   Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, DestroyRef
 } from '@angular/core';
 import { SlicePipe, TitleCasePipe } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { debounceTime } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
@@ -40,6 +40,13 @@ export class AdminFinancialTabComponent implements OnInit {
   readonly summaryLoading = signal(true);
   readonly summaryError   = signal(false);
   readonly summary        = signal<SettlementSummaryResponse | null>(null);
+  readonly platformFee = new FormControl<number | null>(null, {
+    validators: [Validators.required, Validators.min(0), Validators.max(25)],
+  });
+  readonly platformFeeLoading = signal(true);
+  readonly platformFeeSaving = signal(false);
+  readonly platformFeeMessage = signal('');
+  readonly platformFeeError = signal('');
 
   // Settlements
   readonly settlementsLoading = signal(true);
@@ -125,9 +132,46 @@ export class AdminFinancialTabComponent implements OnInit {
 
   loadAll(): void {
     this.loadSummary();
+    this.loadPlatformFee();
     this.loadSettlements();
     this.loadAccounts();
     this.loadPayments();
+  }
+
+  loadPlatformFee(): void {
+    this.platformFeeLoading.set(true);
+    this.platformFeeError.set('');
+    this.adminService.getPlatformFee().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: res => {
+        this.platformFee.setValue(res.data?.percentage ?? null);
+        this.platformFeeLoading.set(false);
+      },
+      error: () => {
+        this.platformFeeLoading.set(false);
+        this.platformFeeError.set('Could not load the platform charge.');
+      },
+    });
+  }
+
+  savePlatformFee(): void {
+    this.platformFee.markAsTouched();
+    if (this.platformFee.invalid || this.platformFee.value === null) return;
+
+    this.platformFeeSaving.set(true);
+    this.platformFeeMessage.set('');
+    this.platformFeeError.set('');
+    this.adminService.updatePlatformFee(this.platformFee.value)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: res => {
+          this.platformFee.setValue(res.data?.percentage ?? this.platformFee.value);
+          this.platformFeeSaving.set(false);
+          this.platformFeeMessage.set('Platform charge updated. New checkouts will use this rate.');
+        },
+        error: () => {
+          this.platformFeeSaving.set(false);
+          this.platformFeeError.set('Could not update the platform charge.');
+        },
+      });
   }
 
   loadSummary(): void {

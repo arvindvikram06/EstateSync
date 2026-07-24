@@ -9,6 +9,41 @@
   </button>
 </div>
 
+<section class="fee-setting mb-8" aria-labelledby="platform-fee-heading">
+  <div>
+    <div class="flex items-center gap-2">
+      <mat-icon class="es-text-primary">percent</mat-icon>
+      <h3 id="platform-fee-heading" class="font-semibold text-es-text">Platform charge</h3>
+    </div>
+    <p class="text-sm text-es-muted mt-1">
+      Applied to new Stripe checkout sessions. Existing and completed payments are unchanged.
+    </p>
+  </div>
+  @if (platformFeeLoading()) {
+    <mat-spinner diameter="24" />
+  } @else {
+    <div class="fee-setting__control">
+      <label for="platform-fee">Percentage</label>
+      <div class="fee-input">
+        <input id="platform-fee" type="number" min="0" max="25" step="0.01"
+          [formControl]="platformFee" aria-describedby="platform-fee-help" />
+        <span>%</span>
+      </div>
+      <small id="platform-fee-help">Allowed range: 0%–25%</small>
+    </div>
+    <button mat-flat-button color="primary" type="button"
+      [disabled]="platformFee.invalid || platformFeeSaving()" (click)="savePlatformFee()">
+      @if (platformFeeSaving()) { Saving… } @else { Save charge }
+    </button>
+  }
+</section>
+@if (platformFeeMessage()) {
+  <p class="fee-feedback fee-feedback--success mb-5">{{ platformFeeMessage() }}</p>
+}
+@if (platformFeeError()) {
+  <p class="fee-feedback fee-feedback--error mb-5">{{ platformFeeError() }}</p>
+}
+
 <!-- ── Summary cards ──────────────────────────────────────────────────────── -->
 @if (summaryLoading()) {
   <div class="flex items-center gap-3 mb-8 text-sm text-es-muted">

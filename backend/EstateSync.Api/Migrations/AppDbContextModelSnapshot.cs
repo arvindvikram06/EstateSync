@@ -927,6 +927,27 @@ namespace EstateSync.Api.Migrations
                     b.ToTable("Payments", (string)null);
                 });
 
+            modelBuilder.Entity("EstateSync.Api.Models.PlatformSetting", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("DecimalValue")
+                        .HasPrecision(8, 6)
+                        .HasColumnType("numeric(8,6)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("PlatformSettings");
+                });
+
             modelBuilder.Entity("EstateSync.Api.Models.Property", b =>
                 {
                     b.Property<Guid>("PropertyId")

@@ -8,6 +8,45 @@
   gap: 6px;
 }
 
+.fee-setting {
+  background: white;
+  border: 1px solid var(--es-border-light);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.fee-setting > div:first-child { flex: 1; }
+.fee-setting__control { display: flex; flex-direction: column; gap: 4px; }
+.fee-setting__control label { font-size: 12px; font-weight: 600; color: var(--es-text-secondary); }
+.fee-setting__control small { font-size: 11px; color: var(--es-text-secondary); }
+.fee-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--es-border);
+  border-radius: 10px;
+  padding: 0 12px;
+  background: white;
+}
+.fee-input:focus-within { border-color: var(--es-primary); }
+.fee-input input {
+  width: 90px;
+  padding: 9px 4px;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  font-weight: 600;
+}
+.fee-feedback { padding: 10px 14px; border-radius: 10px; font-size: 13px; }
+.fee-feedback--success { background: #ecfdf5; color: #047857; }
+.fee-feedback--error { background: #fef2f2; color: #b91c1c; }
+
+@media (max-width: 720px) {
+  .fee-setting { align-items: stretch; flex-direction: column; }
+}
+
 .fin-icon {
   width: 40px;
   height: 40px;

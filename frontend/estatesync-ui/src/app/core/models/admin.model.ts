@@ -137,6 +137,10 @@ export interface SettlementSummaryResponse {
   totalPaymentsVolume: number;
 }
 
+export interface PlatformFeeSettingResponse {
+  percentage: number;
+}
+
 // Connected accounts
 export interface ConnectedAccountResponse {
   id: string;

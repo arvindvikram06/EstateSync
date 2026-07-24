@@ -49,6 +49,7 @@ public partial class AppDbContext : DbContext
     public DbSet<OwnerProfile> OwnerProfiles => Set<OwnerProfile>();
     public DbSet<SiteVisit> SiteVisits => Set<SiteVisit>();
     public DbSet<PropertyVisitSlot> PropertyVisitSlots => Set<PropertyVisitSlot>();
+    public DbSet<PlatformSetting> PlatformSettings => Set<PlatformSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

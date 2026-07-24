@@ -13,6 +13,7 @@ using EstateSync.Api.Interfaces.Services.Admin;
 using EstateSync.Api.Interfaces.Services.Complaints;
 using EstateSync.Api.Interfaces.Services.Kyc;
 using EstateSync.Api.Interfaces.Services.Properties;
+using EstateSync.Api.Interfaces.Services.Payments;
 using EstateSync.Api.Models;
 
 namespace EstateSync.Api.Controllers;
@@ -28,6 +29,7 @@ public class AdminController : ControllerBase
     private readonly IAdminDashboardService _dashboardService;
     private readonly IAdminFinancialService _financialService;
     private readonly IComplaintService _complaintService;
+    private readonly IPlatformFeeService _platformFeeService;
 
     public AdminController(
         IPropertyApprovalService propertyApprovalService,
@@ -35,7 +37,8 @@ public class AdminController : ControllerBase
         IAdminService adminService,
         IAdminDashboardService dashboardService,
         IAdminFinancialService financialService,
-        IComplaintService complaintService)
+        IComplaintService complaintService,
+        IPlatformFeeService platformFeeService)
     {
         _propertyApprovalService = propertyApprovalService ?? throw new ArgumentNullException(nameof(propertyApprovalService));
         _kycService              = kycService              ?? throw new ArgumentNullException(nameof(kycService));
@@ -43,6 +46,7 @@ public class AdminController : ControllerBase
         _dashboardService        = dashboardService        ?? throw new ArgumentNullException(nameof(dashboardService));
         _financialService        = financialService        ?? throw new ArgumentNullException(nameof(financialService));
         _complaintService        = complaintService        ?? throw new ArgumentNullException(nameof(complaintService));
+        _platformFeeService      = platformFeeService      ?? throw new ArgumentNullException(nameof(platformFeeService));
     }
 
     // ── Dashboard Stats ───────────────────────────────────────────────────────
@@ -220,6 +224,31 @@ public class AdminController : ControllerBase
     }
 
     // ── Financial Dashboard ───────────────────────────────────────────────────
+
+    [HttpGet("settings/platform-fee")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<PlatformFeeSettingResponse>>> GetPlatformFee(CancellationToken ct)
+    {
+        var percentage = await _platformFeeService.GetPercentAsync(ct) * 100m;
+        return Ok(new ApiResponse<PlatformFeeSettingResponse>
+        {
+            Data = new PlatformFeeSettingResponse(percentage)
+        });
+    }
+
+    [HttpPut("settings/platform-fee")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<ApiResponse<PlatformFeeSettingResponse>>> UpdatePlatformFee(
+        [FromBody] UpdatePlatformFeeSettingRequest request, CancellationToken ct)
+    {
+        var percentage = await _platformFeeService.UpdatePercentAsync(
+            request.Percentage, User.GetUserId(), ct);
+        return Ok(new ApiResponse<PlatformFeeSettingResponse>
+        {
+            Data = new PlatformFeeSettingResponse(percentage),
+            Message = "Platform charge updated successfully. It will apply to new checkout sessions."
+        });
+    }
 
     [HttpGet("financial/summary")]
     [Authorize(Roles = "Admin")]

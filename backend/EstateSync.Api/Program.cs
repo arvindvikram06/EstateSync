@@ -150,6 +150,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Register UnitOfWork
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IPlatformFeeService, PlatformFeeService>();
 
 // Register Repositories
 #region Repositories

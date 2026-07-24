@@ -29,6 +29,7 @@ public class TenantPaymentService : ITenantPaymentService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _config;
     private readonly ILogger<TenantPaymentService> _logger;
+    private readonly IPlatformFeeService _platformFeeService;
 
     public TenantPaymentService(
         IUserRepository userRepo,
@@ -39,7 +40,8 @@ public class TenantPaymentService : ITenantPaymentService
         INotificationSender notificationSender,
         IUnitOfWork unitOfWork,
         IConfiguration config,
-        ILogger<TenantPaymentService> logger)
+        ILogger<TenantPaymentService> logger,
+        IPlatformFeeService platformFeeService)
     {
         _userRepo = userRepo;
         _leaseBillRepo = leaseBillRepo;
@@ -50,6 +52,7 @@ public class TenantPaymentService : ITenantPaymentService
         _unitOfWork = unitOfWork;
         _config = config;
         _logger = logger;
+        _platformFeeService = platformFeeService;
     }
 
     public async Task<string> CreateTenantCheckoutSessionAsync(Guid leaseBillId, Guid tenantId, CancellationToken ct = default)
@@ -97,14 +100,16 @@ public class TenantPaymentService : ITenantPaymentService
 
         var stripeCustomerId = await GetOrCreateStripeCustomerAsync(tenant, tenantId, ct);
 
-        var (totalCents, appFeeCents, platformFee) = CalculateAmounts(bill.Amount);
+        var platformPercent = await _platformFeeService.GetPercentAsync(ct);
+        var (totalCents, appFeeCents, platformFee) = CalculateAmounts(bill.Amount, platformPercent);
 
         // Correlation metadata set on both Session and PaymentIntent so any payment-level
         // webhook can look up our DB records without an extra Stripe API round-trip.
         var correlationMetadata = new Dictionary<string, string>
         {
             { "LeaseBillId", bill.LeaseBillId.ToString() },
-            { "TenantId",    tenantId.ToString() }
+            { "TenantId",    tenantId.ToString() },
+            { "PlatformFeeCents", ((long)Math.Round(platformFee * 100m)).ToString(CultureInfo.InvariantCulture) }
         };
 
         var frontendUrl = _config["App:FrontendUrl"]?.TrimEnd('/')
@@ -206,7 +211,12 @@ public class TenantPaymentService : ITenantPaymentService
             return;
         }
 
-        var (_, _, platformFee) = CalculateAmounts(bill?.Amount ?? (session.AmountTotal ?? 0) / 100m);
+        var platformFee = session.Metadata.TryGetValue("PlatformFeeCents", out var feeCentsText)
+            && long.TryParse(feeCentsText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var feeCents)
+            ? feeCents / 100m
+            : CalculateAmounts(
+                bill?.Amount ?? (session.AmountTotal ?? 0) / 100m,
+                await _platformFeeService.GetPercentAsync(ct)).platformFee;
         var paidAmount = (session.AmountTotal ?? 0) / 100m;
 
         if (bill != null)
@@ -329,11 +339,11 @@ public class TenantPaymentService : ITenantPaymentService
     }
 
     // Fix #9: Use InvariantCulture so "0.054" parses correctly on any server locale.
-    private (long totalCents, long appFeeCents, decimal platformFee) CalculateAmounts(decimal billAmount)
+    private (long totalCents, long appFeeCents, decimal platformFee) CalculateAmounts(
+        decimal billAmount, decimal platformPercent)
     {
         double stripePercent   = double.TryParse(_config["Stripe:StripeFeePercent"],   NumberStyles.Float, CultureInfo.InvariantCulture, out var sp) ? sp : 0.054;
         double stripeFixedInr  = double.TryParse(_config["Stripe:StripeFeeFixedInr"],  NumberStyles.Float, CultureInfo.InvariantCulture, out var sf) ? sf : 25.0;
-        double platformPercent = double.TryParse(_config["Stripe:PlatformFeePercent"], NumberStyles.Float, CultureInfo.InvariantCulture, out var pf) ? pf : 0.02;
 
         double rent         = (double)billAmount;
         double totalCharged = (rent + stripeFixedInr) / (1.0 - stripePercent);
@@ -341,7 +351,7 @@ public class TenantPaymentService : ITenantPaymentService
         long totalCents    = (long)Math.Round(totalCharged * 100);
         long rentCents     = (long)Math.Round(rent * 100);
         long stripFeeCents = totalCents - rentCents;
-        long platformCents = (long)Math.Round(rent * platformPercent * 100);
+        long platformCents = (long)Math.Round(rent * (double)platformPercent * 100);
         long appFeeCents   = platformCents + stripFeeCents;
 
         return (totalCents, appFeeCents, platformCents / 100m);

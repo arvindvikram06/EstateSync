@@ -21,6 +21,7 @@ import {
   AdminLeaseApprovalRequest,
   AdminLeaseSummary,
   AdminUserResponse,
+  PlatformFeeSettingResponse,
 } from '../../models/admin.model';
 
 @Injectable({ providedIn: 'root' })
@@ -111,6 +112,15 @@ export class AdminService {
 
   getFinancialSummary(): Observable<ApiResponse<SettlementSummaryResponse>> {
     return this.http.get<ApiResponse<SettlementSummaryResponse>>(`${this.base}/financial/summary`);
+  }
+
+  getPlatformFee(): Observable<ApiResponse<PlatformFeeSettingResponse>> {
+    return this.http.get<ApiResponse<PlatformFeeSettingResponse>>(`${this.base}/settings/platform-fee`);
+  }
+
+  updatePlatformFee(percentage: number): Observable<ApiResponse<PlatformFeeSettingResponse>> {
+    return this.http.put<ApiResponse<PlatformFeeSettingResponse>>(
+      `${this.base}/settings/platform-fee`, { percentage });
   }
 
   getSettlements(filters?: { ownerId?: string; status?: string; from?: string; to?: string }, page = 1, limit = 20): Observable<PagedResponse<OwnerSettlementResponse>> {
