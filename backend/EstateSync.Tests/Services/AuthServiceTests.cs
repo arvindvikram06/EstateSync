@@ -16,6 +16,7 @@ using EstateSync.Api.Interfaces.Services.Email;
 using EstateSync.Api.Interfaces.Services.Tokens;
 using EstateSync.Api.Mappers;
 using EstateSync.Api.Services.Email;
+using Microsoft.Extensions.Configuration;
 
 namespace EstateSync.Tests.Services;
 
@@ -29,6 +30,9 @@ public class AuthServiceTests
     private Mock<ITokenService> _tokenServiceMock;
     private Mock<IUnitOfWork> _unitOfWorkMock;
     private Mock<IEmailQueue> _emailQueueMock;
+    private Mock<IPasswordResetTokenStore> _passwordResetTokenStoreMock;
+    private Mock<IEmailVerificationTokenStore> _emailVerificationTokenStoreMock;
+    private Mock<IConfiguration> _configurationMock;
     private AuthService _authService;
 
     [SetUp]
@@ -41,6 +45,11 @@ public class AuthServiceTests
         _tokenServiceMock = new Mock<ITokenService>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _emailQueueMock = new Mock<IEmailQueue>();
+        _passwordResetTokenStoreMock = new Mock<IPasswordResetTokenStore>();
+        _emailVerificationTokenStoreMock = new Mock<IEmailVerificationTokenStore>();
+        _configurationMock = new Mock<IConfiguration>();
+
+        _configurationMock.Setup(x => x["App:FrontendUrl"]).Returns("http://localhost:4200");
 
         _authService = new AuthService(
             _userRepositoryMock.Object,
@@ -50,7 +59,10 @@ public class AuthServiceTests
             _tokenServiceMock.Object,
             _unitOfWorkMock.Object,
             new AuthMapper(),
-            _emailQueueMock.Object
+            _emailQueueMock.Object,
+            _passwordResetTokenStoreMock.Object,
+            _emailVerificationTokenStoreMock.Object,
+            _configurationMock.Object
         );
     }
 
@@ -83,9 +95,12 @@ public class AuthServiceTests
         _userRepositoryMock.Verify(x => x.AddAsync(It.Is<User>(u =>
             u.Email == request.Email &&
             u.FullName == request.FullName &&
-            !u.IsEmailVerified &&
-            u.EmailVerificationToken != null)), Times.Once);
+            !u.IsEmailVerified)), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<System.Threading.CancellationToken>()), Times.Once);
+        _emailVerificationTokenStoreMock.Verify(x => x.StoreAsync(
+            It.Is<string>(token => token.Length == 64),
+            It.IsAny<Guid>(),
+            TimeSpan.FromHours(24)), Times.Once);
         _emailQueueMock.Verify(x => x.EnqueueAsync(
             It.Is<EmailMessage>(m => m.To == request.Email),
             It.IsAny<System.Threading.CancellationToken>()), Times.Once);

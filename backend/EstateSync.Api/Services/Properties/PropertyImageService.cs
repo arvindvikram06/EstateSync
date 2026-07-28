@@ -10,6 +10,8 @@ using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
 using EstateSync.Api.Interfaces.Services.Properties;
 using EstateSync.Api.Interfaces.Services.Storage;
+using EstateSync.Api.Interfaces.Services.Shared;
+using EstateSync.Api.Common;
 
 namespace EstateSync.Api.Services.Properties;
 
@@ -19,17 +21,20 @@ public class PropertyImageService : IPropertyImageService
     private readonly IFileStorageService _fileStorageService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<PropertyImageService> _logger;
+    private readonly ICacheService _cache;
 
     public PropertyImageService(
         IPropertyRepository propertyRepo,
         IFileStorageService fileStorageService,
         IUnitOfWork unitOfWork,
-        ILogger<PropertyImageService> logger)
+        ILogger<PropertyImageService> logger,
+        ICacheService cache)
     {
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
         _fileStorageService = fileStorageService ?? throw new ArgumentNullException(nameof(fileStorageService));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
     }
 
     public async Task<List<Guid>> UploadImagesAsync(Guid id, List<IFormFile> files, Guid ownerId, CancellationToken ct)
@@ -51,6 +56,7 @@ public class PropertyImageService : IPropertyImageService
 
         // await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
+        await _cache.IncrementAsync(PropertyCacheKeys.ListingsVersion, ct);
 
         var uploadedIds = newImages.Select(pi => pi.ImageId).ToList();
 
@@ -89,6 +95,7 @@ public class PropertyImageService : IPropertyImageService
 
         // await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
+        await _cache.IncrementAsync(PropertyCacheKeys.ListingsVersion, ct);
 
         _logger.LogInformation("Deleted image {ImageId} for property {PropertyId} by owner {OwnerId}", imageId, id, ownerId);
     }

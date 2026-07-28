@@ -25,6 +25,10 @@ docs/*
 
 **/artifacts
 
+# Local presentation output and generator
+EstateSync_Project_Overview.pptx
+tools/create_estatesync_ppt.py
+
 .DS_Store
 **/.DS_Store
 

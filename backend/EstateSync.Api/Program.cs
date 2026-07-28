@@ -269,6 +269,7 @@ builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(_ =>
         builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379,abortConnect=false"));
 builder.Services.AddSingleton<IPasswordResetTokenStore, RedisPasswordResetTokenStore>();
 builder.Services.AddSingleton<IEmailVerificationTokenStore, RedisEmailVerificationTokenStore>();
+builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 
 // Configure JWT Authentication via Extension Method
 builder.Services.AddCustomAuthentication(builder.Configuration);

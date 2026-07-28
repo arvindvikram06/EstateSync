@@ -2,6 +2,8 @@ using EstateSync.Api.Interfaces.Services.Notifications;
 using EstateSync.Api.Models;
 using EstateSync.Api.Repositories.Interfaces;
 using Microsoft.Extensions.Logging;
+using EstateSync.Api.Common;
+using EstateSync.Api.Interfaces.Services.Shared;
 
 namespace EstateSync.Api.Services.Background;
 
@@ -11,10 +13,16 @@ public class LeaseExpiryJob
     private readonly INotificationSender _notif;
     private readonly IUnitOfWork _uow;
     private readonly ILogger<LeaseExpiryJob> _logger;
+    private readonly ICacheService _cache;
 
-    public LeaseExpiryJob(ILeaseRepository leaseRepo, INotificationSender notif, IUnitOfWork uow, ILogger<LeaseExpiryJob> logger)
+    public LeaseExpiryJob(
+        ILeaseRepository leaseRepo,
+        INotificationSender notif,
+        IUnitOfWork uow,
+        ILogger<LeaseExpiryJob> logger,
+        ICacheService cache)
     {
-        _leaseRepo = leaseRepo; _notif = notif; _uow = uow; _logger = logger;
+        _leaseRepo = leaseRepo; _notif = notif; _uow = uow; _logger = logger; _cache = cache;
     }
 
     public async Task RunAsync()
@@ -34,6 +42,7 @@ public class LeaseExpiryJob
                 (lease.Property.Status == PropertyStatus.AvailableSoon || lease.Property.Status == PropertyStatus.Leased))
             {
                 lease.Property.Status = PropertyStatus.Active;
+                await _cache.IncrementAsync(PropertyCacheKeys.ListingsVersion);
             }
 
             _logger.LogInformation("LeaseExpiryJob: Expired Lease {LeaseId} for Property {PropertyId}", lease.LeaseId, lease.PropertyId);

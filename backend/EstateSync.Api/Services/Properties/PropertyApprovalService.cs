@@ -24,6 +24,7 @@ public class PropertyApprovalService : IPropertyApprovalService
     private readonly PropertyMapper _mapper;
     private readonly ILogger<PropertyApprovalService> _logger;
     private readonly IUrlResolverService _urlResolver;
+    private readonly ICacheService _cache;
 
     public PropertyApprovalService(
         IPropertyRepository propertyRepo,
@@ -32,7 +33,8 @@ public class PropertyApprovalService : IPropertyApprovalService
         IUnitOfWork unitOfWork,
         PropertyMapper mapper,
         ILogger<PropertyApprovalService> logger,
-        IUrlResolverService urlResolver)
+        IUrlResolverService urlResolver,
+        ICacheService cache)
     {
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
@@ -41,6 +43,7 @@ public class PropertyApprovalService : IPropertyApprovalService
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
     }
 
     public async Task SubmitForApprovalAsync(Guid id, Guid ownerId, CancellationToken ct)
@@ -95,6 +98,7 @@ public class PropertyApprovalService : IPropertyApprovalService
         await CreateAndSendAdminPropertyNotificationsAsync(property);
 
         await _unitOfWork.SaveChangesAsync(ct);
+        await _cache.IncrementAsync(PropertyCacheKeys.ListingsVersion, ct);
         _logger.LogInformation("Property {PropertyId} submitted for approval by owner {OwnerId}", id, ownerId);
     }
 
@@ -139,6 +143,7 @@ public class PropertyApprovalService : IPropertyApprovalService
         await CreateAndSendOwnerPropertyNotificationAsync(property, parsedStatus, remarks);
 
         await _unitOfWork.SaveChangesAsync(ct);
+        await _cache.IncrementAsync(PropertyCacheKeys.ListingsVersion, ct);
         _logger.LogInformation("Property {PropertyId} approval status updated to {Status} by admin {AdminId}", id, parsedStatus, adminId);
     }
 

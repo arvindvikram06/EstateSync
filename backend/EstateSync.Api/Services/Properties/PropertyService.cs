@@ -24,6 +24,8 @@ public class PropertyService : IPropertyService
     private readonly PropertyMapper _mapper;
     private readonly ILogger<PropertyService> _logger;
     private readonly IUrlResolverService _urlResolver;
+    private readonly ICacheService _cache;
+    private static readonly TimeSpan ListingsCacheTtl = TimeSpan.FromMinutes(3);
 
     public PropertyService(
         IPropertyRepository propertyRepo,
@@ -32,7 +34,8 @@ public class PropertyService : IPropertyService
         IUnitOfWork unitOfWork,
         PropertyMapper mapper,
         ILogger<PropertyService> logger,
-        IUrlResolverService urlResolver)
+        IUrlResolverService urlResolver,
+        ICacheService cache)
     {
         _propertyRepo = propertyRepo ?? throw new ArgumentNullException(nameof(propertyRepo));
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
@@ -41,10 +44,26 @@ public class PropertyService : IPropertyService
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
     }
 
     public async Task<PagedResponse<PropertySummaryResponse>> SearchAsync(PropertySearchRequest request, CancellationToken ct)
     {
+        var version = await _cache.GetAsync<long>(PropertyCacheKeys.ListingsVersion, ct);
+        if (version <= 0)
+        {
+            version = 1;
+            await _cache.SetAsync(PropertyCacheKeys.ListingsVersion, version, TimeSpan.FromDays(30), ct);
+        }
+
+        var cacheKey = PropertyCacheKeys.Search(request, version);
+        var cached = await _cache.GetAsync<PagedResponse<PropertySummaryResponse>>(cacheKey, ct);
+        if (cached != null)
+        {
+            _logger.LogDebug("Public property listing cache hit for {CacheKey}", cacheKey);
+            return await ResolveSearchResponseAsync(cached, ct);
+        }
+
         var offset = (request.Page - 1) * request.Limit;
         var (items, total) = await _propertyRepo.SearchAsync(
             request.Search,
@@ -56,18 +75,16 @@ public class PropertyService : IPropertyService
             request.Limit,
             offset);
 
-        var resolved = new List<PropertySummaryResponse>();
-        foreach (var item in items)
-            resolved.Add(await _urlResolver.ResolveAsync(_mapper.MapToSummaryResponse(item), ct));
-
-        return new PagedResponse<PropertySummaryResponse>
+        var response = new PagedResponse<PropertySummaryResponse>
         {
             Success = true,
-            Data = resolved,
+            Data = items.Select(_mapper.MapToSummaryResponse).ToList(),
             Page = request.Page,
             Limit = request.Limit,
             Total = total
         };
+        await _cache.SetAsync(cacheKey, response, ListingsCacheTtl, ct);
+        return await ResolveSearchResponseAsync(response, ct);
     }
 
     public async Task<PropertyDetailResponse> GetByIdAsync(Guid id, CancellationToken ct)
@@ -106,6 +123,7 @@ public class PropertyService : IPropertyService
 
         await _propertyRepo.AddAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
+        await InvalidatePublicListingsAsync(ct);
 
         _logger.LogInformation("Property {PropertyId} created successfully in Draft status by owner {OwnerId}", property.PropertyId, ownerId);
 
@@ -132,6 +150,7 @@ public class PropertyService : IPropertyService
 
         // await _propertyRepo.UpdateAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
+        await InvalidatePublicListingsAsync(ct);
 
         _logger.LogInformation("Property {PropertyId} updated successfully by owner {OwnerId}", id, ownerId);
 
@@ -159,6 +178,7 @@ public class PropertyService : IPropertyService
 
         await _propertyRepo.DeleteAsync(property);
         await _unitOfWork.SaveChangesAsync(ct);
+        await InvalidatePublicListingsAsync(ct);
 
         _logger.LogInformation("Property {PropertyId} deleted by user {UserId}. Admin: {IsAdmin}", id, userId, isAdmin);
     }
@@ -216,6 +236,7 @@ public class PropertyService : IPropertyService
         {
             property.UpdatedAt = DateTime.UtcNow;
             await _unitOfWork.SaveChangesAsync(ct);
+            await InvalidatePublicListingsAsync(ct);
         }
 
         _logger.LogInformation("Wizard draft {PropertyId} patched by owner {OwnerId}", id, ownerId);
@@ -245,5 +266,28 @@ public class PropertyService : IPropertyService
             Limit = limit,
             Total = 0
         };
+    }
+
+    private async Task<PagedResponse<PropertySummaryResponse>> ResolveSearchResponseAsync(
+        PagedResponse<PropertySummaryResponse> response,
+        CancellationToken ct)
+    {
+        var resolved = new List<PropertySummaryResponse>();
+        foreach (var item in response.Data ?? [])
+            resolved.Add(await _urlResolver.ResolveAsync(item, ct));
+
+        return new PagedResponse<PropertySummaryResponse>
+        {
+            Success = response.Success,
+            Data = resolved,
+            Page = response.Page,
+            Limit = response.Limit,
+            Total = response.Total
+        };
+    }
+
+    private async Task InvalidatePublicListingsAsync(CancellationToken ct)
+    {
+        await _cache.IncrementAsync(PropertyCacheKeys.ListingsVersion, ct);
     }
 }

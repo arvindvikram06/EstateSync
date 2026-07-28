@@ -12,6 +12,8 @@ using EstateSync.Api.Mappers;
 using EstateSync.Api.Models;
 using EstateSync.Api.Services.Properties;
 using EstateSync.Api.Interfaces.Services.Properties;
+using EstateSync.Api.Interfaces.Services.Shared;
+using EstateSync.Api.Common;
 
 namespace EstateSync.Tests.Services;
 
@@ -25,6 +27,8 @@ public class PropertyServiceTests
     private Mock<IUnitOfWork> _unitOfWorkMock;
     private PropertyMapper _propertyMapper;
     private Mock<ILogger<PropertyService>> _loggerMock;
+    private Mock<IUrlResolverService> _urlResolverMock;
+    private Mock<ICacheService> _cacheMock;
     private PropertyService _propertyService;
 
     [SetUp]
@@ -37,6 +41,15 @@ public class PropertyServiceTests
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _propertyMapper = new PropertyMapper();
         _loggerMock = new Mock<ILogger<PropertyService>>();
+        _urlResolverMock = new Mock<IUrlResolverService>();
+        _cacheMock = new Mock<ICacheService>();
+
+        _urlResolverMock
+            .Setup(x => x.ResolveAsync(It.IsAny<PropertyDetailResponse>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PropertyDetailResponse response, CancellationToken _) => response);
+        _urlResolverMock
+            .Setup(x => x.ResolveAsync(It.IsAny<PropertySummaryResponse>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PropertySummaryResponse response, CancellationToken _) => response);
 
         _propertyRepoMock
             .Setup(x => x.AddAsync(It.IsAny<Property>()))
@@ -45,12 +58,61 @@ public class PropertyServiceTests
 
         _propertyService = new PropertyService(
             _propertyRepoMock.Object,
-            _locationRepoMock.Object,
             _userRepoMock.Object,
             _leaseRepoMock.Object,
             _unitOfWorkMock.Object,
             _propertyMapper,
-            _loggerMock.Object);
+            _loggerMock.Object,
+            _urlResolverMock.Object,
+            _cacheMock.Object);
+    }
+
+    [Test]
+    public async Task SearchAsync_ShouldReturnCachedPublicListingWithoutDatabaseQuery()
+    {
+        var request = new PropertySearchRequest { State = "Tamil Nadu", Page = 1, Limit = 20 };
+        var cached = new PagedResponse<PropertySummaryResponse>
+        {
+            Success = true,
+            Data = [],
+            Page = 1,
+            Limit = 20,
+            Total = 0
+        };
+        _cacheMock
+            .Setup(x => x.GetAsync<long>(
+                PropertyCacheKeys.ListingsVersion, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(4);
+        _cacheMock
+            .Setup(x => x.GetAsync<PagedResponse<PropertySummaryResponse>>(
+                PropertyCacheKeys.Search(request, 4), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cached);
+
+        var result = await _propertyService.SearchAsync(request, CancellationToken.None);
+
+        result.Should().BeEquivalentTo(cached);
+        _propertyRepoMock.VerifyNoOtherCalls();
+    }
+
+    [Test]
+    public async Task SearchAsync_ShouldCacheDatabaseResultsForThreeMinutes()
+    {
+        var request = new PropertySearchRequest { Page = 1, Limit = 20 };
+        _cacheMock
+            .Setup(x => x.GetAsync<long>(
+                PropertyCacheKeys.ListingsVersion, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(2);
+        _propertyRepoMock
+            .Setup(x => x.SearchAsync(null, null, null, null, null, null, 20, 0))
+            .ReturnsAsync((Array.Empty<Property>(), 0));
+
+        await _propertyService.SearchAsync(request, CancellationToken.None);
+
+        _cacheMock.Verify(x => x.SetAsync(
+            PropertyCacheKeys.Search(request, 2),
+            It.IsAny<PagedResponse<PropertySummaryResponse>>(),
+            TimeSpan.FromMinutes(3),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]

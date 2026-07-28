@@ -35,6 +35,7 @@ public class LeaseService : ILeaseService
     private readonly IUserRepository _userRepo;
     private readonly ILeaseVacateNoticeRepository _vacateNoticeRepo;
     private readonly IUrlResolverService _urlResolver;
+    private readonly ICacheService _cache;
 
     public LeaseService(
         ILeaseRepository leaseRepo,
@@ -51,7 +52,8 @@ public class LeaseService : ILeaseService
         IHttpContextAccessor httpContextAccessor,
         IUserRepository userRepo,
         ILeaseVacateNoticeRepository vacateNoticeRepo,
-        IUrlResolverService urlResolver)
+        IUrlResolverService urlResolver,
+        ICacheService cache)
     {
         _leaseRepo = leaseRepo ?? throw new ArgumentNullException(nameof(leaseRepo));
         _applicationRepo = applicationRepo ?? throw new ArgumentNullException(nameof(applicationRepo));
@@ -68,6 +70,7 @@ public class LeaseService : ILeaseService
         _userRepo = userRepo ?? throw new ArgumentNullException(nameof(userRepo));
         _vacateNoticeRepo = vacateNoticeRepo ?? throw new ArgumentNullException(nameof(vacateNoticeRepo));
         _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
     }
 
     public async Task<LeaseResponse> CreateLeaseAsync(CreateLeaseRequest request, Guid ownerId, CancellationToken ct)
@@ -292,6 +295,7 @@ public class LeaseService : ILeaseService
             lease.Status = LeaseStatus.Active;
             lease.ActivatedAt = DateTime.UtcNow;
             property.Status = PropertyStatus.Leased;
+            await _cache.IncrementAsync(PropertyCacheKeys.ListingsVersion, ct);
 
             await RejectOtherApplicationsOnLeaseActivationAsync(property.PropertyId, lease.ApplicationId, property.Title);
             await GenerateLeaseBillsAsync(lease);
@@ -462,7 +466,10 @@ public class LeaseService : ILeaseService
 
         // Undo the expiry scheduler's 3-month warning state, if it fired
         if (lease.Property.Status == PropertyStatus.AvailableSoon)
+        {
             lease.Property.Status = PropertyStatus.Leased;
+            await _cache.IncrementAsync(PropertyCacheKeys.ListingsVersion, ct);
+        }
 
         await _notificationSender.SendAsync(new Notification
         {
@@ -528,7 +535,10 @@ public class LeaseService : ILeaseService
             application.Status = ApplicationStatus.Completed;
 
         if (property.Status == PropertyStatus.Leased || property.Status == PropertyStatus.AvailableSoon)
+        {
             property.Status = PropertyStatus.Active;
+            await _cache.IncrementAsync(PropertyCacheKeys.ListingsVersion, ct);
+        }
 
         await _notificationSender.SendAsync(new Notification
         {
@@ -616,7 +626,10 @@ public class LeaseService : ILeaseService
 
         // Exit is confirmed with no owner action needed — signal property is coming available
         if (!penaltyApplied && property.Status == PropertyStatus.Leased)
+        {
             property.Status = PropertyStatus.AvailableSoon;
+            await _cache.IncrementAsync(PropertyCacheKeys.ListingsVersion, ct);
+        }
 
         await _notificationSender.SendAsync(new Notification
         {
@@ -671,7 +684,10 @@ public class LeaseService : ILeaseService
 
         // Lease stays Active until RequestedExitDate — scheduler terminates on that date
         if (property.Status == PropertyStatus.Leased)
+        {
             property.Status = PropertyStatus.AvailableSoon;
+            await _cache.IncrementAsync(PropertyCacheKeys.ListingsVersion, ct);
+        }
 
         await _notificationSender.SendAsync(new Notification
         {
