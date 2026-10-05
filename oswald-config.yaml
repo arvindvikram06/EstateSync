@@ -1,0 +1,7 @@
+llm:
+  provider: custom
+  model: bedrock/zai.glm-5
+  url: https://llm-proxy.innovation.studio.presidio.ai
+  apiKeyName: GLM_API_KEY
+  isThinkingEnabled: false
+  temperature: 0.6
